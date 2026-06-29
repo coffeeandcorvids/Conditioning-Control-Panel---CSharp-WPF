@@ -67,3 +67,14 @@ runs/tests on the Pi with NO UI, and per upstream is "very achievable." ← STAR
 **Phase 2 — Avalonia UI** (Vesper-core views: spirals/fog/triggers/lock-cards/haptics + pink/dark) on
 top of the Core. The bigger lift; do after the engine's proven.
 **Defer/accept-loss:** the irreducibly-Windows set above.
+
+## EXCLUDE: Patreon / monetization / premium-gating (Star: "86 it", Jun 29)
+Footprint is HUGE — ~1084 refs across ~90 files (PatreonService, SubscribeStarService, PatreonTabView,
+MainWindow.Patreon/.PremiumRail/.Marquee, premium/free user gating woven through features, leaderboard,
+quests). Surgically ripping all of it out of the dying WPF code = large + fragile (gating is entangled
+with feature unlocks). NOT worth it on code we're replacing.
+**The clean 86: by OMISSION.** We do NOT port the monetization/premium-gating layer into Core or the
+new UI. Our fork is private + all-features-unlocked (no free/paid tiers, no patron checks, no
+donate/promo chrome). So Patreon simply doesn't exist in the ported creature — by construction, not by
+risky surgery. Port map: monetization layer → DON'T PORT (same bucket as the Windows-only set).
+Design note for Core/new-UI: treat every capability as unlocked; drop IsPremium/patron gating entirely.
