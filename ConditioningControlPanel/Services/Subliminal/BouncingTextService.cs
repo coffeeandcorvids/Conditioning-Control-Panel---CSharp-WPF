@@ -1,0 +1,652 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Threading;
+
+namespace ConditioningControlPanel.Services;
+
+/// <summary>
+/// Bouncing Text - DVD screensaver style text that bounces across screens
+/// Unlocks at Level 60, awards 25 XP per bounce (max 150 XP/min, 10s cooldown between rewards)
+/// </summary>
+public class BouncingTextService : IDisposable
+{
+    private readonly Random _random = new();
+    private readonly List<BouncingTextWindow> _windows = new();
+    private bool _isRunning;
+
+    // Composition-clock state. We drive motion off CompositionTarget.Rendering
+    // (vsync-aligned, one callback per rendered frame) rather than a DispatcherTimer
+    // (quantized to the ~15.6ms OS tick, which beats against the display refresh and
+    // produces "low frame rate" judder). _lastRenderTime feeds delta-time movement.
+    private TimeSpan _lastRenderTime = TimeSpan.MinValue;
+    
+    // Current text state
+    private string _currentText = "";
+    private double _posX, _posY;
+    private double _velX, _velY;
+    private double _totalWidth, _totalHeight;
+    private double _minX, _minY, _maxX, _maxY;
+    private Color _currentColor;
+    
+    // Text size - base size that gets scaled by settings
+    private const int BASE_FONT_SIZE = 72;
+    private double _textWidth = 200;
+    private double _textHeight = 60;
+    private int _currentFontSize = BASE_FONT_SIZE;
+    
+    // Corner hit detection - tolerance in pixels (corners are hard to hit exactly)
+    private const double CORNER_TOLERANCE = 15.0;
+
+    // Anti-exploit: XP rate limiting for bounces
+    private DateTime _lastBounceXpTime = DateTime.MinValue;
+    private static readonly TimeSpan BounceXpCooldown = TimeSpan.FromSeconds(2); // Short cooldown to prevent double-count on corner hits
+    private int _bounceXpThisMinute;
+    private DateTime _bounceXpMinuteStart = DateTime.MinValue;
+    private const int MaxBounceXpPerMinute = 150;
+    
+    // Z-order re-assertion accumulator (re-assert topmost every ~0.5s of real time;
+    // frame-rate-independent now that the tick rate varies with the display refresh).
+    private double _zReassertAccum;
+
+    public bool IsRunning => _isRunning;
+
+    /// <summary>
+    /// Current bounding rect of the bouncing text in PHYSICAL virtual-desktop
+    /// pixels, padded to absorb motion between OCR self-exclusion cache refreshes.
+    /// Consumed by <see cref="App.GetCcpWindowRectsCached"/> so the avatar's
+    /// awareness OCR doesn't read the app's own bouncing words (#287). The
+    /// full-screen overlay window itself is dropped from the exclusion set by the
+    /// per-monitor span filter, so this small moving rect has to be supplied
+    /// separately. A single global rect covers all per-screen windows since they
+    /// share one _posX/_posY in virtual-desktop DIP space.
+    ///
+    /// Caller must invoke on the UI thread (the animation timer mutates these
+    /// fields there). Returns empty when not running.
+    /// </summary>
+    public System.Drawing.Rectangle[] GetActiveTextScreenRects()
+    {
+        if (!_isRunning) return Array.Empty<System.Drawing.Rectangle>();
+        try
+        {
+            var dpiScale = GetDpiScale();
+            // Pad generously: the text drifts a few px/frame at ~30fps and the OCR
+            // rect cache is ~250ms stale, so a word could otherwise slip the rect
+            // between refreshes. Bouncing text is large and isolated, so modest
+            // over-exclusion costs nothing.
+            double padX = _textWidth * 0.5 + 60;
+            double padY = _textHeight * 0.5 + 60;
+            int left   = (int)Math.Floor((_posX - padX) * dpiScale);
+            int top    = (int)Math.Floor((_posY - padY) * dpiScale);
+            int right  = (int)Math.Ceiling((_posX + _textWidth + padX) * dpiScale);
+            int bottom = (int)Math.Ceiling((_posY + _textHeight + padY) * dpiScale);
+            return new[] { new System.Drawing.Rectangle(left, top, right - left, bottom - top) };
+        }
+        catch
+        {
+            return Array.Empty<System.Drawing.Rectangle>();
+        }
+    }
+
+    public event EventHandler? OnBounce;
+    /// <summary>Fires on a true/near DVD corner hit (distinct from a plain wall bounce). Used by the bark egg.</summary>
+    public event EventHandler? OnCornerHit;
+
+    public void Start(bool bypassLevelCheck = false, List<string>? pool = null)
+    {
+        if (_isRunning) return;
+
+        var settings = App.Settings.Current;
+
+        // Note: We don't check BouncingTextEnabled here because Start() is called
+        // explicitly when we want to start (either by toggle or by session)
+
+        _isRunning = true;
+
+        // Calculate font size based on settings (50-300% of base)
+        _currentFontSize = (int)(BASE_FONT_SIZE * settings.BouncingTextSize / 100.0);
+
+        // Get random text from pool
+        SelectRandomText(pool);
+        
+        // Measure actual text size
+        MeasureTextSize();
+        
+        // Calculate screen bounds
+        CalculateScreenBounds(settings.DualMonitorEnabled);
+        
+        // Random starting position (ensure text starts fully within bounds)
+        _posX = _minX + _random.NextDouble() * Math.Max(1, (_maxX - _minX - _textWidth));
+        _posY = _minY + _random.NextDouble() * Math.Max(1, (_maxY - _minY - _textHeight));
+        
+        // Random velocity in DIP/second (speed based on setting). The base is the
+        // old 3-5 px/tick value scaled by 60 so the on-screen feel is unchanged at
+        // 60 FPS, but motion is now delta-time driven so it stays correct at any rate.
+        var speed = settings.BouncingTextSpeed / 10.0; // 1-10 maps to 0.1-1.0 multiplier
+        var baseSpeed = (3.0 + _random.NextDouble() * 2.0) * 60.0; // 180-300 DIP/sec
+        _velX = baseSpeed * speed * (_random.Next(2) == 0 ? 1 : -1);
+        _velY = baseSpeed * speed * (_random.Next(2) == 0 ? 1 : -1);
+        
+        // Random starting color
+        _currentColor = GetRandomColor();
+        
+        // Create windows for each screen
+        CreateWindows(settings.DualMonitorEnabled, settings.BouncingTextOpacity);
+
+        // Drive motion off the composition clock (vsync-aligned, one callback per
+        // rendered frame) instead of a DispatcherTimer — see _lastRenderTime note.
+        _lastRenderTime = TimeSpan.MinValue;
+        _zReassertAccum = 0;
+        CompositionTarget.Rendering -= Animate; // guard against a double subscribe
+        CompositionTarget.Rendering += Animate;
+        
+        App.Logger?.Information("BouncingTextService started - Text: {Text}, Size: {W}x{H}", 
+            _currentText, _textWidth, _textHeight);
+    }
+
+    public void Stop()
+    {
+        _isRunning = false;
+        
+        CompositionTarget.Rendering -= Animate;
+
+        // Always close and clear windows, even if we thought we weren't running
+        foreach (var window in _windows)
+        {
+            try { window.Close(); } catch { }
+        }
+        _windows.Clear();
+        
+        App.Logger?.Information("BouncingTextService stopped");
+    }
+
+    private void SelectRandomText(List<string>? pool = null)
+    {
+        var settings = App.Settings.Current;
+        var enabledTexts = pool != null && pool.Count > 0
+            ? pool.ToList()
+            : settings.BouncingTextPool
+                .Where(kv => kv.Value)
+                .Select(kv => kv.Key)
+                .ToList();
+
+        if (enabledTexts.Count == 0)
+        {
+            _currentText = "GOOD GIRL";
+        }
+        else
+        {
+            _currentText = enabledTexts[_random.Next(enabledTexts.Count)];
+        }
+    }
+
+    /// <summary>
+    /// Measure the actual rendered size of the current text
+    /// </summary>
+    private void MeasureTextSize()
+    {
+        try
+        {
+            var typeface = new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
+            // MainWindow can be null during startup/shutdown; GetDpi(null) throws an
+            // NRE that the catch below swallows into a noisy [WRN] (#305). Resolve a
+            // DPI source that may be null and fall back to 1.0 PixelsPerDip.
+            var dpiSource = Application.Current?.MainWindow
+                            ?? _windows.FirstOrDefault();
+            double pixelsPerDip = dpiSource != null
+                ? VisualTreeHelper.GetDpi(dpiSource).PixelsPerDip
+                : 1.0;
+            var formattedText = new FormattedText(
+                _currentText,
+                CultureInfo.CurrentCulture,
+                FlowDirection.LeftToRight,
+                typeface,
+                _currentFontSize,
+                Brushes.White,
+                new NumberSubstitution(),
+                pixelsPerDip);
+            
+            _textWidth = formattedText.Width;
+            _textHeight = formattedText.Height;
+            
+            App.Logger?.Debug("Measured text '{Text}': {W}x{H}", _currentText, _textWidth, _textHeight);
+        }
+        catch (Exception ex)
+        {
+            // Fallback to estimation if measurement fails
+            _textWidth = _currentFontSize * _currentText.Length * 0.6;
+            _textHeight = _currentFontSize * 1.2;
+            App.Logger?.Warning(ex, "Failed to measure text, using estimate: {W}x{H}", _textWidth, _textHeight);
+        }
+    }
+
+    private void CalculateScreenBounds(bool dualMonitor)
+    {
+        var screens = dualMonitor 
+            ? App.GetAllScreensCached() 
+            : new[] { System.Windows.Forms.Screen.PrimaryScreen! };
+        
+        // Get DPI scale
+        var dpiScale = GetDpiScale();
+        
+        // Find total bounds across all screens
+        _minX = screens.Min(s => s.Bounds.X) / dpiScale;
+        _minY = screens.Min(s => s.Bounds.Y) / dpiScale;
+        _maxX = screens.Max(s => s.Bounds.X + s.Bounds.Width) / dpiScale;
+        _maxY = screens.Max(s => s.Bounds.Y + s.Bounds.Height) / dpiScale;
+        
+        _totalWidth = _maxX - _minX;
+        _totalHeight = _maxY - _minY;
+    }
+
+    private void CreateWindows(bool dualMonitor, int opacity = 100)
+    {
+        var screens = dualMonitor
+            ? App.GetAllScreensCached()
+            : new[] { System.Windows.Forms.Screen.PrimaryScreen! };
+
+        foreach (var screen in screens)
+        {
+            var window = new BouncingTextWindow(screen, _currentFontSize, opacity);
+            window.Show();
+            _windows.Add(window);
+        }
+
+        // Update text in all windows
+        UpdateWindowsText();
+    }
+
+    private void Animate(object? sender, EventArgs e)
+    {
+        if (!_isRunning) return;
+
+        // Delta time from the composition clock. Establish a baseline on the first
+        // frame, ignore duplicate callbacks, and clamp after a stall so the text
+        // never teleports across the screen.
+        double dt = 1.0 / 60.0;
+        if (e is RenderingEventArgs r)
+        {
+            if (_lastRenderTime == TimeSpan.MinValue)
+            {
+                _lastRenderTime = r.RenderingTime;
+                return;
+            }
+            dt = (r.RenderingTime - _lastRenderTime).TotalSeconds;
+            _lastRenderTime = r.RenderingTime;
+            if (dt <= 0) return;
+            if (dt > 0.1) dt = 0.1;
+        }
+
+        // Hide bouncing text while a mandatory video is playing
+        if (App.Video?.IsPlaying == true)
+        {
+            foreach (var w in _windows) { if (w.IsLoaded) w.Hide(); }
+            return;
+        }
+        else
+        {
+            foreach (var w in _windows) { if (w.IsLoaded && !w.IsVisible) w.Show(); }
+        }
+
+        // Move (delta-time based; velocities are DIP/second)
+        _posX += _velX * dt;
+        _posY += _velY * dt;
+        
+        bool bouncedX = false;
+        bool bouncedY = false;
+        
+        // Calculate the RIGHT and BOTTOM edges of the text
+        double textRight = _posX + _textWidth;
+        double textBottom = _posY + _textHeight;
+        
+        // Bounce off LEFT edge (text's left edge hits screen's left edge)
+        if (_posX <= _minX)
+        {
+            _posX = _minX;
+            _velX = Math.Abs(_velX);
+            bouncedX = true;
+        }
+        // Bounce off RIGHT edge (text's right edge hits screen's right edge)
+        else if (textRight >= _maxX)
+        {
+            _posX = _maxX - _textWidth;
+            _velX = -Math.Abs(_velX);
+            bouncedX = true;
+        }
+        
+        // Bounce off TOP edge (text's top edge hits screen's top edge)
+        if (_posY <= _minY)
+        {
+            _posY = _minY;
+            _velY = Math.Abs(_velY);
+            bouncedY = true;
+        }
+        // Bounce off BOTTOM edge (text's bottom edge hits screen's bottom edge)
+        else if (textBottom >= _maxY)
+        {
+            _posY = _maxY - _textHeight;
+            _velY = -Math.Abs(_velY);
+            bouncedY = true;
+        }
+        
+        bool bounced = bouncedX || bouncedY;
+        
+        // Check for corner hit (both X and Y bounce at the same time!)
+        if (bouncedX && bouncedY)
+        {
+            App.Logger?.Information("🎯 CORNER HIT! Position: ({X}, {Y})", _posX, _posY);
+            App.Achievements?.TrackCornerHit();
+            OnCornerHit?.Invoke(this, EventArgs.Empty);
+        }
+        // Also check for "near corner" hits - when very close to a corner during a single-axis bounce
+        else if (bounced)
+        {
+            bool nearCorner = IsNearCorner(_posX, _posY, textRight, textBottom);
+            if (nearCorner)
+            {
+                App.Logger?.Information("🎯 NEAR-CORNER HIT! Position: ({X}, {Y})", _posX, _posY);
+                App.Achievements?.TrackCornerHit();
+                OnCornerHit?.Invoke(this, EventArgs.Empty);
+            }
+        }
+        
+        // On bounce: change color, award XP, maybe change text
+        if (bounced)
+        {
+            _currentColor = GetRandomColor();
+            var now = DateTime.UtcNow;
+
+            // Reset per-minute counter if a new minute has started
+            if ((now - _bounceXpMinuteStart).TotalSeconds >= 60)
+            {
+                _bounceXpThisMinute = 0;
+                _bounceXpMinuteStart = now;
+            }
+
+            if (now - _lastBounceXpTime >= BounceXpCooldown && _bounceXpThisMinute < MaxBounceXpPerMinute)
+            {
+                App.Progression?.AddXP(15, XPSource.BouncingText);
+                _lastBounceXpTime = now;
+                _bounceXpThisMinute += 15;
+            }
+            OnBounce?.Invoke(this, EventArgs.Empty);
+
+            // Haptic pulse on bounce
+            _ = App.Haptics?.BouncingTextBounceAsync();
+
+            // 10% chance to change text on bounce
+            if (_random.NextDouble() < 0.1)
+            {
+                SelectRandomText();
+                MeasureTextSize(); // Re-measure when text changes
+            }
+
+            UpdateWindowsText();
+        }
+        
+        // Re-assert z-order every ~500ms — bouncing text is long-lived and will
+        // lose topmost when competing with flash/video/overlay windows
+        _zReassertAccum += dt;
+        if (_zReassertAccum >= 0.5)
+        {
+            _zReassertAccum = 0;
+            foreach (var window in _windows)
+                window.ReassertTopmost();
+        }
+
+        // Update position in all windows
+        UpdateWindowsPosition();
+    }
+
+    /// <summary>
+    /// Check if the text is near any corner within tolerance
+    /// </summary>
+    private bool IsNearCorner(double left, double top, double right, double bottom)
+    {
+        // Top-left corner
+        bool nearTopLeft = left <= _minX + CORNER_TOLERANCE && top <= _minY + CORNER_TOLERANCE;
+        // Top-right corner
+        bool nearTopRight = right >= _maxX - CORNER_TOLERANCE && top <= _minY + CORNER_TOLERANCE;
+        // Bottom-left corner
+        bool nearBottomLeft = left <= _minX + CORNER_TOLERANCE && bottom >= _maxY - CORNER_TOLERANCE;
+        // Bottom-right corner
+        bool nearBottomRight = right >= _maxX - CORNER_TOLERANCE && bottom >= _maxY - CORNER_TOLERANCE;
+        
+        return nearTopLeft || nearTopRight || nearBottomLeft || nearBottomRight;
+    }
+
+    private void UpdateWindowsText()
+    {
+        foreach (var window in _windows)
+        {
+            window.UpdateText(_currentText, _currentColor);
+        }
+    }
+
+    private void UpdateWindowsPosition()
+    {
+        foreach (var window in _windows)
+        {
+            window.UpdatePosition(_posX, _posY, _textWidth, _textHeight);
+        }
+    }
+
+    private Color GetRandomColor()
+    {
+        // Bright, vibrant colors
+        var colors = new[]
+        {
+            Color.FromRgb(255, 105, 180), // Hot Pink
+            Color.FromRgb(255, 20, 147),  // Deep Pink
+            Color.FromRgb(138, 43, 226),  // Blue Violet
+            Color.FromRgb(255, 0, 255),   // Magenta
+            Color.FromRgb(0, 255, 255),   // Cyan
+            Color.FromRgb(255, 255, 0),   // Yellow
+            Color.FromRgb(0, 255, 0),     // Lime
+            Color.FromRgb(255, 165, 0),   // Orange
+            Color.FromRgb(255, 69, 0),    // Red Orange
+            Color.FromRgb(50, 205, 50),   // Lime Green
+        };
+        return colors[_random.Next(colors.Length)];
+    }
+
+    private double GetDpiScale()
+    {
+        try
+        {
+            using var g = System.Drawing.Graphics.FromHwnd(IntPtr.Zero);
+            return g.DpiX / 96.0;
+        }
+        catch
+        {
+            return 1.0;
+        }
+    }
+
+    /// <summary>
+    /// Refresh when settings change
+    /// </summary>
+    public void Refresh()
+    {
+        if (!_isRunning) return;
+        
+        var settings = App.Settings.Current;
+        
+        // Update speed
+        var speed = settings.BouncingTextSpeed / 10.0;
+        var currentSpeed = Math.Sqrt(_velX * _velX + _velY * _velY);
+        var targetSpeed = (3.0 + _random.NextDouble() * 2.0) * 60.0 * speed; // DIP/sec
+        var scale = targetSpeed / Math.Max(0.1, currentSpeed);
+        _velX *= scale;
+        _velY *= scale;
+        
+        // Check if font size changed - if so, update and re-measure
+        var newFontSize = (int)(BASE_FONT_SIZE * settings.BouncingTextSize / 100.0);
+        if (newFontSize != _currentFontSize)
+        {
+            _currentFontSize = newFontSize;
+            MeasureTextSize(); // Re-measure with new font size
+            
+            // Update font size in all windows
+            foreach (var window in _windows)
+            {
+                window.UpdateFontSize(_currentFontSize);
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        Stop();
+    }
+}
+
+/// <summary>
+/// Transparent window that displays the bouncing text
+/// </summary>
+internal class BouncingTextWindow : Window
+{
+    private readonly TextBlock _textBlock;
+    private readonly System.Windows.Forms.Screen _screen;
+    private readonly double _dpiScale;
+    private IntPtr _hwnd;
+
+    public BouncingTextWindow(System.Windows.Forms.Screen screen, int fontSize = 48, int opacity = 100)
+    {
+        _screen = screen;
+        _dpiScale = GetDpiScale();
+
+        WindowStyle = WindowStyle.None;
+        AllowsTransparency = true;
+        Background = Brushes.Transparent;
+        Topmost = true;
+        ShowInTaskbar = false;
+        ShowActivated = false;
+        IsHitTestVisible = false;
+        ResizeMode = ResizeMode.NoResize;
+
+        // Cover the entire screen
+        Left = screen.Bounds.X / _dpiScale;
+        Top = screen.Bounds.Y / _dpiScale;
+        Width = screen.Bounds.Width / _dpiScale;
+        Height = screen.Bounds.Height / _dpiScale;
+
+        // Create text block
+        _textBlock = new TextBlock
+        {
+            FontSize = fontSize,
+            FontWeight = FontWeights.Bold,
+            Foreground = Brushes.HotPink,
+            Opacity = opacity / 100.0,
+            Effect = new System.Windows.Media.Effects.DropShadowEffect
+            {
+                Color = Colors.Black,
+                BlurRadius = 10,
+                ShadowDepth = 3
+            }
+        };
+        
+        // Canvas for positioning
+        var canvas = new Canvas();
+        canvas.Children.Add(_textBlock);
+        Content = canvas;
+        
+        // Make click-through and force Win32 TOPMOST (more reliable than WPF Topmost property)
+        SourceInitialized += (s, e) =>
+        {
+            MakeClickThrough();
+            SetWindowPos(_hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        };
+    }
+
+    public void UpdateText(string text, Color color)
+    {
+        _textBlock.Text = text;
+        var brush = new SolidColorBrush(color);
+        brush.Freeze();
+        _textBlock.Foreground = brush;
+    }
+
+    public void UpdateFontSize(int fontSize)
+    {
+        _textBlock.FontSize = fontSize;
+    }
+
+    public void UpdatePosition(double x, double y, double textWidth, double textHeight)
+    {
+        // Convert global position to local screen position
+        var localX = x - (_screen.Bounds.X / _dpiScale);
+        var localY = y - (_screen.Bounds.Y / _dpiScale);
+
+        // Just position the text and let WPF clip it to the window naturally. The
+        // previous "is any part visible on this screen?" check used Width/Height
+        // (this window's bounds, computed from the desktop DPI scale) as the
+        // boundary, which goes wrong on mixed-DPI multi-monitor setups: the text
+        // would appear to "hide and come back" inside a region of the screen
+        // because the visibility math thought we were off-screen when we weren't.
+        // (Bug #188.) The bouncing math in BouncingTextService keeps _posX/_posY
+        // inside the virtual desktop bounds anyway, so any window that covers part
+        // of where the text is will render it; windows that don't cover that
+        // region just render the text off-canvas and WPF clips it. No visibility
+        // toggle needed.
+        Canvas.SetLeft(_textBlock, localX);
+        Canvas.SetTop(_textBlock, localY);
+        _textBlock.Visibility = Visibility.Visible;
+    }
+
+    private void MakeClickThrough()
+    {
+        _hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+        var extendedStyle = GetWindowLong(_hwnd, GWL_EXSTYLE);
+        // WS_EX_TRANSPARENT: clicks pass through
+        // WS_EX_TOOLWINDOW: not shown in alt-tab
+        // WS_EX_NOACTIVATE: never steals keyboard/mouse focus
+        SetWindowLong(_hwnd, GWL_EXSTYLE, extendedStyle | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE);
+    }
+
+    public void ReassertTopmost()
+    {
+        if (_hwnd != IntPtr.Zero)
+            SetWindowPos(_hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    }
+
+    private double GetDpiScale()
+    {
+        try
+        {
+            using var g = System.Drawing.Graphics.FromHwnd(IntPtr.Zero);
+            return g.DpiX / 96.0;
+        }
+        catch
+        {
+            return 1.0;
+        }
+    }
+
+    #region Win32
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+    private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+    private const uint SWP_NOMOVE = 0x0002;
+    private const uint SWP_NOSIZE = 0x0001;
+    private const uint SWP_NOACTIVATE = 0x0010;
+
+    private const int GWL_EXSTYLE = -20;
+    private const int WS_EX_TRANSPARENT = 0x00000020;
+    private const int WS_EX_TOOLWINDOW = 0x00000080;
+    private const int WS_EX_NOACTIVATE = 0x08000000;
+
+    #endregion
+}

@@ -9,7 +9,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>ConditioningControlPanel</AssemblyName>
     <RootNamespace>ConditioningControlPanel</RootNamespace>
-    <Version>6.1.4</Version>
+    <Version>6.2.2</Version>
     <Company>CodeBambi</Company>
     <Product>Conditioning Control Panel</Product>
     <Description>A professional visual conditioning application with gamification features.</Description>
@@ -57,6 +57,10 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.1.1" ExcludeAssets="all" PrivateAssets="all" />
     <PackageReference Include="MahApps.Metro" Version="2.4.10" />
     <PackageReference Include="MahApps.Metro.IconPacks" Version="5.0.0" />
+    <!-- GPU-friendly 2D renderer for the new Chaos FX particle/glow layer (ChaosSkiaFxOverlay).
+         CPU SKElement path is used for now (reliable on AllowsTransparency layered windows);
+         native libSkiaSharp extracts via IncludeNativeLibrariesForSelfExtract for single-file. -->
+    <PackageReference Include="SkiaSharp.Views.WPF" Version="2.88.8" />
     
     <!-- MVVM Framework -->
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
@@ -64,6 +68,27 @@
     <!-- Audio Control -->
     <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
+
+    <!-- Offline speech recognition (Takeover "repeat after me" mechanic).
+         Vosk = local, closed-grammar STT; native libvosk ships in the package's
+         runtimes/win-x64 and extracts via IncludeNativeLibrariesForSelfExtract for
+         single-file. The acoustic MODEL is NOT in the package — it's dropped into
+         Resources\Models\vosk\ (see Content include below) and resolved at runtime by
+         Services/Speech/SpeechService.cs. No model on disk => SpeechService no-ops.
+         Privacy contract: audio stays on device, never transmitted, never written to disk. -->
+    <PackageReference Include="Vosk" Version="0.3.38" />
+
+    <!-- Dedicated offline wake-word engine for "Hey Bambi" (sherpa-onnx keyword spotting, Apache-2.0,
+         fully local, NO API key). Vosk STT can't reliably spot a custom out-of-vocabulary name (its
+         grammar ctor throws on the OOV token and it falls back to the free recognizer, mis-hearing the
+         name ~half the time). sherpa-onnx KWS is an open-vocabulary spotter: the keyword is given as a
+         subword-token sequence in keywords.txt — no retraining, no dictionary limit. It runs ONLY the
+         wake stage; post-wake command/mantra capture stays on Vosk. The KWS MODEL is a drop-in under
+         Resources\Models\sherpa-kws\ (see that folder's README); absent => the wake loop transparently
+         falls back to the Vosk wake path, so nothing breaks if it isn't installed. The .runtime.win-x64
+         dep carries the native lib. Privacy: identical to Vosk — audio stays on device, never sent. -->
+    <PackageReference Include="org.k2fsa.sherpa.onnx" Version="1.13.3" />
+    <PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x64" Version="1.13.3" />
     <PackageReference Include="OllamaSharp" Version="5.4.16" />
     
     <!-- Logging -->
@@ -149,8 +174,8 @@
          from AppContext.BaseDirectory\Assets\Chaos\{kind}\{id}.png. Staging candidates are
          excluded so only the promoted finals ship. Remove from the default None glob first
          so the no-copy None item doesn't suppress this Content copy. -->
-    <None Remove="assets\Chaos\**\*.png;assets\Chaos\**\*.gif" />
-    <Content Include="assets\Chaos\**\*.png;assets\Chaos\**\*.gif" Exclude="assets\Chaos\**\_staging*\**">
+    <None Remove="assets\Chaos\**\*.png;assets\Chaos\**\*.gif;assets\Chaos\**\*.json" />
+    <Content Include="assets\Chaos\**\*.png;assets\Chaos\**\*.gif;assets\Chaos\**\*.json" Exclude="assets\Chaos\**\_staging*\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
@@ -167,6 +192,12 @@
     </ItemGroup>
   </Target>
 
+
+  <ItemGroup>
+    <!-- Rounded display font (Fredoka, OFL) for the Chaos multiplier hero number. Embedded as a
+         Resource so the pack:// font URI (/Fonts/#Fredoka) resolves in the single-file build. -->
+    <Resource Include="Fonts\Fredoka.ttf" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- App icon -->
@@ -297,6 +328,12 @@
   <ItemGroup>
     <!-- Session completion card images -->
     <Resource Include="Resources\Cards\*.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Bespoke per-quest art (one PNG per quest id), bundled in-app so quests
+         render without any CDN dependency. Loaded via pack:// by quest id. -->
+    <Resource Include="Resources\quests\*.png" />
   </ItemGroup>
 
   <ItemGroup>

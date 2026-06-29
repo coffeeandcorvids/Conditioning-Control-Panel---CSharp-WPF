@@ -44,7 +44,16 @@ public sealed class ChaosSidebarBoon
     public Visibility DescVisibility => string.IsNullOrEmpty(Desc) ? Visibility.Collapsed : Visibility.Visible;
     public Visibility FlavorVisibility => string.IsNullOrEmpty(Flavor) ? Visibility.Collapsed : Visibility.Visible;
     public Visibility ExtraVisibility => string.IsNullOrEmpty(Extra) ? Visibility.Collapsed : Visibility.Visible;
-    public Brush AccentBrush => IsEmptySlot ? EmptyAccent : IsModifier ? ModAccent : IsCurse ? CurseAccent : Level > 0 ? PocketAccent : BoonAccent;
+    public Brush AccentBrush
+    {
+        get
+        {
+            var fallback = IsEmptySlot ? EmptyAccent : IsModifier ? ModAccent : IsCurse ? CurseAccent : Level > 0 ? PocketAccent : BoonAccent;
+            // Payload-based color language: a mapped boon shows its family color; everything else
+            // (empty slots, unmapped mechanics) keeps the category fallback above.
+            return IsEmptySlot ? fallback : ConditioningControlPanel.ChaosBoonColors.BrushForOrDefault(Id, fallback);
+        }
+    }
     public Brush TileBackBrush => IsEmptySlot ? Brushes.Transparent : IsModifier ? ModBack : IsCurse ? CurseBack : Level > 0 ? PocketBack : BoonBack;
     public double TileOpacity => IsEmptySlot ? 0.55 : 1.0;
 
@@ -106,12 +115,25 @@ public enum ChaosDifficulty { Easy, Medium, Hard, Extreme }
 
 public enum ChaosRarity { Common, Uncommon, Rare }
 
+/// <summary>
+/// Which flavour of the Rabbit Hole a run is: the immersive <see cref="Story"/> descent (backdrop,
+/// Madam narrative + story cards, run locked on top, floating avatar hidden) or <see cref="FreeDesktop"/>
+/// free-play (no backdrop/narrative, the run does NOT pin itself above other apps so you keep using
+/// your PC, and the companion avatar floats over the desktop). Chosen per-run at the hub; the in-run
+/// subsystems read <see cref="ChaosModeService.ActiveMode"/> rather than mutating saved settings.
+/// </summary>
+public enum ChaosPlayMode { Story, FreeDesktop }
+
 /// <summary>Knobs that drive a single Chaos run. Built from the Lab card + AppSettings.</summary>
 public sealed class ChaosRunConfig
 {
     public ChaosDifficulty Difficulty { get; set; } = ChaosDifficulty.Easy;
     public int DurationSec { get; set; } = 180;
     public int WaveCount { get; set; } = 5;
+
+    /// <summary>Story (immersive, default) vs Free Desktop (free-play over the real desktop). Drives the
+    /// backdrop, narrative, avatar visibility and z-order at run start. See <see cref="ChaosPlayMode"/>.</summary>
+    public ChaosPlayMode PlayMode { get; set; } = ChaosPlayMode.Story;
 
     // ---- setup-window config ----
     /// <summary>Base resistance is ZERO (2026-06-10): the "It would never work on me..." charm
@@ -550,6 +572,7 @@ public sealed class ChaosRunState : INotifyPropertyChanged
         (boon.IsCurse ? ActiveCurses : ActiveBoons).Add(boon);
         RunPickTiles.Add(new ChaosSidebarBoon
         {
+            Id = boon.Id,   // carry the id so the ribbon tile colors by payload family
             Icon = ChaosArt.Resolve("boons", boon.Id),
             Glyph = boon.IsCurse ? "☠" : "◈",
             Name = boon.Name,

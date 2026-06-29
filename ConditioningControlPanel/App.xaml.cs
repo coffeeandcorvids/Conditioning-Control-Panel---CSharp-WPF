@@ -147,13 +147,25 @@ namespace ConditioningControlPanel
             get
             {
                 var customPath = Settings?.Current?.CustomAssetsPath;
-                if (!string.IsNullOrWhiteSpace(customPath) && Directory.Exists(customPath))
+                if (!string.IsNullOrWhiteSpace(customPath))
                 {
-                    return customPath;
+                    if (Directory.Exists(customPath))
+                    {
+                        return customPath;
+                    }
+                    // A custom path is configured but its folder is gone (e.g. unplugged
+                    // drive). Falling back to the default location is silent data desync —
+                    // surface it once so it's diagnosable in the log (#391).
+                    if (!_warnedMissingCustomAssetsPath)
+                    {
+                        _warnedMissingCustomAssetsPath = true;
+                        Logger?.Warning("CustomAssetsPath '{Path}' does not exist — falling back to default assets folder. Imports/extractions will go to the default location.", customPath);
+                    }
                 }
                 return UserAssetsPath;
             }
         }
+        private static bool _warnedMissingCustomAssetsPath;
 
         /// <summary>
         /// Returns a temp directory for media files (decrypted packs, video downloads, etc.)
@@ -281,6 +293,7 @@ namespace ConditioningControlPanel
         public static Services.Moderation.IModerationCounter ModerationCounter { get; private set; } = null!;
         public static WindowAwarenessService WindowAwareness { get; private set; } = null!;
         public static PatreonService Patreon { get; private set; } = null!;
+        public static SubscribeStarService SubscribeStar { get; private set; } = null!;
         public static UpdateService Update { get; private set; } = null!;
         public static ProfileSyncService ProfileSync { get; private set; } = null!;
         public static LeaderboardService Leaderboard { get; private set; } = null!;
@@ -291,6 +304,10 @@ namespace ConditioningControlPanel
         public static DualMonitorVideoService DualMonitorVideo { get; private set; } = null!;
         public static ScreenMirrorService ScreenMirror { get; private set; } = null!;
         public static AutonomyService Autonomy { get; private set; } = null!;
+        /// <summary>Offline speech recognition (Takeover "repeat after me"). May be unavailable (no model/mic); callers check IsAvailable.</summary>
+        public static Services.Speech.SpeechService Speech { get; private set; } = null!;
+        /// <summary>Offline "Hey Bambi" wake-word spotter (sherpa-onnx KWS, no key). Unavailable until the model is dropped into Resources\Models\sherpa-kws\; the wake loop falls back to Vosk when so.</summary>
+        public static Services.Speech.SherpaWakeService WakeWord { get; private set; } = null!;
         public static InteractionQueueService InteractionQueue { get; private set; } = null!;
         public static ContentPackService ContentPacks { get; private set; } = null!;
         public static CompanionService Companion { get; private set; } = null!;
@@ -310,6 +327,7 @@ namespace ConditioningControlPanel
         public static CatalogueLookupService CatalogueLookup { get; private set; } = null!;
         public static LockdownService Lockdown { get; private set; } = null!;
         public static MantraService Mantra { get; private set; } = null!;
+        public static MantraVoiceService MantraVoice { get; private set; } = null!;
         public static ModService Mods { get; private set; } = null!;
         public static BugReportService BugReport { get; private set; } = null!;
         public static WallpaperService? Wallpaper { get; private set; }
@@ -337,7 +355,7 @@ namespace ConditioningControlPanel
         /// Whether user is logged in with Patreon, Discord, or email (required for progression tracking).
         /// HasCloudIdentity covers email login (has UnifiedId) and restored sessions.
         /// </summary>
-        public static bool IsLoggedIn => (Patreon?.IsAuthenticated == true) || (Discord?.IsAuthenticated == true) || HasCloudIdentity;
+        public static bool IsLoggedIn => (Patreon?.IsAuthenticated == true) || (Discord?.IsAuthenticated == true) || (SubscribeStar?.IsAuthenticated == true) || HasCloudIdentity;
 
         /// <summary>
         /// Whether a conditioning session is currently running. Set by MainWindow.
@@ -393,7 +411,8 @@ namespace ConditioningControlPanel
                 return Settings?.Current?.UserDisplayName
                     ?? Patreon?.DisplayName
                     ?? Discord?.CustomDisplayName
-                    ?? Discord?.DisplayName;
+                    ?? Discord?.DisplayName
+                    ?? SubscribeStar?.DisplayName;
             }
         }
 
@@ -907,6 +926,11 @@ namespace ConditioningControlPanel
             Logger.Information("Application starting v{Version} | workingSet {WS}MB",
                 Services.UpdateService.AppVersion, Environment.WorkingSet / (1024 * 1024));
 
+            // If a Rabbit Hole run was live when the process last died, the native vanish left nothing
+            // in crash.log — but the chaos sentinel file is still on disk. Report+consume it so the
+            // crash self-documents (with last-known context) in this session's log.
+            Services.Chaos.ChaosCrashSentinel.ConsumeAndReport(Logger);
+
             // Hang forensics: the recurring freezes are render-thread deadlocks (Application
             // Hang 1002, nothing in crash.log). The watchdog writes one minidump per session
             // to the logs folder when the dispatcher stops responding for 10s.
@@ -920,6 +944,21 @@ namespace ConditioningControlPanel
             DispatcherUnhandledException += (s, args) =>
             {
                 LogCrashDetails("DISPATCHER", args.Exception);
+
+                // GDI / desktop-heap quota exhaustion while WPF shows a layered window
+                // (heavy effect load, esp. many full-screen subliminal/flash surfaces on a
+                // multi-monitor setup). This is RECOVERABLE — the failed window-show just
+                // drops a frame. Swallow it instead of crashing or wedging the UI.
+                // (#394/#395: "Not enough quota is available to process this command",
+                //  ERROR_NOT_ENOUGH_QUOTA 1816 / ERROR_NO_SYSTEM_RESOURCES 1450.)
+                if (args.Exception is System.ComponentModel.Win32Exception quotaEx &&
+                    (quotaEx.NativeErrorCode == 1816 || quotaEx.NativeErrorCode == 1450 ||
+                     quotaEx.Message.Contains("Not enough quota")))
+                {
+                    try { Logger?.Warning("Window-show quota exhausted (GDI/desktop heap) — dropped an effect frame: {Msg}", quotaEx.Message); } catch { }
+                    args.Handled = true;
+                    return;
+                }
 
                 // Check for rendering thread failure - this is unrecoverable and can cause dialog loops
                 var isRenderFailure = args.Exception.Message.Contains("RENDER") ||
@@ -1033,6 +1072,12 @@ namespace ConditioningControlPanel
 
             // Check if installer set an assets path in registry
             ApplyInstallerAssetsPath();
+
+            // Ensure the custom assets folder + standard subdirs exist. Without this a
+            // configured CustomAssetsPath whose folder is missing makes EffectiveAssetsPath
+            // silently fall back to the default AppData location, so pack extraction and
+            // drag-drop imports land in the wrong place (#391).
+            EnsureCustomAssetsDirectories();
 
             // Clean up stale temp files from previous sessions (crash recovery, leaked files)
             CleanupStaleTempFiles();
@@ -1168,6 +1213,7 @@ namespace ConditioningControlPanel
 
             WindowAwareness = new WindowAwarenessService();
             Patreon = new PatreonService();
+            SubscribeStar = new SubscribeStarService();
             ProfileSync = new ProfileSyncService();
             Leaderboard = new LeaderboardService();
             Haptics = new HapticService(Settings.Current.Haptics);
@@ -1197,6 +1243,8 @@ namespace ConditioningControlPanel
             ScreenOcr = new ScreenOcrService();
             KeywordHighlight = new KeywordHighlightService();
             RemoteControl = new RemoteControlService();
+            // Quest credit: each remote-control command received (Patreon-exclusive quest category).
+            RemoteControl.CommandReceived += (_, _) => { try { Quests?.TrackRemoteCommand(); } catch { } };
             AvailableSubjects = new AvailableSubjectsService();
             CompanionPhrases = new CompanionPhraseService();
             Catalogue = new CatalogueService();
@@ -1225,6 +1273,16 @@ namespace ConditioningControlPanel
 
             // Initialize autonomy service (companion autonomous behavior - Level 100+)
             Autonomy = new AutonomyService();
+
+            // Initialize offline speech recognition (Takeover "repeat after me").
+            // Constructor is a no-op; the mic only opens during an explicit listen window, and the
+            // service reports IsAvailable=false (no model on disk / no capture device) instead of throwing.
+            Speech = new Services.Speech.SpeechService();
+
+            // Initialize the sherpa-onnx wake-word spotter ("Hey Bambi"). No-op ctor; reports
+            // IsAvailable=false until the KWS model is dropped into Resources\Models\sherpa-kws\,
+            // in which case the wake loop prefers it over the Vosk free-recognizer path. No API key.
+            WakeWord = new Services.Speech.SherpaWakeService();
 
             // Initialize content packs service
             ContentPacks = new ContentPackService();
@@ -1282,9 +1340,14 @@ namespace ConditioningControlPanel
             // prior run that was killed mid-lockdown so the panic key isn't stuck off.
             LockdownService.RecoverIfNeeded();
             Lockdown = new LockdownService();
+            // Quest credit: each completed lockdown (Patreon-exclusive quest category).
+            Lockdown.LockdownDeactivated += () => { try { Quests?.TrackLockdownCompleted(); } catch { } };
 
             // Initialize mantra lab service
             Mantra = new MantraService();
+
+            // Spoken Mantras (Takeover voice mechanic) — loads per-mod mantras.json on demand.
+            MantraVoice = new MantraVoiceService();
 
             // Initialize wallpaper override service
             Wallpaper = new WallpaperService();
@@ -1292,6 +1355,10 @@ namespace ConditioningControlPanel
             // Initialize Patreon (validate subscription in background)
             // Then load cloud profile if authenticated
             _ = InitializePatreonAndSyncAsync();
+
+            // Initialize SubscribeStar (validate subscription in background). Shares
+            // the unified account + premium gate with Patreon (see PatreonService gate).
+            _ = SubscribeStar.InitializeAsync();
 
             // Initialize Discord OAuth (validate session in background)
             _ = InitializeDiscordAsync();
@@ -1356,6 +1423,11 @@ namespace ConditioningControlPanel
             // Same problem hits anywhere code does `Application.Current.MainWindow as MainWindow`
             // — popups, feature controls, etc. Expose a stable static reference.
             MainWindowRef = mainWindow;
+
+            // Arm the offline mic features (wake word / push-to-talk) at startup if the user left them
+            // on. They're decoupled from Takeover ("She's Listening" owns them), so they no longer wait
+            // for Takeover to start. No-op unless consent is given and the speech engine is available.
+            try { Autonomy?.RefreshVoiceInputModes(); } catch (Exception ex) { Logger?.Warning(ex, "Startup RefreshVoiceInputModes failed"); }
 
             // First-instance "Open with CCP" dispatch: replay parsed --play/--edit
             // args once MainWindow is fully loaded so the player/editor windows
@@ -1526,17 +1598,26 @@ namespace ConditioningControlPanel
                     ProfileSync.StartHeartbeat();
                 }
 
-                // Start autonomy service if it should be enabled
-                // (might have been skipped during LoadSettings if whitelist wasn't loaded yet)
+                // Re-arm Takeover on launch ONLY if the user opted in (AutonomyResumeOnStartup).
+                // Takeover now always starts OFF by default — this fixes "it stays on after a restart".
+                // The enabled+consent flags persist so the toggle remembers its label, but the service
+                // does not auto-run unless resume-on-startup is explicitly turned on.
                 var s = Settings?.Current;
-                if (s != null && s.AutonomyModeEnabled && s.AutonomyConsentGiven)
+                if (s != null && s.AutonomyResumeOnStartup && s.AutonomyModeEnabled && s.AutonomyConsentGiven)
                 {
                     var hasPatreonAccess = s.PatreonTier >= 1 || Patreon?.IsWhitelisted == true;
                     if (hasPatreonAccess && Autonomy?.IsEnabled != true)
                     {
                         Autonomy?.Start();
-                        Logger?.Information("Started autonomy service after Patreon validation");
+                        Logger?.Information("Re-armed Takeover on startup (AutonomyResumeOnStartup opt-in)");
                     }
+                }
+                else if (s != null && s.AutonomyModeEnabled && !s.AutonomyResumeOnStartup)
+                {
+                    // Clear the stale "enabled" flag so the UI shows OFF on a fresh launch and a
+                    // mid-pulse Stop() from a previous run can't leave anything armed.
+                    s.AutonomyModeEnabled = false;
+                    Logger?.Information("Takeover left OFF on startup (resume-on-startup not opted in)");
                 }
             }
             catch (Exception ex)
@@ -2548,6 +2629,33 @@ Application State:
         }
 
         /// <summary>
+        /// Ensures a configured custom assets folder and its standard subfolders
+        /// (images/videos/wallpapers) exist. The default UserAssetsPath subdirs are
+        /// created unconditionally at startup, but a custom path is only known after
+        /// settings load — and if its folder is missing, EffectiveAssetsPath silently
+        /// falls back to the default location, sending imports/extractions to the wrong
+        /// place even though settings show the custom path (#391).
+        /// </summary>
+        internal static void EnsureCustomAssetsDirectories()
+        {
+            var customPath = Settings?.Current?.CustomAssetsPath;
+            if (string.IsNullOrWhiteSpace(customPath)) return;
+
+            try
+            {
+                // CreateDirectory creates the parent customPath too if absent.
+                Directory.CreateDirectory(Path.Combine(customPath, "images"));
+                Directory.CreateDirectory(Path.Combine(customPath, "videos"));
+                Directory.CreateDirectory(Path.Combine(customPath, "wallpapers"));
+                Logger?.Information("Ensured custom assets directories at {Path}", customPath);
+            }
+            catch (Exception ex)
+            {
+                Logger?.Warning(ex, "Could not create custom assets directories at {Path} — EffectiveAssetsPath will fall back to the default location", customPath);
+            }
+        }
+
+        /// <summary>
         /// Check if the installer set a custom assets path in the registry and apply it.
         /// This allows users to confirm/change their assets folder during installation.
         /// </summary>
@@ -2593,6 +2701,25 @@ Application State:
         protected override void OnExit(ExitEventArgs e)
         {
             Logger?.Information("Application shutting down...");
+
+            // A clean shutdown — even mid-run — is NOT a crash. Clear the chaos sentinel so the next
+            // launch doesn't false-report it as an abnormal exit.
+            try { Services.Chaos.ChaosCrashSentinel.Clear(); } catch { }
+
+            // If the companion is on its own UI thread (AvatarOwnThread), shut its Dispatcher down so the
+            // STA thread's Dispatcher.Run() returns and the thread exits cleanly. Background thread, so it
+            // wouldn't block process exit, but shut it down explicitly. No-op when the avatar shares the
+            // main dispatcher (the guard skips it when avatarDispatcher == the main dispatcher).
+            try
+            {
+                var avatarDispatcher = AvatarWindow?.Dispatcher;
+                if (avatarDispatcher != null && avatarDispatcher != Current?.Dispatcher
+                    && !avatarDispatcher.HasShutdownStarted)
+                {
+                    avatarDispatcher.InvokeShutdown();
+                }
+            }
+            catch (Exception ex) { Logger?.Warning(ex, "Avatar own-thread dispatcher shutdown failed"); }
 
             // Save settings FIRST (before cloud sync) to persist the user's current local state.
             // This prevents cloud sync from overwriting local values with stale data before save.

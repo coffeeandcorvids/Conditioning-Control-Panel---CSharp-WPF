@@ -19,6 +19,41 @@ namespace ConditioningControlPanel.Services.Chaos;
 /// </summary>
 public sealed class ChaosModeService
 {
+    /// <summary>Which mode the live (or most recent) run is. Defaults to Story so hub-side narrative
+    /// behaves as before. Set at <see cref="StartRun"/>, reset to Story at <see cref="CleanupAfterRun"/>.
+    /// The backdrop, narrative director, avatar and z-order helpers read this instead of the user's
+    /// saved <c>NarrativeModeEnabled</c> so a Free Desktop run never clobbers their Story settings.</summary>
+    public static ChaosPlayMode ActiveMode { get; private set; } = ChaosPlayMode.Story;
+
+    /// <summary>Master switch for the Madam's Story descent. While <c>false</c> the Lab-card Story
+    /// option is disabled, every run is forced to <see cref="ChaosPlayMode.FreeDesktop"/>, and the
+    /// narrative/backdrop/avatar-hide never engage — i.e. the game plays exactly as it did before
+    /// story support was added. Flip to <c>true</c> once real story content exists to bring Story
+    /// mode + the Madam back. (Reversible single switch — no other code needs to change.)
+    /// static readonly (not const) so the guards don't fold to unreachable-code warnings.</summary>
+    public static readonly bool StoryModeEnabled = false;
+
+    /// <summary>The play mode chosen on the Lab card. The pick moved here from the in-hub picker, so
+    /// this is the single source of truth that <see cref="StartRun"/> reads. Defaults to Free Desktop
+    /// (the pre-Story behaviour); <see cref="StartRun"/> forces Free Desktop anyway while
+    /// <see cref="StoryModeEnabled"/> is false.</summary>
+    public static ChaosPlayMode SelectedPlayMode { get; set; } = ChaosPlayMode.FreeDesktop;
+
+    /// <summary>True only in a Free Desktop run: the run must NOT pin itself above other apps, so the
+    /// per-tick topmost re-assertion stands down and chaos windows are born non-topmost.</summary>
+    public static bool IsDesktopMode => ActiveMode == ChaosPlayMode.FreeDesktop;
+
+    /// <summary>In-run Madam narrative + story cards fire only in Story mode AND when the user setting is
+    /// on. Free Desktop runs are silent regardless of the setting. (Hub-side greetings still honor the
+    /// raw setting — there is no run mode chosen yet at the hub.)</summary>
+    public static bool NarrativeActive =>
+        App.Settings?.Current?.NarrativeModeEnabled == true && ActiveMode == ChaosPlayMode.Story;
+
+    /// <summary>True while a Rabbit Hole run is on screen (countdown → results dismissed). Other
+    /// services gate run-hostile behavior on this — e.g. subliminals suppress their focus-steal so a
+    /// flash doesn't yank foreground off the bubble-click interaction mid-run.</summary>
+    public bool IsRunActive => _active;
+
     private ChaosRunState? _state;
     private ChaosHudWindow? _hud;
     private ChaosOverlayWindow? _overlay;
@@ -26,6 +61,10 @@ public sealed class ChaosModeService
     private DispatcherTimer? _runTimer;
     private DispatcherTimer? _spawnTimer;
     private int _chromeRaiseTick;   // throttles the per-tick chrome topmost re-assert (see RunTick)
+    private int _memSampleTick;     // throttles the [CHAOSMEM] telemetry sample (~every 15s, see RunTick)
+    private long _peakNativeMb;     // high-water native (~workingSet-managed) MB this run — fed to the crash sentinel
+    private TimeSpan _lastRenderTs = TimeSpan.MinValue;   // [CHAOSHITCH] frame-gap detector (see OnChaosRendering)
+    private int _hitchCount;
     private bool _active;        // a run session exists (countdown → results dismissed)
     private bool _spawning;      // GO fired, bubbles spawning, not yet ended
     private bool _paused;        // boon draft on screen (clock + spawns held)
@@ -38,6 +77,7 @@ public sealed class ChaosModeService
     private int _waveDetonations; // per-loop count — a zero-detonation loop doubles its gold tip
     private int _lastComboBigFired;   // highest ComboBig threshold already fired this combo streak
     private int _lastActFired = 1;    // last ActIndex an ActChanged bark fired for
+    private DateTime _lastNoFocusAnnounceUtc = DateTime.MinValue;   // throttles the big "NO FOCUS" banner so mashed grabs don't stack a queue
 
     // ---- "start small": named tunables (conservative defaults; no magic numbers in logic) ----
     /// <summary>High-combo thresholds that fire ChaosComboBig once per crossing (edge-detected).</summary>
@@ -259,6 +299,23 @@ public sealed class ChaosModeService
         CloseLoadoutSidebar();   // the Warren-phase sidebar hands off to the real run HUD
         var cfg = config ?? ChaosRunConfig.FromSettings();
 
+        // Lock in the play mode BEFORE any run window is built — the chaos windows read
+        // ChaosWindowZ.BornTopmost in their constructors, so this must be set first.
+        // The mode is picked on the Lab card (SelectedPlayMode), not per-config — the in-hub
+        // picker was retired. While Story is disabled (no story content yet) we force Free
+        // Desktop, so the Madam narrative/backdrop/avatar-hide never engage.
+        var resolvedMode = StoryModeEnabled ? SelectedPlayMode : ChaosPlayMode.FreeDesktop;
+        cfg.PlayMode = resolvedMode;
+        ActiveMode = resolvedMode;
+        ChaosWindowZ.DesktopMode = resolvedMode == ChaosPlayMode.FreeDesktop;
+        // Pin the whole layer topmost (default) regardless of mode — Free Desktop keeps its other
+        // traits but no longer sinks behind whatever window you click. Set BEFORE any chaos window
+        // is created (they read ChaosWindowZ.BornTopmost in their constructors).
+        ChaosWindowZ.PinTopmost = App.Settings?.Current?.ChaosPinOnTop ?? true;
+        // Free Desktop is meant for keeping your PC usable, so soften intrusive payloads (no fullscreen
+        // video yanking you out of what you're doing). Story keeps whatever the run config said.
+        if (resolvedMode == ChaosPlayMode.FreeDesktop) cfg.AmbientMode = true;
+
         try
         {
             App.Bubbles?.PauseAndClear();
@@ -340,6 +397,7 @@ public sealed class ChaosModeService
         App.Overlay?.WarmSpiralCache();   // pre-decode the spiral off-thread so its first show doesn't hitch
         ChaosEffectBannerOverlay.EnsureCreated();   // birth the banner window NOW, not mid-chaos
         ChaosFieldFxOverlay.EnsureCreated();        // ripples/residue/trails are drafted mid-run — pre-create always
+        ChaosSkiaFxOverlay.EnsureCreated();         // PROTOTYPE Skia FX layer (rabbit trail + caller glow); self-gates on AppSettings flag
 
         // The run-pick ribbon along the top: shows ONLY mantras/sins drafted during THIS descent,
         // in pick order, beside the clock. Bind to this run's collection so each drafted card lands
@@ -379,7 +437,7 @@ public sealed class ChaosModeService
         // Pocket Watch: birth the wave-countdown window NOW (keep-alive contract — never mid-run).
         if (_state.ShowWaveTimer) ChaosWaveTimerOverlay.EnsureCreated();
         // Rabbit Caller equipped: pre-create the cursor-glow halo for the summon-at-click.
-        if (ChaosMeta.IsBoonActive("rabbit_caller")) ChaosCursorGlowOverlay.EnsureCreated();
+        if (ChaosMeta.IsBoonActive("rabbit_caller") && !ChaosSkiaFxOverlay.Enabled) ChaosCursorGlowOverlay.EnsureCreated();
         if (ChaosMeta.IsBoonActive("e_stim")) ChaosEStimOverlay.EnsureCreated();
         // VibePopping equipped: pre-create the pointer glow + trail for the buzz window.
         if (ChaosMeta.IsBoonActive("vibe_popping")) ChaosVibeTrailOverlay.EnsureCreated();
@@ -447,6 +505,13 @@ public sealed class ChaosModeService
         _pendingDepthVCard = false;
         ChaosBackdropService.Show(_state.ActIndex);
         ChaosNarrativeHooks.OnMoment("run_start", BuildNarrativeCtx());
+
+        // Arm crash diagnostics: fresh peak, baseline sample, and the sentinel goes live for THIS run.
+        _peakNativeMb = 0; _memSampleTick = 0;
+        LogMemSample("run-start");
+        // Arm the frame-hitch detector for this run.
+        _lastRenderTs = TimeSpan.MinValue; _hitchCount = 0;
+        System.Windows.Media.CompositionTarget.Rendering += OnChaosRendering;
     }
 
     /// <summary>
@@ -659,8 +724,14 @@ public sealed class ChaosModeService
     public void RaiseGameLayerAboveVideo()
     {
         if (!_spawning) return;
+        // Only re-raise while the layer is pinned. If the player opted out of pinning, re-raising
+        // would fight them bringing a browser/work window forward.
+        if (!ChaosWindowZ.PinTopmost) return;
         // Bottom of the gameplay band: ambient FX that read fine UNDER the bubbles.
         try { ChaosFieldFxOverlay.RaiseActive(); } catch { }
+        try { ChaosSkiaFxOverlay.RaiseActive(); } catch { }
+        // The shared bubble host (when enabled) sits just above the ambient FX, below the chrome.
+        try { ChaosBubbleHostOverlay.RaiseActive(); } catch { }
         try { ChaosPopText.RaiseActive(); } catch { }
         try { ChaosDvdOverlay.RaiseActive(); } catch { }
         try { ChaosEffectBannerOverlay.RaiseActive(); } catch { }
@@ -696,6 +767,9 @@ public sealed class ChaosModeService
     private void KeepChromeTopmost()
     {
         if (!_spawning) return;
+        // If the player opted out of pinning, skip the topmost re-assertion entirely (this also
+        // avoids BringAllToFront yanking the bubbles back over the foreground app).
+        if (!ChaosWindowZ.PinTopmost) return;
         // Chrome first (lowest of the pinned set).
         try { _hud?.RaiseToTopmost(); } catch { }
         try { _fx?.RaiseToTopmost(); } catch { }
@@ -733,6 +807,73 @@ public sealed class ChaosModeService
 
     // ============================ run loop ============================
 
+    /// <summary>
+    /// One memory snapshot to the app log (gated on <c>ChaosMemTelemetry</c>) AND a refresh of the
+    /// crash sentinel. Native~ = workingSet - managed; if it climbs run-over-run while managed stays
+    /// flat, the random mid-play crash is the residual native OOM. If native stays flat, the vanish is
+    /// an access violation (prime suspect: the Skia FX raster layer) — flip Enhanced FX off to confirm.
+    /// </summary>
+    private void LogMemSample(string phase)
+    {
+        try
+        {
+            var proc = System.Diagnostics.Process.GetCurrentProcess();
+            long wsMb = proc.WorkingSet64 / (1024 * 1024);
+            long privMb = proc.PrivateMemorySize64 / (1024 * 1024);
+            long managedMb = GC.GetTotalMemory(false) / (1024 * 1024);
+            long nativeMb = Math.Max(0, wsMb - managedMb);
+            if (nativeMb > _peakNativeMb) _peakNativeMb = nativeMb;
+            int bubbles = App.Bubbles?.ActiveBubbles ?? 0;
+            double elapsed = _state?.ElapsedSec ?? 0;
+
+            long gifDecodes = App.Flash?.GifDecodes ?? 0;
+            long staticDecodes = App.Flash?.StaticDecodes ?? 0;
+
+            if (App.Settings?.Current?.ChaosMemTelemetry == true)
+                App.Logger?.Information(
+                    "[CHAOSMEM] {Phase} t={Elapsed:F0}s ws={Ws}MB priv={Priv}MB managed={Managed}MB native~={Native}MB peakNative={Peak}MB bubbles={Bubbles} gifDecodes={Gif} staticDecodes={Static} skiaFx={Skia}",
+                    phase, elapsed, wsMb, privMb, managedMb, nativeMb, _peakNativeMb, bubbles,
+                    gifDecodes, staticDecodes, App.Settings?.Current?.ChaosSkiaFxEnabled);
+
+            // Refresh the dirty-shutdown sentinel so a native vanish self-reports this run's peak
+            // native memory + how far it got + which FX path was live.
+            ChaosCrashSentinel.Mark(BuildSentinelContext(elapsed, bubbles));
+        }
+        catch { }
+    }
+
+    private string BuildSentinelContext(double elapsed, int bubbles)
+    {
+        int monitors = 1;
+        try { monitors = System.Windows.Forms.Screen.AllScreens.Length; } catch { }
+        var s = App.Settings?.Current;
+        return string.Format(System.Globalization.CultureInfo.InvariantCulture,
+            "v{0} mode={1} skiaFx={2} pinTop={3} difficulty={4} monitors={5} elapsed={6:F0}s peakNative={7}MB bubbles={8}",
+            Services.UpdateService.AppVersion, ActiveMode, s?.ChaosSkiaFxEnabled, s?.ChaosPinOnTop,
+            _state?.Config?.Difficulty, monitors, elapsed, _peakNativeMb, bubbles);
+    }
+
+    /// <summary>Per-frame render-gap detector (gated on ChaosMemTelemetry). CompositionTarget.Rendering
+    /// fires once per composed frame; a gap well over the ~16ms budget means the single WPF render thread
+    /// stalled — a dropped frame felt by EVERY window (avatar, cursor glow, bouncing text) at once. Logs
+    /// the gap + live bubble count so we can correlate hitches with spawns/density before optimizing.</summary>
+    private void OnChaosRendering(object? sender, EventArgs e)
+    {
+        if (e is not System.Windows.Media.RenderingEventArgs re) return;
+        var ts = re.RenderingTime;
+        if (_lastRenderTs != TimeSpan.MinValue)
+        {
+            double gapMs = (ts - _lastRenderTs).TotalMilliseconds;
+            if (gapMs > 40.0 && App.Settings?.Current?.ChaosMemTelemetry == true)
+            {
+                _hitchCount++;
+                App.Logger?.Information("[CHAOSHITCH] frame gap {Gap:F0}ms bubbles={Bubbles} (#{N} this run)",
+                    gapMs, App.Bubbles?.ActiveBubbles ?? 0, _hitchCount);
+            }
+        }
+        _lastRenderTs = ts;
+    }
+
     private void RunTick(object? sender, EventArgs e)
     {
         if (!_spawning || _state == null || _paused || _manualPaused) return;
@@ -761,6 +902,9 @@ public sealed class ChaosModeService
         _state.ElapsedSec = elapsed;
         _state.Heat = Math.Max(0, _state.Heat - 0.0015);
         UpdateHeatTint();
+
+        // Crash telemetry + sentinel refresh: ~every 15s (RunTick fires 4x/s → 60 ticks).
+        if (++_memSampleTick >= 60) { _memSampleTick = 0; LogMemSample("tick"); }
 
         // Focus-bar hover cue: while the hand rests on a live bubble, the bar brightens —
         // "check your fuel first" lands at the exact moment of the decision. 4x/s poll.
@@ -1753,6 +1897,16 @@ public sealed class ChaosModeService
                 ChaosSfx.Play("focus_empty", 0.55f);
                 Pulse(Color.FromRgb(255, 80, 80), 0.22);
                 _hud?.FlashFocusBar();   // point the eye at the empty bar itself
+                // The small bubble-side "NO FOCUS" label reads as "popped for no reason" to a new
+                // player — say WHY loudly, center-screen, so the lesson lands. Throttled: a flurry
+                // of mis-grabs shouldn't stack a queue of identical banners.
+                if ((DateTime.UtcNow - _lastNoFocusAnnounceUtc).TotalSeconds >= 1.5)
+                {
+                    _lastNoFocusAnnounceUtc = DateTime.UtcNow;
+                    // No artKey → the announcer renders only this single 60px line (subText is
+                    // dropped without banner art), so the whole message lives in the headline.
+                    ChaosAnnouncerOverlay.Announce("✋ NO FOCUS TO DEFUSE", ChaosAnnounceKind.Temptation, holdMs: 1300);
+                }
                 _state.PushEvent("✋ no focus — it triggers in your grip");
                 if (!ChaosMeta.State.SeenBarkDefuseNoFocus)
                 {
@@ -2041,8 +2195,14 @@ public sealed class ChaosModeService
         if (name.Length > 0) ChaosSfx.Play(name, 0.45f);
     }
 
+    // What the desktop-friendly (ambient) mode soft-remaps to a cascade/text instead of firing.
+    // NOTE: Video is intentionally NOT here. Story mode is disabled, so every run is forced to
+    // FreeDesktop (AmbientMode=true) — if Video were remapped, video bubbles could NEVER play a
+    // video (they'd always fizzle to a cascade/text). Players who don't want videos just disable
+    // the "video" bubble in the pool toggles. HT links stay softened: they hijack the embedded
+    // browser fullscreen and have no equivalent opt-out.
     private static bool IsIntrusivePayload(EffectBubblePayloadKind k) =>
-        k == EffectBubblePayloadKind.Video || k == EffectBubblePayloadKind.HtLink;
+        k == EffectBubblePayloadKind.HtLink;
 
     private static readonly Random _ambientRng = new();
 
@@ -2246,6 +2406,9 @@ public sealed class ChaosModeService
         {
             _rippleHook = new Services.GlobalMouseHook();
             _rippleHook.RightDown = OnRippleRightDown;
+            // Shared-host bubble pops also ride this hook (self-gates on ChaosBubbleSharedHost): on a
+            // left-click over a live bubble it pops + swallows; everywhere else it passes through.
+            _rippleHook.LeftDown = px => App.Bubbles?.OnSharedHostLeftDown(px) ?? false;
             _rippleHook.Start();
         }
         catch (Exception ex) { App.Logger?.Debug("Chaos ripple hook: {E}", ex.Message); }
@@ -2548,10 +2711,13 @@ public sealed class ChaosModeService
         _rabbitCallPending = rabbits;
         _rabbitCallMaxed = maxed;
         _rabbitAimPrevDown = true;   // swallow the press that armed us (HUD/toy-button click)
-        ChaosCursorGlowOverlay.Arm();
+        if (ChaosSkiaFxOverlay.Enabled) ChaosSkiaFxOverlay.ArmCursorGlow(); else ChaosCursorGlowOverlay.Arm();
         if (_rabbitAimTimer == null)
         {
-            _rabbitAimTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(25) };
+            // Render priority (not the DispatcherTimer default of Background, which starves under load
+            // and made the cursor glow "stick"/skip frames whenever a chaos event spiked the UI thread).
+            _rabbitAimTimer = new System.Windows.Threading.DispatcherTimer(System.Windows.Threading.DispatcherPriority.Render)
+            { Interval = TimeSpan.FromMilliseconds(16) };
             _rabbitAimTimer.Tick += RabbitAimTick;
         }
         _rabbitAimTimer.Start();
@@ -2562,7 +2728,7 @@ public sealed class ChaosModeService
     {
         _rabbitCallPending = 0;
         _rabbitAimTimer?.Stop();
-        ChaosCursorGlowOverlay.Disarm();
+        if (ChaosSkiaFxOverlay.Enabled) ChaosSkiaFxOverlay.DisarmCursorGlow(); else ChaosCursorGlowOverlay.Disarm();
     }
 
     private void RabbitAimTick(object? sender, EventArgs e)
@@ -2575,7 +2741,7 @@ public sealed class ChaosModeService
                 return;
             }
             if (!GetCursorPos(out var cur)) return;
-            ChaosCursorGlowOverlay.MoveToPx(cur.X, cur.Y);
+            if (ChaosSkiaFxOverlay.Enabled) ChaosSkiaFxOverlay.MoveCursorGlowToPx(cur.X, cur.Y); else ChaosCursorGlowOverlay.MoveToPx(cur.X, cur.Y);
 
             bool down = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
             bool pressed = down && !_rabbitAimPrevDown;
@@ -2871,6 +3037,7 @@ public sealed class ChaosModeService
         try { ChaosVibeTrailOverlay.CloseActive(); } catch { }
         try { ChaosEStimOverlay.CloseActive(); } catch { }
         try { ChaosFieldFxOverlay.CloseActive(); } catch { }
+        try { ChaosSkiaFxOverlay.CloseActive(); } catch { }
         try { ChaosPopText.ShutdownPool(); } catch { }
         try { _fx?.Close(); } catch { }
         if (_overlay != null)
@@ -2886,6 +3053,9 @@ public sealed class ChaosModeService
     private void EndRun()
     {
         if (!_spawning || _state == null) return;
+        LogMemSample("run-end");
+        ChaosCrashSentinel.Clear();   // the field is coming down — a vanish after here isn't a run crash
+        try { System.Windows.Media.CompositionTarget.Rendering -= OnChaosRendering; } catch { }
         bool ranFullCourse = _state.ElapsedSec >= _state.RunDurationSec;
         // The final loop ends at the run clock, not a wave boundary — its tip lands here
         // (full-course descents only; a quit mid-fall forfeits the loop's tip).
@@ -2916,6 +3086,7 @@ public sealed class ChaosModeService
         try { ChaosVibeTrailOverlay.CloseActive(); } catch { }
         try { ChaosEStimOverlay.CloseActive(); } catch { }
         try { ChaosFieldFxOverlay.CloseActive(); } catch { }
+        try { ChaosSkiaFxOverlay.CloseActive(); } catch { }
         try { ChaosPopText.ShutdownPool(); } catch { }
         try { _fx?.Close(); } catch { }
         _fx = null;
@@ -2986,6 +3157,8 @@ public sealed class ChaosModeService
 
     private void CleanupAfterRun()
     {
+        ChaosCrashSentinel.Clear();   // every run teardown path funnels through here — disarm the sentinel
+        try { System.Windows.Media.CompositionTarget.Rendering -= OnChaosRendering; } catch { }
         if (App.Video != null) App.Video.VideoStarted -= OnVideoStartedDuringRun;   // belt-and-suspenders (mid-run close)
         if (App.Video != null) App.Video.VideoEnded -= OnVideoEndedDuringRun;
         StopKeyHook();   // idempotent; covers the overlay-closed-mid-run path
@@ -2999,6 +3172,7 @@ public sealed class ChaosModeService
         try { ChaosVibeTrailOverlay.CloseActive(); } catch { }
         try { ChaosEStimOverlay.CloseActive(); } catch { }
         try { ChaosFieldFxOverlay.CloseActive(); } catch { }
+        try { ChaosSkiaFxOverlay.CloseActive(); } catch { }
         try { ChaosBackdropService.CloseActive(); } catch { }
         try { ChaosPopText.ShutdownPool(); } catch { }
         App.AvatarWindow?.SetChaosRunActive(false);   // restore the avatar's normal attached z-order
@@ -3014,6 +3188,10 @@ public sealed class ChaosModeService
         _spawning = false;
         _paused = false;
         _manualPaused = false;
+        // Back to the immersive default so hub-side narrative + a fresh run behave as Story until a
+        // run explicitly opts into Free Desktop again.
+        ActiveMode = ChaosPlayMode.Story;
+        ChaosWindowZ.DesktopMode = false;
         _lessonCardPaused = false;
         _lessonCardsAfterDraft = false;
         _pendingLessonCards.Clear();

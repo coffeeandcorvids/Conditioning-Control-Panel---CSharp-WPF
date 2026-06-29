@@ -899,6 +899,30 @@ namespace ConditioningControlPanel.Models
             set { _backgroundMusicEnabled = value; OnPropertyChanged(); }
         }
 
+        private bool _browserVideoMuted = false;
+        /// <summary>
+        /// When true, the integrated browser's audio (BambiCloud / HypnoTube video)
+        /// is muted via CoreWebView2.IsMuted. Lets users run their own audio
+        /// alongside CCP without the browser video doubling on top.
+        /// </summary>
+        public bool BrowserVideoMuted
+        {
+            get => _browserVideoMuted;
+            set { _browserVideoMuted = value; OnPropertyChanged(); }
+        }
+
+        private string? _rememberedConfigJson;
+        /// <summary>
+        /// One-slot snapshot for the header "Remember" button — the conditioning
+        /// config (as a Preset) plus the premium toggle states + browser mute.
+        /// Null/empty = nothing remembered yet. Progression/XP are never captured.
+        /// </summary>
+        public string? RememberedConfigJson
+        {
+            get => _rememberedConfigJson;
+            set { _rememberedConfigJson = value; OnPropertyChanged(); }
+        }
+
         // MMDevice ID of the playback endpoint the user wants CCP audio routed to.
         // Empty = system default. Streaming use case: route CCP to a private headset
         // while the stream's default endpoint stays clean.
@@ -1444,6 +1468,20 @@ namespace ConditioningControlPanel.Models
             set { _dualMonitorEnabled = value; OnPropertyChanged(); }
         }
 
+        private bool _fillAllMonitorsWithVideo;
+        /// <summary>
+        /// On 3+ monitors, give every secondary screen its own video decoder. Each LibVLC
+        /// decoder is a full decode pass, so 3+ independent decoders lag high-res rigs (#389).
+        /// Default off: with DualMonitor on, 1–2 monitor setups still fill every screen, but
+        /// 3+ monitors decode the primary only unless the user opts in here. No effect on
+        /// 1–2 monitor setups.
+        /// </summary>
+        public bool FillAllMonitorsWithVideo
+        {
+            get => _fillAllMonitorsWithVideo;
+            set { _fillAllMonitorsWithVideo = value; OnPropertyChanged(); }
+        }
+
         private bool _restrictGazeContentToCalibratedScreen = true;
         /// <summary>
         /// When enabled (and a webcam calibration exists), all gaze-reactive
@@ -1596,6 +1634,28 @@ namespace ConditioningControlPanel.Models
         {
             get => _deeperSubmissions;
             set { _deeperSubmissions = value ?? new Dictionary<string, DeeperSubmissionRecord>(); OnPropertyChanged(); }
+        }
+
+        // Session catalogue submissions, keyed by the canonical .session.json file
+        // path (custom sessions are file-backed). Drives the share status badge +
+        // accepted notification. See DeeperSubmissionRecord / MainWindow.CatalogueSubmissions.
+        private Dictionary<string, DeeperSubmissionRecord> _catalogueSessionSubmissions = new();
+        [JsonProperty]
+        public Dictionary<string, DeeperSubmissionRecord> CatalogueSessionSubmissions
+        {
+            get => _catalogueSessionSubmissions;
+            set { _catalogueSessionSubmissions = value ?? new Dictionary<string, DeeperSubmissionRecord>(); OnPropertyChanged(); }
+        }
+
+        // Preset catalogue submissions, keyed by the in-memory preset Id (presets
+        // live in UserPresets, not on disk). Drives the share status badge +
+        // accepted notification.
+        private Dictionary<string, DeeperSubmissionRecord> _cataloguePresetSubmissions = new();
+        [JsonProperty]
+        public Dictionary<string, DeeperSubmissionRecord> CataloguePresetSubmissions
+        {
+            get => _cataloguePresetSubmissions;
+            set { _cataloguePresetSubmissions = value ?? new Dictionary<string, DeeperSubmissionRecord>(); OnPropertyChanged(); }
         }
 
         private bool _runOnStartup = false;
@@ -2021,7 +2081,20 @@ namespace ConditioningControlPanel.Models
         public int BubblesFrequency
         {
             get => _bubblesFrequency;
-            set { _bubblesFrequency = Math.Clamp(value, 1, 15); OnPropertyChanged(); }
+            set { _bubblesFrequency = Math.Clamp(value, 1, 60); OnPropertyChanged(); }
+        }
+        private bool _bubbleSharedHost = false;
+        /// <summary>Render the ambient dashboard bubbles as visuals on ONE shared click-through host
+        /// window (Canvas-positioned, pops via the global mouse hook) instead of one top-level layered
+        /// Window per bubble — the same hyper-optimized path the chaos field uses (see
+        /// <see cref="ChaosBubbleSharedHost"/>). The per-window path repositions every bubble via
+        /// SetWindowPos each frame, which saturates the UI thread and makes clicks register late under a
+        /// dense field (raised spawn rate / higher concurrent cap). Default OFF until proven, exactly how
+        /// the chaos host shipped; falls back to the proven per-window path when off.</summary>
+        public bool BubbleSharedHost
+        {
+            get => _bubbleSharedHost;
+            set { _bubbleSharedHost = value; OnPropertyChanged(); }
         }
         private int _bubblesVolume = 50;
         public int BubblesVolume
@@ -2040,6 +2113,44 @@ namespace ConditioningControlPanel.Models
         {
             get => _bubblesClickable;
             set { _bubblesClickable = value; OnPropertyChanged(); }
+        }
+
+        // ---- Trigger Bubbles (ambient bubbles that fire a Chaos effect on pop) ----
+        private bool _bubbleTriggersEnabled = false;
+        public bool BubbleTriggersEnabled
+        {
+            get => _bubbleTriggersEnabled;
+            set { _bubbleTriggersEnabled = value; OnPropertyChanged(); }
+        }
+        private int _bubbleTriggerChance = 10;   // percent of spawns that carry an effect
+        public int BubbleTriggerChance
+        {
+            get => _bubbleTriggerChance;
+            set { _bubbleTriggerChance = Math.Clamp(value, 0, 50); OnPropertyChanged(); }
+        }
+        private int _bubbleSpeedBoost = 0;   // 0..500 % extra travel speed for on-screen bubbles
+        public int BubbleSpeedBoost
+        {
+            get => _bubbleSpeedBoost;
+            set { _bubbleSpeedBoost = Math.Clamp(value, 0, 500); OnPropertyChanged(); }
+        }
+        // Which effect types are in the pool (equal odds among the picked ids).
+        // Ids map to ChaosBubbleVariants ("htlink" == Cascade/Gif Rain); "glitch" is the
+        // full-screen GIF wash faced with glitch.png — built dashboard-side, not a chaos variant.
+        private List<string> _bubbleTriggerVariants = new()
+            { "flash", "subliminal", "pink", "spiral", "glitch", "htlink", "video" };
+        public List<string> BubbleTriggerVariants
+        {
+            get => _bubbleTriggerVariants;
+            set { _bubbleTriggerVariants = value ?? new List<string>(); OnPropertyChanged(); }
+        }
+        // Easter egg: when an effect bubble lingers >4s, a 10% roll sends the companion to glide over,
+        // narrate the effect, and pop it for you (50% louder). Gated under BubbleTriggersEnabled.
+        private bool _bubbleAvatarEggEnabled = true;
+        public bool BubbleAvatarEggEnabled
+        {
+            get => _bubbleAvatarEggEnabled;
+            set { _bubbleAvatarEggEnabled = value; OnPropertyChanged(); }
         }
 
         // ---- Chaos Mode (effect-bubbles roguelite, Lab) ----
@@ -2091,11 +2202,91 @@ namespace ConditioningControlPanel.Models
             get => _chaosScreenShakeEnabled;
             set { _chaosScreenShakeEnabled = value; OnPropertyChanged(); }
         }
+        private bool _chaosHudOnRight;
+        /// <summary>Park the Rabbit Hole HUD sidebar on the RIGHT edge of the screen instead of the left.</summary>
+        public bool ChaosHudOnRight
+        {
+            get => _chaosHudOnRight;
+            set { _chaosHudOnRight = value; OnPropertyChanged(); }
+        }
         private bool _chaosColorFlashesEnabled = true;
         public bool ChaosColorFlashesEnabled
         {
             get => _chaosColorFlashesEnabled;
             set { _chaosColorFlashesEnabled = value; OnPropertyChanged(); }
+        }
+        private bool _chaosSkiaFxEnabled = true;
+        /// <summary>A/B flag for the Skia GPU-style FX prototype (ChaosSkiaFxOverlay): when on, the
+        /// rabbit trail + Rabbit-Caller cursor glow render as an additive bloomed particle field
+        /// instead of the legacy WPF ellipse pool. Off falls back to the old overlays.</summary>
+        public bool ChaosSkiaFxEnabled
+        {
+            get => _chaosSkiaFxEnabled;
+            set { _chaosSkiaFxEnabled = value; OnPropertyChanged(); }
+        }
+        private bool _chaosMenuMusicMuted;
+        /// <summary>Persisted mute toggle for the Rabbit Hole main-menu soundtrack (menu_theme.mp3).</summary>
+        public bool ChaosMenuMusicMuted
+        {
+            get => _chaosMenuMusicMuted;
+            set { _chaosMenuMusicMuted = value; OnPropertyChanged(); }
+        }
+        private bool _chaosBubbleSharedHost = true;
+        /// <summary>Default ON (proven win): render all chaos bubbles as visuals on ONE shared
+        /// click-through host window (Canvas-positioned) instead of one top-level layered Window per
+        /// bubble. The per-bubble-window model repositions every bubble via SetWindowPos each frame,
+        /// which saturates the UI thread and makes clicks register late under a dense field. With the
+        /// host on, pops are detected via the global mouse hook (swallow on hit) instead of WPF events,
+        /// so they're immune to that starvation. Falls back to the proven per-window path when off.</summary>
+        public bool ChaosBubbleSharedHost
+        {
+            get => _chaosBubbleSharedHost;
+            set { _chaosBubbleSharedHost = value; OnPropertyChanged(); }
+        }
+        private bool _chaosDvdSharedHost = true;
+        /// <summary>Default ON (proven win): render the DVD bouncing-text logos (Porn DVD /
+        /// Intrusive Thoughts / Casting Couch) as cheap Canvas children of ONE shared click-through host
+        /// window instead of one top-level layered Window per logo. The per-logo-window model repositions
+        /// every logo via SetWindowPos each frame; on a split (up to ~16 logos at once) that storm
+        /// saturates the UI thread and freezes the companion avatar. With the host on, logos move via
+        /// Canvas.SetLeft/Top (batched in one render pass). Spanker-clickable logos keep the per-window
+        /// path so the smack still hit-tests. Falls back to the proven per-window path when off.</summary>
+        public bool ChaosDvdSharedHost
+        {
+            get => _chaosDvdSharedHost;
+            set { _chaosDvdSharedHost = value; OnPropertyChanged(); }
+        }
+        private bool _avatarOwnThread;
+        /// <summary>EXPERIMENTAL A/B (default OFF): run the AI companion (AvatarTubeWindow) on its OWN
+        /// dedicated UI thread + Dispatcher instead of sharing the main thread. Its float/breathing/
+        /// typewriter/pose timers then can't be queued behind chaos's UI work, so the companion keeps
+        /// animating + typing while a chaos run is busy (the "avatar stutters during chaos" symptom).
+        /// Caveat: WPF's render thread is still process-wide, so it's smoother, not perfectly immune.
+        /// Falls back to the proven same-thread path when off. Needs an attached-mode play-test.</summary>
+        public bool AvatarOwnThread
+        {
+            get => _avatarOwnThread;
+            set { _avatarOwnThread = value; OnPropertyChanged(); }
+        }
+        private bool _chaosMemTelemetry = true;
+        /// <summary>Diagnostic: write a [CHAOSMEM] working-set / native-memory sample to the app log
+        /// every ~15s during a run (plus run-start/run-end). Pairs with the dirty-shutdown sentinel to
+        /// catch the random mid-play native crash on tester machines — the log tail shows whether native
+        /// memory climbed run-over-run (OOM) or stayed flat (an access violation, e.g. the Skia layer).
+        /// Default on while we hunt the crash; cheap (one line / 15s). Turn off once it's diagnosed.</summary>
+        public bool ChaosMemTelemetry
+        {
+            get => _chaosMemTelemetry;
+            set { _chaosMemTelemetry = value; OnPropertyChanged(); }
+        }
+        private bool _chaosPinOnTop = true;
+        /// <summary>Pin the whole Rabbit Hole layer (HUD/sidebar, bubbles, overlays) topmost so it
+        /// stays above other apps and never sinks when you click another window. Off restores the
+        /// old Free Desktop behavior where the run yields to whatever you bring forward.</summary>
+        public bool ChaosPinOnTop
+        {
+            get => _chaosPinOnTop;
+            set { _chaosPinOnTop = value; OnPropertyChanged(); }
         }
         private double _chaosShakeIntensity = 0.8;
         public double ChaosShakeIntensity
@@ -2143,6 +2334,7 @@ namespace ConditioningControlPanel.Models
             get => _narrativeModeEnabled;
             set { _narrativeModeEnabled = value; OnPropertyChanged(); }
         }
+
         private bool _backdropEnabled = true;
         /// <summary>Show per-zone backdrop plates under the chaos bubbles. When OFF, no backdrop window
         /// spawns and classic Chaos keeps its desktop click-through behavior exactly.</summary>
@@ -2203,6 +2395,18 @@ namespace ConditioningControlPanel.Models
         {
             get => _lockCardStrict;
             set { _lockCardStrict = value; OnPropertyChanged(); }
+        }
+
+        private bool _lockCardVoiceMode = false; // Solve by speaking the phrase (offline mic) instead of typing
+        /// <summary>
+        /// When true, lock cards are solved by saying the phrase out loud (offline Vosk mic) rather
+        /// than typing it. Falls back to typing automatically if speech isn't available or mic
+        /// consent wasn't given, so the user is never trapped.
+        /// </summary>
+        public bool LockCardVoiceMode
+        {
+            get => _lockCardVoiceMode;
+            set { _lockCardVoiceMode = value; OnPropertyChanged(); }
         }
         
         private Dictionary<string, bool> _lockCardPhrases = new()
@@ -3277,6 +3481,214 @@ namespace ConditioningControlPanel.Models
         {
             get => _autonomyAnnouncementChance;
             set { _autonomyAnnouncementChance = Math.Clamp(value, 0, 100); OnPropertyChanged(); }
+        }
+
+        // ── Takeover start/stop + speech ("repeat after me") ──────────────────────
+
+        private bool _autonomyResumeOnStartup = false;
+        /// <summary>
+        /// Opt-in: re-arm Takeover automatically on app launch. Default OFF — Takeover now
+        /// always starts OFF and the user explicitly turns it on (fixes "it stays on after restart").
+        /// </summary>
+        [JsonProperty]
+        public bool AutonomyResumeOnStartup
+        {
+            get => _autonomyResumeOnStartup;
+            set { _autonomyResumeOnStartup = value; OnPropertyChanged(); }
+        }
+
+        private bool _autonomyCanTriggerVoiceCommand = true;
+        /// <summary>
+        /// Takeover "Surprise me with mantras": let the autonomy scheduler auto-prompt a spoken
+        /// mantra during Takeover. Only ever fires when the speech engine is available (model + mic),
+        /// mic consent is given, and the user isn't already driving the mic (wake/PTT). Self-disables
+        /// otherwise. The on-demand mantra capability lives separately in <see cref="SpokenMantrasEnabled"/>.
+        /// </summary>
+        [JsonProperty]
+        public bool AutonomyCanTriggerVoiceCommand
+        {
+            get => _autonomyCanTriggerVoiceCommand;
+            set { _autonomyCanTriggerVoiceCommand = value; OnPropertyChanged(); }
+        }
+
+        private bool _spokenMantrasEnabled = false;
+        /// <summary>
+        /// "She's Listening" on-demand spoken mantras: when on, a wake-word / push-to-talk turn that
+        /// doesn't match a voice command falls back to a mantra, and the Test affordance works. The
+        /// Takeover *surprise* auto-trigger is the separate <see cref="AutonomyCanTriggerVoiceCommand"/>.
+        /// Independent of Takeover — the mic features are decoupled from it.
+        /// </summary>
+        [JsonProperty]
+        public bool SpokenMantrasEnabled
+        {
+            get => _spokenMantrasEnabled;
+            set { _spokenMantrasEnabled = value; OnPropertyChanged(); }
+        }
+
+        private bool _micConsentGiven = false;
+        /// <summary>
+        /// Explicit consent to open the microphone for the offline "repeat after me" mechanic.
+        /// Never implied — the mic stays closed until this is true.
+        /// </summary>
+        [JsonProperty]
+        public bool MicConsentGiven
+        {
+            get => _micConsentGiven;
+            set { _micConsentGiven = value; OnPropertyChanged(); }
+        }
+
+        private int _speechInputDeviceIndex = -1;
+        /// <summary>WaveIn capture device index, or -1 for the Windows default device.</summary>
+        [JsonProperty]
+        public int SpeechInputDeviceIndex
+        {
+            get => _speechInputDeviceIndex;
+            set { _speechInputDeviceIndex = value; OnPropertyChanged(); }
+        }
+
+        private double _speechMatchThreshold = 0.62;
+        /// <summary>Minimum fuzzy similarity (0..1) for a spoken phrase to count as a match.</summary>
+        [JsonProperty]
+        public double SpeechMatchThreshold
+        {
+            get => _speechMatchThreshold;
+            set { _speechMatchThreshold = Math.Clamp(value, 0.1, 1.0); OnPropertyChanged(); }
+        }
+
+        // Was 0.04, which proved too high: it rejected normal-volume speech that Vosk had ALREADY
+        // recognized as "too quiet" (the avatar would ask you to be louder, or silently drop a matched
+        // command). 0.010 (~-40 dBFS) still sits above typical room tone (~0.003-0.008) but lets a soft
+        // speaking voice through. Users tune it live via the "Mic sensitivity" slider (She's Listening);
+        // existing users at the old 0.04 default are relaxed by MigrateLoudnessThreshold() on load.
+        private double _speechLoudnessThreshold = 0.010;
+        /// <summary>Minimum peak RMS loudness (0..1) for a phrase to count as "said out loud".</summary>
+        [JsonProperty]
+        public double SpeechLoudnessThreshold
+        {
+            get => _speechLoudnessThreshold;
+            set { _speechLoudnessThreshold = Math.Clamp(value, 0.0, 1.0); OnPropertyChanged(); }
+        }
+
+        private bool _loudnessThresholdRelaxed;
+        /// <summary>One-shot guard for <see cref="MigrateLoudnessThreshold"/> so a future explicit choice sticks.</summary>
+        [JsonProperty]
+        public bool LoudnessThresholdRelaxed
+        {
+            get => _loudnessThresholdRelaxed;
+            set { _loudnessThresholdRelaxed = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Relax the legacy 0.04 loudness gate to the gentler default for existing users. Nobody set
+        /// 0.04 deliberately (there's no UI for it), so any value parked at the old default is bumped to
+        /// 0.015. One-shot — once relaxed (or once a user picks their own value via a future UI), it
+        /// never re-fires.
+        /// </summary>
+        internal void MigrateLoudnessThreshold()
+        {
+            if (_loudnessThresholdRelaxed) return;
+            if (_speechLoudnessThreshold >= 0.035 && _speechLoudnessThreshold <= 0.045)
+                _speechLoudnessThreshold = 0.015;
+            _loudnessThresholdRelaxed = true;
+        }
+
+        private double _speechWakeThreshold = 0.15;
+        /// <summary>
+        /// sherpa KWS trigger threshold (0..1) for the "Hey Bambi" wake word — the config-level
+        /// KeywordsThreshold applied to every keyword line. Lower = wakes more easily (fewer misses,
+        /// more false wakes). Default 0.15 is recall-biased; the in-app wake calibration overwrites this
+        /// with a value tuned to the user's own voice + mic. Per-user, so it survives the keyword set.
+        /// </summary>
+        [JsonProperty]
+        public double SpeechWakeThreshold
+        {
+            get => _speechWakeThreshold;
+            set { _speechWakeThreshold = Math.Clamp(value, 0.02, 0.6); OnPropertyChanged(); }
+        }
+
+        private double _speechWakeBoost = 2.0;
+        /// <summary>sherpa KWS keyword boost (KeywordsScore) for the wake word. Higher = easier to fire.</summary>
+        [JsonProperty]
+        public double SpeechWakeBoost
+        {
+            get => _speechWakeBoost;
+            set { _speechWakeBoost = Math.Clamp(value, 0.0, 5.0); OnPropertyChanged(); }
+        }
+
+        private bool _speechWakeDiagnostics;
+        /// <summary>
+        /// Dev/diagnostic: when on, the sherpa wake spotter logs capture start/stop and a periodic mic
+        /// level (peak RMS) + frame count, so we can tell from the log whether the mic is actually
+        /// capturing and how loud speech is reaching it. Off by default (it's chatty).
+        /// </summary>
+        [JsonProperty]
+        public bool SpeechWakeDiagnostics
+        {
+            get => _speechWakeDiagnostics;
+            set { _speechWakeDiagnostics = value; OnPropertyChanged(); }
+        }
+
+        private bool _speechWakeWordEnabled = false;
+        /// <summary>Opt-in always-on "Hey Bambi" wake-word listening (mic stays open). Pass-2 UI.</summary>
+        [JsonProperty]
+        public bool SpeechWakeWordEnabled
+        {
+            get => _speechWakeWordEnabled;
+            set { _speechWakeWordEnabled = value; OnPropertyChanged(); }
+        }
+
+        private string _speechWakeWords = "hey bambi";
+        /// <summary>Comma-separated wake phrases for the opt-in always-on path.</summary>
+        [JsonProperty]
+        public string SpeechWakeWords
+        {
+            get => _speechWakeWords;
+            set { _speechWakeWords = value ?? ""; OnPropertyChanged(); }
+        }
+
+        private bool _speechPushToTalkEnabled = false;
+        /// <summary>Opt-in push-to-talk (overrides auto-listen for noisy rooms). Pass-2 UI.</summary>
+        [JsonProperty]
+        public bool SpeechPushToTalkEnabled
+        {
+            get => _speechPushToTalkEnabled;
+            set { _speechPushToTalkEnabled = value; OnPropertyChanged(); }
+        }
+
+        private string _speechPushToTalkKey = "F8";
+        /// <summary>The key that summons a voice prompt when push-to-talk is on. Parsed as a <see cref="System.Windows.Input.Key"/>.</summary>
+        [JsonProperty]
+        public string SpeechPushToTalkKey
+        {
+            get => _speechPushToTalkKey;
+            set { _speechPushToTalkKey = string.IsNullOrWhiteSpace(value) ? "F8" : value; OnPropertyChanged(); }
+        }
+
+        private double _speechWakeMatchThreshold = 0.6;
+        /// <summary>
+        /// Fuzzy-match strictness (0..1) for the "Hey Bambi" wake word. Lower = wakes more easily (good
+        /// because "bambi" is out-of-vocabulary for the offline model, so it transcribes loosely); higher
+        /// = fewer false wakes. Default 0.6 — was effectively 0.8, which missed ~half of real wakes.
+        /// </summary>
+        [JsonProperty]
+        public double SpeechWakeMatchThreshold
+        {
+            get => _speechWakeMatchThreshold;
+            set { _speechWakeMatchThreshold = Math.Clamp(value, 0.3, 0.95); OnPropertyChanged(); }
+        }
+
+        private bool _speechHeadphonesMode = false;
+        /// <summary>
+        /// "I use headphones" — when on, the avatar's own voice can't bleed into the mic, so the command
+        /// listener allows barge-in: it skips the wait-until-she's-quiet echo guard and opens the mic even
+        /// while she's still talking. Off (default, safe for speakers) keeps the half-duplex guard so the
+        /// recognizer never hears her own voice as a bogus command.
+        /// </summary>
+        [JsonProperty]
+        public bool SpeechHeadphonesMode
+        {
+            get => _speechHeadphonesMode;
+            set { _speechHeadphonesMode = value; OnPropertyChanged(); }
         }
 
         #endregion

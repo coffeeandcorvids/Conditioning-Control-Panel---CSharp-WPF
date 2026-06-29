@@ -1,0 +1,891 @@
+using System;
+using System.IO;
+using System.Text.Json;
+using System.Windows;
+using System.Windows.Threading;
+using ConditioningControlPanel.Helpers;
+using ConditioningControlPanel.Localization;
+using ConditioningControlPanel.Models;
+
+namespace ConditioningControlPanel.Services;
+
+/// <summary>
+/// Central service for tracking achievement progress and unlocking achievements
+/// </summary>
+public class AchievementService : IDisposable
+{
+    private AchievementProgress _progress;
+    private readonly string _progressPath;
+    private readonly DispatcherTimer _saveTimer;
+    private readonly DispatcherTimer _trackingTimer;
+    private bool _isDirty;
+    private DateTime _lastPinkFilterCheck = DateTime.Now;
+    private DateTime _lastSpiralCheck = DateTime.Now;
+    private DateTime _lastBrainDrainCheck = DateTime.Now;
+    private DateTime _lastMindWipeCheck = DateTime.Now;
+    private DateTime _lastDeeperCheck = DateTime.Now;
+    private DateTime _lastAutonomyCheck = DateTime.Now;
+    
+    public event EventHandler<Achievement>? AchievementUnlocked;
+
+    /// <summary>
+    /// When true, TryUnlock still records achievements but suppresses popup notifications.
+    /// Used during post-login sync to silently restore cloud achievements.
+    /// </summary>
+    public bool SuppressPopups { get; set; }
+
+    public AchievementProgress Progress => _progress;
+    
+    public AchievementService()
+    {
+        _progressPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "ConditioningControlPanel",
+            "achievements.json");
+        
+        _progress = LoadProgress();
+
+        // Reset continuous/session-based counters on startup (these shouldn't persist)
+        _progress.ContinuousSpiralMinutes = 0;
+        _progress.ContinuousMindWipeSeconds = 0;
+        _progress.AltTabPressedThisSession = false;
+        _progress.AvatarClickCount = 0;
+        _progress.AvatarClickStartTime = null;
+
+        // Check daily streak on startup
+        _progress.UpdateDailyStreak();
+        // Sync CurrentStreak even if UpdateDailyStreak returned early (already launched today)
+        _progress.SyncCurrentStreak();
+        _isDirty = true;
+        
+        // Auto-save every 30 seconds if dirty (off UI thread)
+        _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+        _saveTimer.Tick += (s, e) =>
+        {
+            if (_isDirty)
+            {
+                _isDirty = false;
+                var json = JsonSerializer.Serialize(_progress, new JsonSerializerOptions { WriteIndented = true });
+                var path = _progressPath;
+                _ = Task.Run(() =>
+                {
+                    try
+                    {
+                        var dir = Path.GetDirectoryName(path);
+                        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                            Directory.CreateDirectory(dir);
+                        File.WriteAllText(path, json);
+                    }
+                    catch (Exception ex)
+                    {
+                        App.Logger?.Error(ex, "Failed to save achievement progress");
+                    }
+                });
+            }
+        };
+        _saveTimer.Start();
+        
+        // Track time-based achievements every second
+        _trackingTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _trackingTimer.Tick += TrackTimeBasedProgress;
+        _trackingTimer.Start();
+        
+        // NOTE: Level achievements and daily maintenance are checked in App.xaml.cs
+        // AFTER the event handler is wired up, so popups actually show!
+        
+        App.Logger?.Information("AchievementService initialized. {Count} achievements unlocked.", 
+            _progress.UnlockedAchievements.Count);
+    }
+    
+    private AchievementProgress LoadProgress()
+    {
+        try
+        {
+            if (File.Exists(_progressPath))
+            {
+                var json = File.ReadAllText(_progressPath);
+                return JsonSerializer.Deserialize<AchievementProgress>(json) ?? new AchievementProgress();
+            }
+        }
+        catch (Exception ex)
+        {
+            App.Logger?.Error(ex, "Failed to load achievement progress");
+        }
+        
+        return new AchievementProgress();
+    }
+    
+    public void Save()
+    {
+        try
+        {
+            var dir = Path.GetDirectoryName(_progressPath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+            
+            var json = JsonSerializer.Serialize(_progress, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(_progressPath, json);
+        }
+        catch (Exception ex)
+        {
+            App.Logger?.Error(ex, "Failed to save achievement progress");
+        }
+    }
+    
+    /// <summary>
+    /// Track time-based progress (called every second)
+    /// </summary>
+    private void TrackTimeBasedProgress(object? sender, EventArgs e)
+    {
+        var settings = App.Settings?.Current;
+        if (settings == null) return;
+        var now = DateTime.Now;
+
+        // Track total conditioning time for skill tree (when overlay is running = session active)
+        if (App.Overlay?.IsRunning == true)
+        {
+            // Add 1 second worth of time (1/60 of a minute) every tick
+            App.SkillTree?.AddConditioningTime(1.0 / 60.0);
+        }
+
+        // Track Pink Filter time - only when overlay is actually running
+        var isPinkFilterActive = settings.PinkFilterEnabled &&
+                                 App.Overlay?.IsRunning == true;
+        if (isPinkFilterActive)
+        {
+            var elapsed = (now - _lastPinkFilterCheck).TotalMinutes;
+            if (elapsed > 0 && elapsed < 0.1) // Sanity check - max 6 seconds between ticks
+            {
+                _progress.TotalPinkFilterMinutes += elapsed;
+                _isDirty = true;
+
+                // Check Rose-Tinted Reality (10 hours = 600 minutes)
+                if (_progress.TotalPinkFilterMinutes >= 600)
+                {
+                    TryUnlock("rose_tinted_reality");
+                }
+
+                // Track for quests (accumulate until we have a full minute)
+                App.Quests?.TrackPinkFilterMinutes(elapsed);
+            }
+            _lastPinkFilterCheck = now;
+        }
+        else
+        {
+            // Reset timer when inactive to prevent time accumulation bugs
+            _lastPinkFilterCheck = now;
+        }
+
+        // Track Spiral time - only when overlay is actually running
+        var isSpiralActive = settings.SpiralEnabled &&
+                             App.Overlay?.IsRunning == true;
+        if (isSpiralActive)
+        {
+            var elapsed = (now - _lastSpiralCheck).TotalMinutes;
+            if (elapsed > 0 && elapsed < 0.1) // Sanity check - max 6 seconds between ticks
+            {
+                _progress.TotalSpiralMinutes += elapsed;
+                _progress.ContinuousSpiralMinutes += elapsed;
+                _isDirty = true;
+
+                // Check Spiral Eyes (20 minutes continuous)
+                if (_progress.ContinuousSpiralMinutes >= 20)
+                {
+                    TryUnlock("spiral_eyes");
+                }
+
+                // Track for quests
+                App.Quests?.TrackSpiralMinutes(elapsed);
+            }
+            _lastSpiralCheck = now;
+        }
+        else
+        {
+            // Reset continuous spiral time when disabled
+            _progress.ContinuousSpiralMinutes = 0;
+            // Reset timer when inactive to prevent time accumulation bugs
+            _lastSpiralCheck = now;
+        }
+
+        // Track BrainDrain time - only when overlay is actually running
+        var isBrainDrainActive = settings.BrainDrainEnabled &&
+                                 App.Overlay?.IsRunning == true;
+        if (isBrainDrainActive)
+        {
+            var elapsed = (now - _lastBrainDrainCheck).TotalMinutes;
+            if (elapsed > 0 && elapsed < 0.1) // Sanity check - max 6 seconds between ticks
+            {
+                // Track for quests (feeds into Combined/Mindless Minutes)
+                App.Quests?.TrackBrainDrainMinutes(elapsed);
+            }
+            _lastBrainDrainCheck = now;
+        }
+        else
+        {
+            // Reset timer when inactive to prevent time accumulation bugs
+            _lastBrainDrainCheck = now;
+        }
+
+        // Track Deeper player time — only while an enhancement is actively playing.
+        // Mirrors the spiral/pink-filter accumulation pattern above. Feeds the
+        // "permanent_resident" achievement (10 hours = 600 minutes). DeeperMinutes is
+        // a lifetime counter persisted on AchievementProgress.
+        if (App.DeeperHost?.IsActivelyPlaying == true)
+        {
+            var elapsed = (now - _lastDeeperCheck).TotalMinutes;
+            if (elapsed > 0 && elapsed < 0.1) // sanity: max ~6s between ticks
+            {
+                _progress.DeeperMinutes += elapsed;
+                _isDirty = true;
+                if (_progress.DeeperMinutes >= 600)
+                {
+                    TryUnlock("permanent_resident");
+                }
+            }
+            _lastDeeperCheck = now;
+        }
+        else
+        {
+            _lastDeeperCheck = now;
+        }
+
+        // Track Bambi Takeover (autonomy) active time for Patreon quests — only while
+        // autonomy is enabled/running. Mirrors the spiral/pink accumulation pattern.
+        if (App.Autonomy?.IsEnabled == true)
+        {
+            var elapsed = (now - _lastAutonomyCheck).TotalMinutes;
+            if (elapsed > 0 && elapsed < 0.1) // sanity: max ~6s between ticks
+            {
+                App.Quests?.TrackAutonomyMinutes(elapsed);
+            }
+            _lastAutonomyCheck = now;
+        }
+        else
+        {
+            _lastAutonomyCheck = now;
+        }
+
+        // Check System Overload (Bubbles + Bouncing Text + Spiral all active)
+        if (settings.BubblesEnabled && settings.BouncingTextEnabled && settings.SpiralEnabled)
+        {
+            if (!_progress.HasSystemOverload)
+            {
+                _progress.HasSystemOverload = true;
+                _isDirty = true;
+                TryUnlock("system_overload");
+            }
+        }
+        
+        // Check Total Lockdown (Strict Lock + No Panic + Pink Filter)
+        // Note: !PanicKeyEnabled means panic is disabled
+        if (settings.StrictLockEnabled && !settings.PanicKeyEnabled && settings.PinkFilterEnabled)
+        {
+            if (!_progress.HasTotalLockdown)
+            {
+                _progress.HasTotalLockdown = true;
+                _isDirty = true;
+                TryUnlock("total_lockdown");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Check and unlock level-based achievements
+    /// </summary>
+    public void CheckLevelAchievements(int level)
+    {
+        if (level >= 10) TryUnlock("plastic_initiation");
+        if (level >= 20) TryUnlock("dumb_bimbo");
+        if (level >= 50) TryUnlock("fully_synthetic");
+        if (level >= 75) TryUnlock("docile_cow");
+        if (level >= 100) TryUnlock("perfect_plastic_puppet");
+        if (level >= 125) TryUnlock("brainwashed_slavedoll");
+        if (level >= 150) TryUnlock("platinum_puppet");
+    }
+    
+    /// <summary>
+    /// Check Daily Maintenance achievement (7 days streak)
+    /// </summary>
+    public void CheckDailyMaintenance()
+    {
+        if (_progress.ConsecutiveDays >= 7)
+        {
+            TryUnlock("daily_maintenance");
+        }
+    }
+    
+    /// <summary>
+    /// Track flash image shown
+    /// </summary>
+    public void TrackFlashImage()
+    {
+        _progress.TotalFlashImages++;
+        _isDirty = true;
+
+        if (_progress.TotalFlashImages >= 5000)
+        {
+            TryUnlock("retinal_burn");
+        }
+
+        // Track for quests
+        App.Quests?.TrackFlashImage();
+    }
+    
+    /// <summary>
+    /// Track bubble popped
+    /// </summary>
+    public void TrackBubblePopped()
+    {
+        _progress.TotalBubblesPopped++;
+        _isDirty = true;
+
+        if (_progress.TotalBubblesPopped >= 1000)
+        {
+            TryUnlock("pop_the_thought");
+        }
+
+        // Award 1 sparkle point every 100 bubbles
+        if (_progress.TotalBubblesPopped % 100 == 0)
+        {
+            var settings = App.Settings?.Current;
+            if (settings != null)
+            {
+                settings.SkillPoints += 1;
+                App.Settings?.Save();
+                App.Logger?.Information("Bubble milestone! {Total} bubbles popped — awarded 1 sparkle point (total: {Points})",
+                    _progress.TotalBubblesPopped, settings.SkillPoints);
+                ShowBubbleMilestoneNotification(_progress.TotalBubblesPopped);
+            }
+        }
+
+        // Track for quests
+        App.Quests?.TrackBubblePopped();
+    }
+
+    private void ShowBubbleMilestoneNotification(int totalBubbles)
+    {
+        try
+        {
+            var fakeAchievement = new Achievement
+            {
+                Id = "bubble_milestone",
+                Name = Loc.GetF("achievement_bubble_milestone_name", totalBubbles),
+                FlavorText = Loc.Get("achievement_bubble_milestone_flavor"),
+                ImageName = "bubble_pop.png",
+                Category = AchievementCategory.Minigames
+            };
+
+            DispatcherHelper.RunOnUI(() =>
+            {
+                try
+                {
+                    var popup = new AchievementPopup(fakeAchievement, "✨", Loc.Get("achievement_bubble_milestone_header"));
+                    popup.Show();
+                }
+                catch (Exception ex)
+                {
+                    App.Logger?.Warning(ex, "Failed to show bubble milestone popup");
+                }
+            }, DispatcherPriority.ApplicationIdle);
+        }
+        catch (Exception ex)
+        {
+            App.Logger?.Warning(ex, "Failed to show bubble milestone notification");
+        }
+    }
+    
+    /// <summary>
+    /// Track bubble count game result
+    /// </summary>
+    public void TrackBubbleCountResult(bool correct)
+    {
+        if (correct)
+        {
+            _progress.BubbleCountCorrectStreak++;
+            if (_progress.BubbleCountCorrectStreak > _progress.BubbleCountBestStreak)
+            {
+                _progress.BubbleCountBestStreak = _progress.BubbleCountCorrectStreak;
+            }
+
+            if (_progress.BubbleCountCorrectStreak >= 5)
+            {
+                TryUnlock("mathematicians_nightmare");
+            }
+        }
+        else
+        {
+            _progress.BubbleCountCorrectStreak = 0;
+        }
+
+        // Track total correct/failed games
+        TrackBubbleCountGameResult(correct);
+
+        _isDirty = true;
+    }
+    
+    /// <summary>
+    /// Track Lock Card completion
+    /// </summary>
+    public void TrackLockCardCompletion(double seconds, int totalChars, int errors, int phrases)
+    {
+        _progress.TotalLockCardsCompleted++;
+        _isDirty = true;
+        App.Logger?.Information("Lock card tracked! Total lock cards completed: {Count}", _progress.TotalLockCardsCompleted);
+        Save(); // Save immediately so sync picks up the new count
+
+        // Track for quests
+        App.Quests?.TrackLockCardCompleted();
+
+        // Check for perfect accuracy
+        if (errors == 0)
+        {
+            _progress.HasPerfectLockCard = true;
+            TryUnlock("typing_tutor");
+        }
+        
+        // Check for speed (3 phrases in under 15 seconds)
+        if (phrases >= 3 && seconds < 15)
+        {
+            if (seconds < _progress.FastestLockCardSeconds)
+            {
+                _progress.FastestLockCardSeconds = seconds;
+            }
+            TryUnlock("obedience_reflex");
+        }
+    }
+
+    /// <summary>
+    /// Track video watch time (adds minutes watched to total)
+    /// </summary>
+    public void TrackVideoWatched(double durationSeconds)
+    {
+        if (durationSeconds <= 0) return;
+
+        var minutes = durationSeconds / 60.0;
+        _progress.TotalVideoMinutes += minutes;
+        _isDirty = true;
+        App.Logger?.Information("Video watched: {Duration}s ({Minutes:F2} min). Total: {Total:F1} minutes",
+            durationSeconds, minutes, _progress.TotalVideoMinutes);
+        Save(); // Save immediately so sync picks up the new value
+
+        // Track for quests
+        App.Quests?.TrackVideoMinutes(minutes);
+    }
+
+    /// <summary>
+    /// Track attention check failure
+    /// </summary>
+    public void TrackAttentionCheckFailed()
+    {
+        _progress.AttentionCheckFailures++;
+        _isDirty = true;
+        
+        if (_progress.AttentionCheckFailures >= 3)
+        {
+            TryUnlock("mercy_beggar");
+        }
+    }
+    
+    /// <summary>
+    /// Track Mind Wipe duration
+    /// </summary>
+    public void TrackMindWipeDuration(double seconds)
+    {
+        _progress.ContinuousMindWipeSeconds = seconds;
+        _isDirty = true;
+        
+        if (seconds >= 60)
+        {
+            TryUnlock("clean_slate");
+        }
+    }
+    
+    /// <summary>
+    /// Track bouncing text corner hit
+    /// </summary>
+    public void TrackCornerHit()
+    {
+        if (!_progress.HasHitCorner)
+        {
+            _progress.HasHitCorner = true;
+            _isDirty = true;
+            TryUnlock("corner_hit");
+        }
+    }
+    
+    /// <summary>
+    /// Track avatar click
+    /// </summary>
+    public void TrackAvatarClick()
+    {
+        var clickCount = _progress.AvatarClickCount + 1;
+        App.Logger?.Debug("TrackAvatarClick called. Current count will be: {Count}", clickCount);
+
+        if (_progress.TrackAvatarClick())
+        {
+            App.Logger?.Information("🎯 20 clicks reached! Unlocking Neon Obsession...");
+            // Special longer easter egg pattern for this achievement
+            _ = App.Haptics?.AvatarEasterEggPatternAsync();
+            TryUnlock("neon_obsession");
+        }
+        if (_progress.TrackNeedyDollClick())
+        {
+            App.Logger?.Information("🎯 150 clicks in 60s! Unlocking Needy Doll...");
+            TryUnlock("needy_doll");
+        }
+        _isDirty = true;
+    }
+    
+    /// <summary>
+    /// Track Alt+Tab during session
+    /// </summary>
+    public void TrackAltTab()
+    {
+        _progress.AltTabPressedThisSession = true;
+        _isDirty = true;
+    }
+    
+    /// <summary>
+    /// Track panic/ESC button press
+    /// </summary>
+    public void TrackPanicPressed()
+    {
+        _progress.LastPanicPressTime = DateTime.Now;
+        _isDirty = true;
+    }
+    
+    /// <summary>
+    /// Track session start (check for Relapse achievement)
+    /// </summary>
+    public void TrackSessionStart()
+    {
+        _progress.ResetSessionTracking();
+
+        // Track session started stat
+        TrackSessionStarted();
+
+        // Check Relapse (started within 10 seconds of panic)
+        CheckRelapse();
+
+        _isDirty = true;
+    }
+
+    /// <summary>
+    /// Check for Relapse achievement (started within 10 seconds of panic/ESC).
+    /// Called from both SessionEngine and direct StartEngine to cover all start paths.
+    /// </summary>
+    public void CheckRelapse()
+    {
+        if (_progress.LastPanicPressTime.HasValue)
+        {
+            var elapsed = (DateTime.Now - _progress.LastPanicPressTime.Value).TotalSeconds;
+            if (elapsed <= 10)
+            {
+                TryUnlock("relapse");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Track session completion
+    /// </summary>
+    public void TrackSessionComplete(string sessionName, double durationMinutes, bool noPanicEnabled, bool strictLockEnabled)
+    {
+        App.Logger?.Information("TrackSessionComplete called: Session={Name}, Duration={Duration:F1}min, NoPanic={NoPanic}, StrictLock={Strict}",
+            sessionName, durationMinutes, noPanicEnabled, strictLockEnabled);
+        
+        _progress.CompletedSessions.Add(sessionName);
+        
+        // Update longest session
+        if (durationMinutes > _progress.LongestSessionMinutes)
+        {
+            _progress.LongestSessionMinutes = durationMinutes;
+        }
+        
+        // Deep Sleep Mode (3+ hours = 180 minutes)
+        if (durationMinutes >= 180)
+        {
+            App.Logger?.Information("Deep Sleep check: Session duration {Duration:F1}min >= 180min, unlocking!", durationMinutes);
+            TryUnlock("deep_sleep");
+        }
+        else if (durationMinutes >= 60)
+        {
+            App.Logger?.Debug("Session {Duration:F1}min completed - need 180min for Deep Sleep achievement", durationMinutes);
+        }
+        
+        // What Panic Button (completed with no panic enabled)
+        if (noPanicEnabled)
+        {
+            App.Logger?.Information("No panic was enabled - unlocking 'what_panic_button'");
+            _progress.CompletedSessionWithNoPanic = true;
+            TryUnlock("what_panic_button");
+        }
+        
+        // Session-specific achievements
+        var sessionLower = sessionName.ToLowerInvariant();
+        
+        // Sofa Decor - Complete "The Distant Doll"
+        if (sessionLower.Contains("distant doll"))
+        {
+            TryUnlock("sofa_decor");
+        }
+        
+        // Look But Don't Touch - Complete "Good Girls Don't Cum" with Strict Lock
+        if (sessionLower.Contains("good girls") && strictLockEnabled)
+        {
+            _progress.CompletedGoodGirlsWithStrictLock = true;
+            TryUnlock("look_but_dont_touch");
+        }
+        
+        // Morning Glory - Complete "Morning Drift" between 6-9 AM
+        if (sessionLower.Contains("morning drift"))
+        {
+            var hour = DateTime.Now.Hour;
+            if (hour >= 6 && hour < 9)
+            {
+                _progress.CompletedMorningDriftInMorning = true;
+                TryUnlock("morning_glory");
+            }
+        }
+        
+        // Player 2 Disconnected - Complete "Gamer Girl" without Alt+Tab
+        if (sessionLower.Contains("gamer girl") && !_progress.AltTabPressedThisSession)
+        {
+            _progress.CompletedGamerGirlNoAltTab = true;
+            TryUnlock("player_2_disconnected");
+        }
+
+        // Track for quests
+        App.Quests?.TrackSessionCompleted();
+
+        _isDirty = true;
+    }
+    
+    /// <summary>
+    /// Try to unlock an achievement (only fires event if not already unlocked)
+    /// </summary>
+    public bool TryUnlock(string achievementId)
+    {
+        App.Logger?.Debug("TryUnlock called for: {Id}", achievementId);
+        
+        if (_progress.IsUnlocked(achievementId))
+        {
+            App.Logger?.Debug("Achievement {Id} already unlocked", achievementId);
+            return false; // Already unlocked
+        }
+        
+        if (!Achievement.All.TryGetValue(achievementId, out var achievement))
+        {
+            App.Logger?.Warning("Unknown achievement ID: {Id}", achievementId);
+            return false;
+        }
+        
+        _progress.Unlock(achievementId);
+        _isDirty = true;
+        Save(); // Save immediately on unlock
+
+        App.Logger?.Information("🏆 Achievement unlocked: {Name} (ID: {Id}){Suppressed}", achievement.Name, achievementId,
+            SuppressPopups ? " (popup suppressed)" : "");
+
+        if (SuppressPopups) return true;
+
+        // Fire event to show popup
+        try
+        {
+            DispatcherHelper.RunOnUISync(() =>
+            {
+                App.Logger?.Debug("Firing AchievementUnlocked event for: {Name}", achievement.Name);
+                AchievementUnlocked?.Invoke(this, achievement);
+                _ = App.Haptics?.AchievementPatternAsync();
+                _ = App.Haptics?.AchievementPatternAsync();
+            });
+        }
+        catch (Exception ex)
+        {
+            App.Logger?.Error(ex, "Failed to fire achievement event");
+        }
+        
+        return true;
+    }
+
+    // ========== NEW STAT TRACKING METHODS ==========
+
+    /// <summary>
+    /// Track attention check passed (any type)
+    /// </summary>
+    public void TrackAttentionCheckPassed(bool isVideo = false)
+    {
+        _progress.TotalAttentionChecksPassed++;
+        if (isVideo)
+        {
+            _progress.VideoAttentionChecksPassed++;
+        }
+        _isDirty = true;
+    }
+
+    /// <summary>
+    /// Track video attention check failure
+    /// </summary>
+    public void TrackVideoAttentionCheckFailed()
+    {
+        _progress.VideoAttentionChecksFailed++;
+        _isDirty = true;
+    }
+
+    /// <summary>
+    /// Track bubble count game started
+    /// </summary>
+    public void TrackBubbleCountGameStarted()
+    {
+        _progress.TotalBubbleCountGames++;
+        _isDirty = true;
+    }
+
+    /// <summary>
+    /// Track bubble count game result (success/failure)
+    /// </summary>
+    public void TrackBubbleCountGameResult(bool success)
+    {
+        if (success)
+        {
+            _progress.TotalBubbleCountCorrect++;
+        }
+        else
+        {
+            _progress.TotalBubbleCountFailed++;
+        }
+        _isDirty = true;
+    }
+
+    /// <summary>
+    /// Track session started
+    /// </summary>
+    public void TrackSessionStarted()
+    {
+        _progress.TotalSessionsStarted++;
+        _isDirty = true;
+    }
+
+    /// <summary>
+    /// Track session abandoned (started but not completed)
+    /// </summary>
+    public void TrackSessionAbandoned()
+    {
+        _progress.TotalSessionsAbandoned++;
+        _isDirty = true;
+    }
+
+    /// <summary>
+    /// Track XP earned
+    /// </summary>
+    public void TrackXPEarned(double amount)
+    {
+        _progress.TotalXPEarned += amount;
+        _isDirty = true;
+    }
+
+    /// <summary>
+    /// Track skill points earned
+    /// </summary>
+    public void TrackSkillPointsEarned(int amount)
+    {
+        _progress.TotalSkillPointsEarned += amount;
+        _isDirty = true;
+    }
+
+    /// <summary>
+    /// Mark progress dirty so the next autosave persists it. Used by GamificationBridge
+    /// after it mutates a counter on <see cref="Progress"/> without going through a
+    /// dedicated Track* method (which would otherwise leave the change unsaved).
+    /// </summary>
+    public void MarkDirty() => _isDirty = true;
+
+    /// <summary>
+    /// Reset all achievement progress (used on logout to clear account-specific data)
+    /// </summary>
+    public void ResetProgress()
+    {
+        _progress = new AchievementProgress();
+        _isDirty = false;
+        Save();
+        App.Logger?.Information("AchievementService progress reset");
+    }
+
+    /// <summary>
+    /// Get unlock count (all achievements, free + exclusive)
+    /// </summary>
+    public int GetUnlockedCount() => _progress.UnlockedAchievements.Count;
+
+    /// <summary>
+    /// Get total achievement count (all achievements, free + exclusive). Parked
+    /// (IsHidden) achievements are excluded so the denominator only counts earnable ones.
+    /// </summary>
+    public int GetTotalCount()
+    {
+        var count = 0;
+        foreach (var a in Achievement.All.Values)
+            if (!a.IsHidden) count++;
+        return count;
+    }
+
+    /// <summary>
+    /// Get unlock count filtered by exclusivity. The free (false) and patron (true)
+    /// counts are deliberately separate and must never be summed into one number.
+    /// </summary>
+    public int GetUnlockedCount(bool exclusive)
+    {
+        var count = 0;
+        foreach (var id in _progress.UnlockedAchievements)
+        {
+            if (Achievement.All.TryGetValue(id, out var a) && a.IsExclusive == exclusive)
+                count++;
+        }
+        return count;
+    }
+
+    /// <summary>
+    /// Get total achievement count filtered by exclusivity.
+    /// </summary>
+    public int GetTotalCount(bool exclusive)
+    {
+        var count = 0;
+        foreach (var a in Achievement.All.Values)
+        {
+            if (a.IsHidden) continue; // parked — not earnable in this build
+            if (a.IsExclusive == exclusive) count++;
+        }
+        return count;
+    }
+
+    /// <summary>
+    /// Whether the current user is entitled to EARN patron-exclusive achievements.
+    /// Note: this gates only NEW earns via <see cref="TryUnlockExclusive"/>. Cloud
+    /// restore uses the ungated <see cref="TryUnlock"/>, so a user who earned an
+    /// exclusive and later downgraded keeps it.
+    /// </summary>
+    public bool CanUnlockExclusive => App.Patreon?.HasPremiumAccess == true;
+
+    /// <summary>
+    /// Entitlement-gated unlock for patron-exclusive achievements. No-op (returns
+    /// false) for non-entitled users; otherwise behaves exactly like TryUnlock.
+    /// </summary>
+    public bool TryUnlockExclusive(string achievementId)
+    {
+        if (_progress.IsUnlocked(achievementId)) return false;
+        if (!CanUnlockExclusive)
+        {
+            App.Logger?.Debug("Exclusive achievement {Id} withheld — user not entitled", achievementId);
+            return false;
+        }
+        return TryUnlock(achievementId);
+    }
+    
+    public void Dispose()
+    {
+        _saveTimer.Stop();
+        _trackingTimer.Stop();
+        Save();
+    }
+}
