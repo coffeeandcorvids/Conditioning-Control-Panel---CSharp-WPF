@@ -78,3 +78,15 @@ new UI. Our fork is private + all-features-unlocked (no free/paid tiers, no patr
 donate/promo chrome). So Patreon simply doesn't exist in the ported creature — by construction, not by
 risky surgery. Port map: monetization layer → DON'T PORT (same bucket as the Windows-only set).
 Design note for Core/new-UI: treat every capability as unlocked; drop IsPremium/patron gating entirely.
+
+## SCOPE TARGET (Star, Jun 29): FULL feature parity — MINUS keyboard tracking
+End goal is now the WHOLE body, not a lean subset. Revises the earlier "focused core, defer the beast":
+we still SEQUENCE (can't port 200K LOC at once), but the TARGET is full parity. Phasing stays:
+wire → real ICommandSink effects → feature clusters (gamification, sessions, content/mod, media,
+overlays, haptics, gaze) → Avalonia UI.
+**DROP entirely: keyboard tracking** = the global keystroke hook (`SetWindowsHookEx`, cluster 01/07).
+Convenient — it was one of the irreducibly-Windows blockers AND the most surveillance-y; cutting it
+removes a hard port problem for free. Anything that depended on raw keystroke capture either goes away
+or is re-sourced (e.g., focus/idle via cross-platform means if needed).
+The other hard Windows bits (DirectX overlay, WebView2, OpenCV gaze) are now IN scope (find Linux
+substitutes / accept degraded versions) rather than deferred-forever — that's the cost of "all of it."
