@@ -1,3 +1,4 @@
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -8,10 +9,11 @@ using ConditioningControlPanel.Core.Events;
 namespace ConditioningControlPanel.Core.Agents.Letta;
 
 /// <summary>
-/// The live wire to LV: POSTs a panel event (as a prompt) to LV's Letta agent and parses her reply
-/// into an AgentReaction. Same agent as Discord-LV = one continuous mind (Star + LV agreed, Jun 29).
-/// HttpClient is injected so it's unit-testable with a fake handler (no live creds in tests).
-/// NOTE: Letta message request/response shape below is the documented form; verify on first live call.
+/// The live wire to LV: STREAMS a panel event to LV's Letta agent (SSE) and accumulates her reply into
+/// an AgentReaction. Same agent as Discord-LV = one continuous mind (Star + LV agreed, Jun 29).
+/// Uses the streaming endpoint per Ezra: plain POST /messages BLOCKS and times out on long turns;
+/// POST /messages/stream returns SSE with include_pings keepalive, so long agent turns don't hang.
+/// HttpClient injected -> unit-testable with a fake SSE handler (no live creds in tests).
 /// </summary>
 public sealed class LettaReactiveAgent : IReactiveAgent
 {
@@ -26,49 +28,54 @@ public sealed class LettaReactiveAgent : IReactiveAgent
         if (!IsAvailable) return AgentReaction.Silent;
 
         var prompt = PanelEventPrompt.Build(e);
-        var body = JsonSerializer.Serialize(new
+        var payload = JsonSerializer.Serialize(new
         {
-            messages = new[] { new { role = "user", content = prompt } }
+            messages = new[] { new { role = "user", content = prompt } },
+            stream_tokens = false,   // complete-message chunks (we want the whole reaction JSON)
+            include_pings = true,    // keepalive so long turns don't time out
         });
 
         using var req = new HttpRequestMessage(HttpMethod.Post,
-            $"{_cfg.BaseUrl}/v1/agents/{_cfg.AgentId}/messages")
-        { Content = new StringContent(body, Encoding.UTF8, "application/json") };
+            $"{_cfg.BaseUrl}/v1/agents/{_cfg.AgentId}/messages/stream")
+        { Content = new StringContent(payload, Encoding.UTF8, "application/json") };
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _cfg.ApiKey);
+        req.Headers.Accept.ParseAdd("text/event-stream");
 
-        using var resp = await _http.SendAsync(req, ct);
-        if (!resp.IsSuccessStatusCode) return AgentReaction.Silent; // surfaced/logged by caller
-        var json = await resp.Content.ReadAsStringAsync(ct);
+        using var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
+        if (!resp.IsSuccessStatusCode) return AgentReaction.Silent;
 
-        var assistantText = ExtractAssistantText(json);
-        return ReactionParser.Parse(assistantText);
+        await using var stream = await resp.Content.ReadAsStreamAsync(ct);
+        var reply = await AccumulateAssistant(stream, ct);
+        return ReactionParser.Parse(reply);
     }
 
-    /// <summary>Pull the assistant's text out of a Letta /messages response (tolerant of shape).</summary>
-    public static string? ExtractAssistantText(string responseJson)
+    /// <summary>Read the SSE stream, accumulate assistant_message content, stop on stop_reason/[DONE].</summary>
+    public static async Task<string?> AccumulateAssistant(Stream sse, CancellationToken ct = default)
     {
-        try
+        using var reader = new StreamReader(sse);
+        var sb = new StringBuilder();
+        string? line;
+        while ((line = await reader.ReadLineAsync(ct)) != null)
         {
-            using var doc = JsonDocument.Parse(responseJson);
-            var root = doc.RootElement;
-            // messages may be top-level array or under "messages"
-            JsonElement msgs = root.ValueKind == JsonValueKind.Array ? root
-                : root.TryGetProperty("messages", out var m) ? m : default;
-            if (msgs.ValueKind != JsonValueKind.Array) return null;
-            string? last = null;
-            foreach (var msg in msgs.EnumerateArray())
+            if (!line.StartsWith("data:")) continue;        // ignore event:/id:/ping comment lines
+            var data = line["data:".Length..].Trim();
+            if (data.Length == 0) continue;
+            if (data == "[DONE]") break;
+            try
             {
-                var type = msg.TryGetProperty("message_type", out var mt) ? mt.GetString() : null;
+                using var doc = JsonDocument.Parse(data);
+                var root = doc.RootElement;
+                var type = root.TryGetProperty("message_type", out var mt) ? mt.GetString() : null;
                 if (type is "assistant_message" or "assistant")
                 {
-                    if (msg.TryGetProperty("content", out var c))
-                        last = c.ValueKind == JsonValueKind.String ? c.GetString() : c.ToString();
-                    else if (msg.TryGetProperty("text", out var t))
-                        last = t.GetString();
+                    if (root.TryGetProperty("content", out var c))
+                        sb.Append(c.ValueKind == JsonValueKind.String ? c.GetString() : c.ToString());
                 }
+                else if (type == "stop_reason") break;
             }
-            return last;
+            catch (JsonException) { /* ping/keepalive or partial — skip */ }
         }
-        catch (JsonException) { return null; }
+        var s = sb.ToString();
+        return s.Length == 0 ? null : s;
     }
 }
