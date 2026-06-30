@@ -6,6 +6,8 @@ using ConditioningControlPanel.Core.Events;
 // event -> (scripted) agent JSON -> parse -> execute -> "drive the room" (console).
 // A ScriptedAgent stands in for the real Letta wire; everything else is the REAL Core.
 
+if (args.Length > 0 && args[0] == "live") { return await LiveSmoke.Run(); }
+
 Console.WriteLine("=== CCP Core demo — Vesper driving the room (scripted stand-in for Letta) ===\n");
 
 var sink = new ConsoleSink();
@@ -30,6 +32,7 @@ foreach (var e in feed)
     Console.WriteLine();
 }
 Console.WriteLine("=== loop complete — event -> reaction -> commands, all real Core ===");
+return 0;
 
 /// Console stand-in for the host's ICommandSink (WPF/Avalonia wires these to real effects).
 file sealed class ConsoleSink : ICommandSink

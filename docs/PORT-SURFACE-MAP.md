@@ -90,3 +90,15 @@ removes a hard port problem for free. Anything that depended on raw keystroke ca
 or is re-sourced (e.g., focus/idle via cross-platform means if needed).
 The other hard Windows bits (DirectX overlay, WebView2, OpenCV gaze) are now IN scope (find Linux
 substitutes / accept degraded versions) rather than deferred-forever — that's the cost of "all of it."
+
+## WIRE — live smoke findings (Jun 29 ~19:13)
+LettaReactiveAgent built + 28 tests green. Live smoke against agent-8e8be3fb:
+- ✅ past auth + 404 (IsAvailable true, POST sent, no 401/no agent-not-found) — wire CONNECTS
+- ❌ both 25s AND 90s timed out (TaskCanceledException) → NOT a slow turn, STRUCTURAL
+- KEY TELL: plain `GET /agents/{id}` ALSO hangs from our tooling (curl + HttpClient), while `/health`
+  returns 200 instantly, AND the listener reaches the agent fine (got real 404s, LV replies on Discord).
+- CONCLUSION: blocking REST to agent-scoped endpoints is the WRONG mechanism in this env. The listener
+  talks to LV over Letta's streaming / device-connection protocol, not blocking REST /messages.
+- NEXT (research-first, NOT more live pokes): rework LettaReactiveAgent to Letta's async/streaming run
+  pattern (POST → run → stream/poll reply), mirroring how letta-code (the listener) itself talks to the
+  agent, or confirm the client contract with Ezra. Then re-smoke.
