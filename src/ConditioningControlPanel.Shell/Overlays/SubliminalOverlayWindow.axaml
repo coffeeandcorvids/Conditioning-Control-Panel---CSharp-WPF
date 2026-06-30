@@ -1,0 +1,21 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ConditioningControlPanel.Shell.Overlays.SubliminalOverlayWindow"
+        Title="sub"
+        ShowInTaskbar="False"
+        CanResize="False"
+        SystemDecorations="None"
+        Topmost="True"
+        TransparencyLevelHint="Transparent"
+        Background="Transparent"
+        WindowStartupLocation="Manual"
+        IsHitTestVisible="False">
+  <Grid>
+    <TextBlock x:Name="SubText"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"
+               Foreground="White"
+               FontWeight="Bold"
+               TextAlignment="Center"/>
+  </Grid>
+</Window>
