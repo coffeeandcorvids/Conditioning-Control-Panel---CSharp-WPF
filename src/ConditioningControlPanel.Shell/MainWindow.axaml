@@ -1,0 +1,46 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ConditioningControlPanel.Shell.MainWindow"
+        Title="Vesper · Conditioning Panel (prototype)"
+        Width="900" Height="600" Background="#120512">
+  <DockPanel LastChildFill="True">
+
+    <!-- event triggers -->
+    <WrapPanel DockPanel.Dock="Top" Margin="10" >
+      <Button x:Name="BtnSpiral"   Content="🌀 keyword: spiral" Margin="4"/>
+      <Button x:Name="BtnLock"     Content="🔒 lock result"     Margin="4"/>
+      <Button x:Name="BtnVideo"    Content="🎬 video done"      Margin="4"/>
+      <Button x:Name="BtnPresence" Content="👁 presence"        Margin="4"/>
+      <TextBox x:Name="TxtMsg" Width="220" Watermark="say something to LV…" Margin="8,4,4,4"/>
+      <Button x:Name="BtnSend"     Content="➤ send"             Margin="4"/>
+    </WrapPanel>
+
+    <!-- say log -->
+    <Border DockPanel.Dock="Bottom" Background="#1c0a1c" Height="120" Margin="10">
+      <ScrollViewer>
+        <TextBlock x:Name="SayLog" Foreground="#ffb3e6" Margin="10" TextWrapping="Wrap"
+                   FontSize="14" Text="(LV's reactions appear here)"/>
+      </ScrollViewer>
+    </Border>
+
+    <!-- visual stage: spiral + flash + fog stacked -->
+    <Grid x:Name="Stage" Background="#160616">
+      <!-- pink fog overlay -->
+      <Border x:Name="Fog" Background="#33ff2f9e" IsVisible="False"/>
+      <!-- spiral -->
+      <Viewbox x:Name="Spiral" IsVisible="False" Width="280" Height="280"
+               HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Path Stroke="#ff2f9e" StrokeThickness="6"
+              Data="M150,150 m0,0 a10,10 0 1,1 0,-20 a30,30 0 1,1 0,60 a55,55 0 1,1 0,-110 a85,85 0 1,1 0,170 a120,120 0 1,1 0,-240">
+          
+        </Path>
+      </Viewbox>
+      <!-- flash word -->
+      <TextBlock x:Name="FlashText" IsVisible="False" Text="" FontSize="96" FontWeight="Bold"
+                 Foreground="#ffffff" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      <!-- status chips for lock/haptics -->
+      <TextBlock x:Name="StatusChip" Text="" FontSize="16" Foreground="#cf8fcf"
+                 HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,12"/>
+    </Grid>
+  </DockPanel>
+</Window>
