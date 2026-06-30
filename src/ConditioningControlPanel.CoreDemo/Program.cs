@@ -7,6 +7,7 @@ using ConditioningControlPanel.Core.Events;
 // A ScriptedAgent stands in for the real Letta wire; everything else is the REAL Core.
 
 if (args.Length > 0 && args[0] == "live") { return await LiveSmoke.Run(); }
+if (args.Length > 0 && args[0] == "raw") { return await RawDump.Run(); }
 
 Console.WriteLine("=== CCP Core demo — Vesper driving the room (scripted stand-in for Letta) ===\n");
 

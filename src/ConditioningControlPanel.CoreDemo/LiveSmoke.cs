@@ -21,7 +21,7 @@ static class LiveSmoke
         try
         {
             var r = await agent.ReactAsync(new KeywordTriggered("spiral"), cts.Token);
-            Console.WriteLine($"\n✅ PIPE ALIVE — LV replied.");
+            Console.WriteLine($"\n✅ PIPE ALIVE — LV replied.  [RAW DEBUG: say='{r.Say}' cmds={r.Commands.Count}]");
             Console.WriteLine($"   say: {(r.Say ?? "(none)")}");
             Console.WriteLine($"   commands: {r.Commands.Count}");
             foreach (var c in r.Commands) Console.WriteLine($"     - {c}");

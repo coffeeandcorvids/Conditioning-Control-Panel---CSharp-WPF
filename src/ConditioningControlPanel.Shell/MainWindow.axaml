@@ -3,6 +3,7 @@
         x:Class="ConditioningControlPanel.Shell.MainWindow"
         Title="Vesper · Conditioning Panel (prototype)"
         RequestedThemeVariant="Dark"
+        WindowStartupLocation="CenterScreen"
         Width="900" Height="600" Background="#120512">
   <Window.Styles>
     <!-- high-contrast on the dark bg: light text everywhere, readable pink buttons -->

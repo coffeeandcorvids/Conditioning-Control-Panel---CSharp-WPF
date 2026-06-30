@@ -102,3 +102,14 @@ LettaReactiveAgent built + 28 tests green. Live smoke against agent-8e8be3fb:
 - NEXT (research-first, NOT more live pokes): rework LettaReactiveAgent to Letta's async/streaming run
   pattern (POST → run → stream/poll reply), mirroring how letta-code (the listener) itself talks to the
   agent, or confirm the client contract with Ezra. Then re-smoke.
+
+## WIRE STATUS CORRECTION (Jun 29 ~19:41) — transport NOT solved
+Retracting the earlier "WORKING transport" claim. Honest state of the endpoints tried:
+- `/v1/agents/{id}/messages/stream` → HANGS (timeout, even streaming)
+- `/v1/conversations/default/messages/stream` → **404 Not Found** (raw dump confirmed)
+The earlier "✅ PIPE ALIVE" was a FALSE POSITIVE: LiveSmoke treated a 404→Silent (no exception) as
+"replied." Fixed conceptually — a non-2xx must NOT read as success. So neither endpoint guess is right;
+I was hand-guessing raw URLs the SDK abstracts. STOP guessing. NEXT: get the EXACT raw route from
+(a) the listener's literal HTTP calls (letta-code, the working ground truth), (b) Letta docs/OpenAPI
+(openapi.json 403'd for me), or (c) Ezra's literal raw URL (not the SDK call). LessonForMe: don't call
+a thing "solved" off a smoke whose success check is too loose; verify the actual reply, not just "no throw."
