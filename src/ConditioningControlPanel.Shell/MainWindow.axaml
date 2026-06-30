@@ -5,150 +5,190 @@
         Title="Conditioning Control Panel"
         RequestedThemeVariant="Dark"
         WindowStartupLocation="CenterScreen"
-        Width="1100" Height="760" Background="#121220">
+        SystemDecorations="None"
+        Width="1200" Height="820" Background="#121220">
 
-  <!-- Palette verbatim from upstream Resources/Theme/Colors.xaml -->
+  <!-- BrandGradient: upstream's exact gradient (#E84393→#8B5CF6) — used on START + title bar -->
+
   <Window.Styles>
+    <!-- base -->
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="#F0F0F5"/>
+    </Style>
     <Style Selector="Button">
       <Setter Property="Foreground" Value="#F0F0F5"/>
-      <Setter Property="Background" Value="#2E2E4A"/>
-      <Setter Property="BorderBrush" Value="#FF5CA8"/>
+      <Setter Property="Background" Value="#222240"/>
+      <Setter Property="BorderBrush" Value="#30FFFFFF"/>
       <Setter Property="BorderThickness" Value="1"/>
       <Setter Property="CornerRadius" Value="8"/>
-      <Setter Property="Padding" Value="10,6"/><Setter Property="FontSize" Value="13"/>
+      <Setter Property="Padding" Value="12,6"/><Setter Property="FontSize" Value="13"/>
+      <Setter Property="Cursor" Value="Hand"/>
     </Style>
     <Style Selector="Button:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="#3A3A5C"/>
+      <Setter Property="Background" Value="#2E2E50"/>
     </Style>
-    <!-- nav buttons (top rail) — active state -->
-    <Style Selector="Button.navActive">
-      <Setter Property="Background" Value="#FF5CA8"/>
+    <!-- nav tab active state -->
+    <Style Selector="Button.tabActive">
+      <Setter Property="Background" Value="#FF1493"/>
       <Setter Property="Foreground" Value="#ffffff"/>
       <Setter Property="FontWeight" Value="Bold"/>
     </Style>
-    <!-- START -->
-    <Style Selector="Button.start">
-      <Setter Property="Background" Value="#1FB85A"/><Setter Property="BorderBrush" Value="#3EE87A"/>
-      <Setter Property="Foreground" Value="#ffffff"/><Setter Property="FontWeight" Value="Bold"/>
-      <Setter Property="FontSize" Value="15"/><Setter Property="CornerRadius" Value="16"/>
-      <Setter Property="Padding" Value="26,10"/>
+    <!-- secondary nav pill -->
+    <Style Selector="Button.navPill">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderBrush" Value="#30FFFFFF"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="20"/>
+      <Setter Property="Padding" Value="14,5"/>
+      <Setter Property="FontSize" Value="12"/>
     </Style>
-    <!-- Exit -->
-    <Style Selector="Button.exit">
-      <Setter Property="Background" Value="#E53935"/><Setter Property="BorderBrush" Value="#E84050"/>
-      <Setter Property="CornerRadius" Value="16"/><Setter Property="Padding" Value="18,10"/>
+    <Style Selector="Button.navPillActive">
+      <Setter Property="Background" Value="#FF1493"/>
+      <Setter Property="BorderBrush" Value="#FF1493"/>
+      <Setter Property="CornerRadius" Value="20"/>
+      <Setter Property="Padding" Value="14,5"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="Foreground" Value="#ffffff"/>
     </Style>
     <Style Selector="TextBox">
-      <Setter Property="Foreground" Value="#F0F0F5"/><Setter Property="Background" Value="#0D0D18"/>
-      <Setter Property="BorderBrush" Value="#FF5CA8"/><Setter Property="CornerRadius" Value="6"/>
-      <Setter Property="CaretBrush" Value="#FF5CA8"/>
-    </Style>
-    <Style Selector="TextBlock.sectionHead">
-      <Setter Property="Foreground" Value="#FF5CA8"/><Setter Property="FontSize" Value="16"/>
-      <Setter Property="FontWeight" Value="Bold"/><Setter Property="Margin" Value="0,0,0,10"/>
-    </Style>
-    <Style Selector="TextBlock.label">
-      <Setter Property="Foreground" Value="#DF6BA0"/><Setter Property="VerticalAlignment" Value="Center"/>
-      <Setter Property="Margin" Value="0,0,12,6"/>
-    </Style>
-    <Style Selector="TextBlock.muted">
-      <Setter Property="Foreground" Value="#6E6E88"/><Setter Property="FontSize" Value="12"/>
-    </Style>
-    <Style Selector="Border.panel">
-      <Setter Property="Background" Value="#1C1C35"/>
+      <Setter Property="Foreground" Value="#F0F0F5"/>
+      <Setter Property="Background" Value="#0D0D18"/>
       <Setter Property="BorderBrush" Value="#FF5CA8"/>
-      <Setter Property="BorderThickness" Value="1.5"/>
-      <Setter Property="CornerRadius" Value="12"/>
-      <Setter Property="Padding" Value="14"/>
-    </Style>
-    <Style Selector="Border.rail">
-      <Setter Property="Background" Value="#181830"/>
-      <Setter Property="BorderBrush" Value="#2E2E4A"/>
-      <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="CornerRadius" Value="12"/>
-      <Setter Property="Padding" Value="6,10"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="CaretBrush" Value="#FF5CA8"/>
     </Style>
     <Style Selector="CheckBox">
       <Setter Property="Foreground" Value="#F0F0F5"/>
     </Style>
-    <Style Selector="Slider">
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="#1C1C35"/>
+      <Setter Property="BorderBrush" Value="#FF5CA8"/>
+      <Setter Property="BorderThickness" Value="1.5"/>
+      <Setter Property="CornerRadius" Value="12"/>
+    </Style>
+    <Style Selector="Border.panel">
+      <Setter Property="Background" Value="#1A1A2E"/>
+      <Setter Property="BorderBrush" Value="#20FFFFFF"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Padding" Value="14"/>
+    </Style>
+    <Style Selector="TextBlock.head">
+      <Setter Property="FontSize" Value="15"/>
+      <Setter Property="FontWeight" Value="Bold"/>
       <Setter Property="Foreground" Value="#FF5CA8"/>
+      <Setter Property="Margin" Value="0,0,0,10"/>
+    </Style>
+    <Style Selector="TextBlock.muted">
+      <Setter Property="Foreground" Value="#6E6E88"/>
+      <Setter Property="FontSize" Value="12"/>
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="Foreground" Value="#DF6BA0"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Margin" Value="0,0,10,6"/>
     </Style>
   </Window.Styles>
 
-  <DockPanel LastChildFill="True">
+  <Grid RowDefinitions="38,46,38,*,46,22">
 
-    <!-- ════════════════════════════════════════════════════════════════════
-         TOP TITLE + NAV BAR
-         ═══════════════════════════════════════════════════════════════════ -->
-    <Border DockPanel.Dock="Top" Background="#181830" BorderBrush="#FF1493"
-            BorderThickness="0,0,0,1.5" Padding="10,8">
-      <Grid ColumnDefinitions="Auto,*,Auto">
-        <!-- title -->
-        <TextBlock Grid.Column="0" Text="Conditioning Control Panel"
-                   Foreground="#FF5CA8" FontWeight="Bold" FontSize="16"
-                   VerticalAlignment="Center" Margin="0,0,20,0"/>
-        <!-- nav tabs (match upstream: Settings/home, Presets, Quests, Achievements, Sessions, Companion, Lab) -->
-        <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-          <Button x:Name="NavHome"         Content="⚙ Settings"     Classes="navActive" Margin="3,0" Padding="12,6"/>
-          <Button x:Name="NavSessions"     Content="▶ Sessions"      Margin="3,0" Padding="12,6"/>
-          <Button x:Name="NavPresets"      Content="📋 Presets"      Margin="3,0" Padding="12,6"/>
-          <Button x:Name="NavQuests"       Content="⭐ Quests"       Margin="3,0" Padding="12,6"/>
-          <Button x:Name="NavAchievements" Content="🏆 Achievements" Margin="3,0" Padding="12,6"/>
-          <Button x:Name="NavCompanion"    Content="🤖 Companion"    Margin="3,0" Padding="12,6"/>
-          <Button x:Name="NavLive"         Content="✦ Live"          Margin="3,0" Padding="12,6"/>
+    <!-- ══════════════════════════════════════════════════════════════════
+         ROW 0 — HOT-PINK TITLE BAR (custom chrome, no OS decorations)
+         ═════════════════════════════════════════════════════════════════ -->
+    <Border Grid.Row="0">
+      <Border.Background>
+        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+          <GradientStop Color="#E84393" Offset="0"/>
+          <GradientStop Color="#8B5CF6" Offset="1"/>
+        </LinearGradientBrush>
+      </Border.Background>
+      <Grid ColumnDefinitions="*,Auto" Margin="14,0">
+        <TextBlock Grid.Column="0" Text="Conditioning Control Panel v6.2.2"
+                   FontWeight="Bold" FontSize="14" VerticalAlignment="Center" Foreground="White"/>
+        <!-- window controls (custom, since SystemDecorations=None) -->
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+          <Button x:Name="BtnMinimize" Content="─" Background="Transparent" BorderThickness="0"
+                  Padding="10,4" FontSize="16" Foreground="White" CornerRadius="0"/>
+          <Button x:Name="BtnClose"    Content="✕" Background="Transparent" BorderThickness="0"
+                  Padding="10,4" FontSize="14" Foreground="White" CornerRadius="0"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         ROW 1 — PRIMARY NAV: profile + main tabs + update badge
+         ═════════════════════════════════════════════════════════════════ -->
+    <Border Grid.Row="1" Background="#181830" BorderBrush="#20FFFFFF" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto,*,Auto" Margin="10,4">
+        <!-- profile section -->
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Border Background="#222240" BorderBrush="#FF5CA8" BorderThickness="1"
+                  CornerRadius="6" Padding="8,4">
+            <TextBlock Text="CCP Default ▾" Foreground="#DF6BA0" FontSize="12"/>
+          </Border>
+          <Ellipse Width="10" Height="10" Fill="#3EE87A"/>
+          <TextBlock Text="STAR" FontWeight="Bold" FontSize="14" Foreground="#FF5CA8"/>
+          <Border>
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                <GradientStop Color="#E84393" Offset="0"/>
+                <GradientStop Color="#8B5CF6" Offset="1"/>
+              </LinearGradientBrush>
+            </Border.Background>
+            <TextBlock Text="Lv 1" FontSize="11" FontWeight="Bold" Foreground="White" Margin="8,2"/>
+          </Border>
+        </StackPanel>
+
+        <!-- primary tab buttons -->
+        <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                   HorizontalAlignment="Center" Margin="8,0">
+          <Button x:Name="NavDashboard"    Content="📊 Dashboard"    Classes="tabActive" Margin="2,0" Padding="10,5" CornerRadius="6" FontSize="12"/>
+          <Button x:Name="NavPresets"      Content="📋 Presets"      Margin="2,0" Padding="10,5" CornerRadius="6" FontSize="12"/>
+          <Button x:Name="NavQuests"       Content="⭐ Quests"       Margin="2,0" Padding="10,5" CornerRadius="6" FontSize="12"/>
+          <Button x:Name="NavEnhancements" Content="✨ Enhancements" Margin="2,0" Padding="10,5" CornerRadius="6" FontSize="12"/>
+          <Button x:Name="NavDeeper"       Content="🌊 Deeper"       Margin="2,0" Padding="10,5" CornerRadius="6" FontSize="12"/>
+          <Button x:Name="NavAssets"       Content="🗂 Assets"       Margin="2,0" Padding="10,5" CornerRadius="6" FontSize="12"/>
         </WrapPanel>
-        <!-- version chip -->
-        <TextBlock Grid.Column="2" Text="V6.2.2 · Pi-native"
-                   Foreground="#6E6E88" FontSize="11" VerticalAlignment="Center"/>
+
+        <!-- update badge -->
+        <Border Grid.Column="2" Background="#E84393" CornerRadius="6" Padding="10,4">
+          <TextBlock Text="UPDATE AVAILABLE v6.2.2" FontSize="11" FontWeight="Bold" Foreground="White"/>
+        </Border>
       </Grid>
     </Border>
 
-    <!-- ════════════════════════════════════════════════════════════════════
-         BOTTOM CONTROL BAR: XP bar + START + Save + Exit
-         ═══════════════════════════════════════════════════════════════════ -->
-    <Border DockPanel.Dock="Bottom" Background="#181830" BorderBrush="#FF1493"
-            BorderThickness="0,1.5,0,0" Padding="14,10">
-      <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
-        <!-- live marquee + session timer -->
-        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-          <TextBlock x:Name="StatusPill" Text="● IDLE" Foreground="#6E6E88" FontWeight="Bold"/>
-          <TextBlock x:Name="SessionTimer" Text="00:00:00" Foreground="#FF5CA8"
-                     FontFamily="Monospace" FontWeight="Bold" FontSize="16"/>
-          <TextBlock x:Name="XpChip" Text="Lv 1 · 0 XP" Foreground="#DF6BA0" FontSize="12" VerticalAlignment="Center"/>
+    <!-- ══════════════════════════════════════════════════════════════════
+         ROW 2 — SECONDARY NAV: achievements, companion, profile, lab
+         ═════════════════════════════════════════════════════════════════ -->
+    <Border Grid.Row="2" Background="#121220" BorderBrush="#20FFFFFF" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="*,Auto" Margin="12,4">
+        <!-- marquee text (top strip) -->
+        <TextBlock Grid.Column="0"
+                   Text="  ✨  A special thanks to Platinum Puppets for providing the audios  💗  ✨  A special thanks to Platinum Puppets for providing the audios  💗  "
+                   Foreground="#DF6BA0" FontSize="11" VerticalAlignment="Center" FontStyle="Italic"/>
+        <!-- secondary tabs -->
+        <StackPanel Grid.Column="1" Orientation="Horizontal">
+          <Button x:Name="Nav2Achievements" Content="🏆 Achievements" Classes="navPill" FontSize="11" Padding="10,4" Margin="0,0,4,0"/>
+          <Button x:Name="Nav2Leaderboard"  Content="📊 Leaderboard"  Classes="navPill" FontSize="11" Padding="10,4" Margin="0,0,4,0"/>
+          <Button x:Name="Nav2Companion"    Content="🤖 Companion"    Classes="navPill" FontSize="11" Padding="10,4" Margin="0,0,4,0"/>
+          <Button x:Name="Nav2Profile"      Content="👤 Profile"      Classes="navPillActive" FontSize="11" Padding="10,4" Margin="0,0,4,0"/>
+          <Button x:Name="Nav2Lab"          Content="🧪 Lab"          Classes="navPill" FontSize="11" Padding="10,4" Margin="0,0,4,0"/>
+          <Button x:Name="Nav2Live"         Content="✦ Live"          Classes="navPill" FontSize="11" Padding="10,4"/>
         </StackPanel>
-        <Button Grid.Column="1" x:Name="BtnStart" Classes="start" Content="▶ START" Margin="8,0"/>
-        <Button Grid.Column="2" x:Name="BtnPause" Content="⏸" Margin="4,0" IsEnabled="False"/>
-        <Button Grid.Column="3" x:Name="BtnSave"  Content="💾 Save" Margin="4,0"/>
-        <Button Grid.Column="4" x:Name="BtnExit"  Classes="exit" Content="✕ Exit" Margin="4,0"/>
       </Grid>
     </Border>
 
-    <!-- ════════════════════════════════════════════════════════════════════
-         MAIN BODY: left quick-toggle rail + center content area
-         ═══════════════════════════════════════════════════════════════════ -->
-    <Grid ColumnDefinitions="80,*">
+    <!-- ══════════════════════════════════════════════════════════════════
+         ROW 3 — MAIN CONTENT (tabs swap here)
+         ═════════════════════════════════════════════════════════════════ -->
+    <Grid Grid.Row="3">
 
-      <!-- LEFT QUICK-TOGGLE RAIL (matches upstream PremiumRail, but ours has no lock overlay) -->
-      <Border Grid.Column="0" Classes="rail" Margin="6,6,3,6">
-        <StackPanel Spacing="6">
-          <TextBlock Text="FEATURES" FontSize="8" FontWeight="Bold"
-                     Foreground="#6E6E88" TextAlignment="Center" Margin="0,0,0,6"/>
-          <!-- quick toggles — all unlocked by construction -->
-          <Button x:Name="RailFlash"    Content="⚡" ToolTip.Tip="Flash Images" Padding="6,8" CornerRadius="8" HorizontalAlignment="Stretch"/>
-          <Button x:Name="RailSub"      Content="💬" ToolTip.Tip="Subliminals"  Padding="6,8" CornerRadius="8" HorizontalAlignment="Stretch"/>
-          <Button x:Name="RailSpiral"   Content="🌀" ToolTip.Tip="Spiral"       Padding="6,8" CornerRadius="8" HorizontalAlignment="Stretch"/>
-          <Button x:Name="RailFog"      Content="🌸" ToolTip.Tip="Pink Fog"     Padding="6,8" CornerRadius="8" HorizontalAlignment="Stretch"/>
-          <Button x:Name="RailHaptics"  Content="💗" ToolTip.Tip="Haptics"      Padding="6,8" CornerRadius="8" HorizontalAlignment="Stretch"/>
-          <Button x:Name="RailLock"     Content="🔒" ToolTip.Tip="Lock Card"    Padding="6,8" CornerRadius="8" HorizontalAlignment="Stretch"/>
-        </StackPanel>
-      </Border>
+      <!-- ── DASHBOARD TAB (default) ─────────────────────────────────── -->
+      <Grid x:Name="ViewDashboard" ColumnDefinitions="*,320" Margin="6">
 
-      <!-- CENTER: multiple views, toggled by nav buttons -->
-      <Grid Grid.Column="1" Margin="3,6,6,6">
-
-        <!-- ════ VIEW: HOME / SETTINGS — 4×4 Velvet Mosaic ════ -->
-        <Grid x:Name="ViewHome">
+        <!-- LEFT: 4×4 mosaic -->
+        <Grid Grid.Column="0" Margin="0,0,6,0">
           <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
@@ -163,276 +203,310 @@
           </Grid.ColumnDefinitions>
 
           <!-- Row 0 -->
-          <ctrl:FeatureCard Grid.Row="0" Grid.Column="0" x:Name="CardFlash"
-                            Icon="⚡" Label="Flash Images" Margin="4"/>
-          <ctrl:FeatureCard Grid.Row="0" Grid.Column="1" x:Name="CardVisuals"
-                            Icon="🎨" Label="Visuals" Margin="4"/>
-          <ctrl:FeatureCard Grid.Row="0" Grid.Column="2" x:Name="CardVideo"
-                            Icon="🎬" Label="Video" Margin="4"/>
-          <ctrl:FeatureCard Grid.Row="0" Grid.Column="3" x:Name="CardSubliminal"
-                            Icon="💬" Label="Subliminals" Margin="4"/>
+          <ctrl:FeatureCard Grid.Row="0" Grid.Column="0" x:Name="CardFlash"    Icon="⚡" Label="Flash Images" Margin="3"/>
+          <ctrl:FeatureCard Grid.Row="0" Grid.Column="1" x:Name="CardVisuals"  Icon="👁" Label="Visuals"      Margin="3"/>
+          <ctrl:FeatureCard Grid.Row="0" Grid.Column="2" x:Name="CardVideo"    Icon="🎬" Label="Video"        Margin="3"/>
+          <ctrl:FeatureCard Grid.Row="0" Grid.Column="3" x:Name="CardSubliminal" Icon="💬" Label="Subliminals" Margin="3"/>
 
-          <!-- Row 1: edge cards + center logo -->
-          <ctrl:FeatureCard Grid.Row="1" Grid.Column="0" x:Name="CardSpiral"
-                            Icon="🌀" Label="Spiral" Margin="4"/>
-          <!-- CENTER LOGO 2×2 spans rows 1-2 cols 1-2 -->
+          <!-- Row 1: edge + 2×2 center logo -->
+          <ctrl:FeatureCard Grid.Row="1" Grid.Column="0" x:Name="CardSpiral"   Icon="🌀" Label="Spiral"       Margin="3"/>
+          <!-- CENTER LOGO 2×2 -->
           <Border Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Grid.ColumnSpan="2"
-                  Background="#1C1C35" BorderBrush="#FF5CA8" BorderThickness="2"
-                  CornerRadius="16" Margin="4">
-            <Grid RowDefinitions="*,Auto">
-              <Viewbox Grid.Row="0" x:Name="LogoSpiral" Margin="20">
-                <Path Stroke="#FF5CA8" StrokeThickness="5"
-                      Data="M150,150 m0,0 a10,10 0 1,1 0,-20 a30,30 0 1,1 0,60 a55,55 0 1,1 0,-110 a85,85 0 1,1 0,170 a120,120 0 1,1 0,-240"/>
-              </Viewbox>
-              <TextBlock Grid.Row="1" Text="CONDITIONING CONTROL PANEL"
-                         FontSize="10" FontWeight="Bold" Foreground="#FF5CA8"
-                         TextAlignment="Center" Margin="0,0,0,12"/>
-            </Grid>
-          </Border>
-          <ctrl:FeatureCard Grid.Row="1" Grid.Column="3" x:Name="CardLockCard"
-                            Icon="🔒" Label="Lock Card" Margin="4"/>
-
-          <!-- Row 2: edge cards (center logo continues) -->
-          <ctrl:FeatureCard Grid.Row="2" Grid.Column="0" x:Name="CardPinkFog"
-                            Icon="🌸" Label="Pink Fog" Margin="4"/>
-          <ctrl:FeatureCard Grid.Row="2" Grid.Column="3" x:Name="CardMindWipe"
-                            Icon="🧠" Label="Mind Wipe" Margin="4"/>
-
-          <!-- Row 3 -->
-          <ctrl:FeatureCard Grid.Row="3" Grid.Column="0" x:Name="CardBubblePop"
-                            Icon="🫧" Label="Bubble Pop" Margin="4"/>
-          <ctrl:FeatureCard Grid.Row="3" Grid.Column="1" x:Name="CardBouncingText"
-                            Icon="✨" Label="Bouncing Text" Margin="4"/>
-          <ctrl:FeatureCard Grid.Row="3" Grid.Column="2" x:Name="CardSystem"
-                            Icon="⚙" Label="System" Margin="4"/>
-          <ctrl:FeatureCard Grid.Row="3" Grid.Column="3" x:Name="CardHaptics"
-                            Icon="💗" Label="Haptics" Margin="4"/>
-        </Grid>
-
-        <!-- ════ VIEW: SESSIONS ════ -->
-        <ScrollViewer x:Name="ViewSessions" IsVisible="False">
-          <StackPanel Margin="10" Spacing="14">
-            <TextBlock Classes="sectionHead" Text="Session Control"/>
-            <Border Classes="panel">
-              <StackPanel Spacing="10">
-                <TextBlock x:Name="TxtSessionStatus" Foreground="#3EE87A" FontSize="16" FontWeight="Bold" Text="● IDLE"/>
-                <TextBlock x:Name="TxtSessionTimer"  Foreground="#FF5CA8" FontSize="32" FontWeight="Bold" Text="00:00:00" FontFamily="Monospace"/>
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                  <Button x:Name="BtnSessionStart" Classes="start" Content="▶ Start"/>
-                  <Button x:Name="BtnSessionPause" Content="⏸ Pause" IsEnabled="False"/>
-                  <Button x:Name="BtnSessionStop"  Classes="exit"  Content="■ Stop" IsEnabled="False"/>
-                </StackPanel>
-                <TextBlock Classes="muted" Text="Starting a session activates all enabled features. LV drives intensity via agent commands."/>
-              </StackPanel>
-            </Border>
-            <TextBlock Classes="sectionHead" Text="Gamification"/>
-            <Border Classes="panel">
-              <StackPanel Orientation="Horizontal" Spacing="30">
-                <StackPanel>
-                  <TextBlock Classes="muted" Text="Level"/>
-                  <TextBlock x:Name="TxtLevel" Foreground="#FF5CA8" FontSize="28" FontWeight="Bold" Text="1"/>
-                </StackPanel>
-                <StackPanel>
-                  <TextBlock Classes="muted" Text="XP"/>
-                  <TextBlock x:Name="TxtXp" Foreground="#3EE87A" FontSize="28" FontWeight="Bold" Text="0"/>
-                </StackPanel>
-                <StackPanel>
-                  <TextBlock Classes="muted" Text="Sessions"/>
-                  <TextBlock x:Name="TxtSessionCount" Foreground="#F0F0F5" FontSize="28" FontWeight="Bold" Text="0"/>
-                </StackPanel>
-                <StackPanel>
-                  <TextBlock Classes="muted" Text="Time"/>
-                  <TextBlock x:Name="TxtTotalTime" Foreground="#F0F0F5" FontSize="28" FontWeight="Bold" Text="0h 0m"/>
-                </StackPanel>
-              </StackPanel>
-            </Border>
-          </StackPanel>
-        </ScrollViewer>
-
-        <!-- ════ VIEW: PRESETS ════ -->
-        <Border x:Name="ViewPresets" IsVisible="False" Classes="panel">
-          <TextBlock Classes="muted" Text="Presets — save + load conditioning session configurations. (coming next)"/>
-        </Border>
-
-        <!-- ════ VIEW: QUESTS ════ -->
-        <Border x:Name="ViewQuests" IsVisible="False" Classes="panel">
-          <TextBlock Classes="muted" Text="Quests — daily + long-term conditioning objectives. (coming next)"/>
-        </Border>
-
-        <!-- ════ VIEW: ACHIEVEMENTS ════ -->
-        <Border x:Name="ViewAchievements" IsVisible="False" Classes="panel">
-          <TextBlock Classes="muted" Text="Achievements — unlocks and milestones. (coming next)"/>
-        </Border>
-
-        <!-- ════ VIEW: COMPANION ════ -->
-        <ScrollViewer x:Name="ViewCompanion" IsVisible="False">
-          <StackPanel Margin="10" Spacing="14">
-            <TextBlock Classes="sectionHead" Text="Companion — Vesper · LV"/>
-            <Border Classes="panel">
-              <StackPanel Spacing="10">
-                <TextBlock Foreground="#DF6BA0" Text="LV is the controller. She drives the session via agent commands."/>
-                <TextBlock x:Name="TxtAgentStatus" Foreground="#FF5CA8" Text="Agent: ScriptedReactiveAgent (Letta transport pending)"/>
-              </StackPanel>
-            </Border>
-            <TextBlock Classes="sectionHead" Text="Settings"/>
-            <Border Classes="panel">
-              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" >
-                <TextBlock Grid.Row="0" Grid.Column="0" Classes="label" Text="Letta URL:"/>
-                <TextBox  Grid.Row="0" Grid.Column="1" x:Name="TxtLettaUrl" PlaceholderText="http://localhost:8283" Margin="0,0,0,8"/>
-                <TextBlock Grid.Row="1" Grid.Column="0" Classes="label" Text="LV agent ID:"/>
-                <TextBox  Grid.Row="1" Grid.Column="1" x:Name="TxtAgentId" PlaceholderText="agent-xxxxxxxx"/>
+                  CornerRadius="14" Margin="3" ClipToBounds="True">
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#1A1A2E" Offset="0"/>
+                <GradientStop Color="#251540" Offset="1"/>
+              </LinearGradientBrush>
+            </Border.Background>
+            <Border BorderBrush="#FF5CA8" BorderThickness="2" CornerRadius="14">
+              <Grid RowDefinitions="*,Auto">
+                <Viewbox Grid.Row="0" x:Name="LogoSpiral" Margin="18">
+                  <Canvas Width="300" Height="300">
+                    <!-- outer glow ring -->
+                    <Ellipse Width="280" Height="280" Canvas.Left="10" Canvas.Top="10"
+                             Stroke="#40FF5CA8" StrokeThickness="2"/>
+                    <!-- spiral path -->
+                    <Path Stroke="#FF5CA8" StrokeThickness="4" Canvas.Left="0" Canvas.Top="0"
+                          Data="M150,150 m0,0 a12,12 0 1,1 0,-24 a36,36 0 1,1 0,72 a64,64 0 1,1 0,-128 a96,96 0 1,1 0,192 a130,130 0 1,1 0,-260"/>
+                    <!-- center dot -->
+                    <Ellipse Width="12" Height="12" Canvas.Left="144" Canvas.Top="144" Fill="#FF5CA8"/>
+                    <!-- C C P letters -->
+                    <TextBlock Canvas.Left="56"  Canvas.Top="255" Text="C" FontSize="22" FontWeight="Bold" Foreground="#FF5CA8"/>
+                    <TextBlock Canvas.Left="141" Canvas.Top="255" Text="·" FontSize="22" FontWeight="Bold" Foreground="#DF6BA0"/>
+                    <TextBlock Canvas.Left="151" Canvas.Top="255" Text="C" FontSize="22" FontWeight="Bold" Foreground="#FF5CA8"/>
+                    <TextBlock Canvas.Left="200" Canvas.Top="255" Text="·" FontSize="22" FontWeight="Bold" Foreground="#DF6BA0"/>
+                    <TextBlock Canvas.Left="210" Canvas.Top="255" Text="P" FontSize="22" FontWeight="Bold" Foreground="#FF5CA8"/>
+                  </Canvas>
+                </Viewbox>
+                <TextBlock Grid.Row="1" Text="CONDITIONING CONTROL PANEL"
+                           FontSize="9" FontWeight="Bold" Foreground="#6E6E88"
+                           TextAlignment="Center" Margin="0,0,0,8" LetterSpacing="2"/>
               </Grid>
             </Border>
-            <Button x:Name="BtnSaveCompanion" Content="💾 Save companion settings" HorizontalAlignment="Left"/>
-          </StackPanel>
-        </ScrollViewer>
-
-        <!-- ════ VIEW: LIVE / REACTIVE STAGE ════ -->
-        <DockPanel x:Name="ViewLive" IsVisible="False" LastChildFill="True">
-          <WrapPanel DockPanel.Dock="Top" Margin="6">
-            <Button x:Name="BtnSpiral"   Content="🌀 spiral"    Margin="3"/>
-            <Button x:Name="BtnLock"     Content="🔒 lock card" Margin="3"/>
-            <Button x:Name="BtnVideo"    Content="🎬 video done" Margin="3"/>
-            <Button x:Name="BtnPresence" Content="👁 presence"  Margin="3"/>
-            <TextBox x:Name="TxtMsg" Width="200" PlaceholderText="say something to LV…" Margin="6,3,3,3"/>
-            <Button x:Name="BtnSend"     Content="➤ send"       Margin="3"/>
-          </WrapPanel>
-          <Border DockPanel.Dock="Bottom" Background="#1C1C35" BorderBrush="#FF5CA8"
-                  BorderThickness="1" CornerRadius="10" Height="100" Margin="6">
-            <ScrollViewer>
-              <TextBlock x:Name="SayLog" Foreground="#ffb3e6" Margin="10"
-                         TextWrapping="Wrap" FontSize="13" Text="(LV's reactions appear here)"/>
-            </ScrollViewer>
           </Border>
-          <Grid x:Name="Stage" Background="#0D0D18">
-            <Border x:Name="Fog" Background="#33FF5CA8" IsVisible="False"/>
-            <Viewbox x:Name="Spiral" IsVisible="False" Width="260" Height="260"
-                     HorizontalAlignment="Center" VerticalAlignment="Center">
-              <Path Stroke="#FF5CA8" StrokeThickness="6"
-                    Data="M150,150 m0,0 a10,10 0 1,1 0,-20 a30,30 0 1,1 0,60 a55,55 0 1,1 0,-110 a85,85 0 1,1 0,170 a120,120 0 1,1 0,-240"/>
-            </Viewbox>
-            <TextBlock x:Name="FlashText" IsVisible="False" Text="" FontSize="88"
-                       FontWeight="Bold" Foreground="#ffffff"
-                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            <TextBlock x:Name="StatusChip" Text="" FontSize="15" Foreground="#DF6BA0"
-                       HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,10"/>
-          </Grid>
-        </DockPanel>
+          <ctrl:FeatureCard Grid.Row="1" Grid.Column="3" x:Name="CardLockCard" Icon="🔒" Label="Lock Card" Margin="3"/>
 
-        <!-- ════ FEATURE DETAIL PANEL (shown when a mosaic card is clicked) ════ -->
-        <ScrollViewer x:Name="ViewFeatureDetail" IsVisible="False">
-          <StackPanel x:Name="DetailContent" Margin="10" Spacing="14">
-            <!-- Back button -->
-            <Button x:Name="BtnDetailBack" Content="← Back to mosaic"
-                    HorizontalAlignment="Left" Background="Transparent" BorderThickness="0"
-                    Foreground="#DF6BA0" Padding="0"/>
-            <!-- Dynamic content panels — show/hide as needed -->
+          <!-- Row 2: edge + center logo continues -->
+          <ctrl:FeatureCard Grid.Row="2" Grid.Column="0" x:Name="CardPinkFog"  Icon="🌸" Label="Pink Filter" Margin="3"/>
+          <ctrl:FeatureCard Grid.Row="2" Grid.Column="3" x:Name="CardMindWipe" Icon="🧠" Label="Mind Wipe"  Margin="3"/>
 
-            <!-- Flash detail -->
-            <StackPanel x:Name="DetailFlash" Spacing="10">
-              <TextBlock Classes="sectionHead" Text="⚡ Flash Images"/>
-              <Border Classes="panel">
-                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
-                  <CheckBox Grid.Row="0" Grid.ColumnSpan="2" x:Name="ChkFlashEnabled"
-                            Content="Flash enabled" Margin="0,0,0,10"/>
-                  <TextBlock Grid.Row="1" Grid.Column="0" Classes="label" Text="Frequency (s):"/>
-                  <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                    <Slider x:Name="SldFlashFreq" Minimum="1" Maximum="60" Value="8" Width="220" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="TxtFlashFreq" Foreground="#F0F0F5" VerticalAlignment="Center" Text="8s"/>
+          <!-- Row 3 -->
+          <ctrl:FeatureCard Grid.Row="3" Grid.Column="0" x:Name="CardBubblePop"     Icon="🫧" Label="Bubble Pop"     Margin="3"/>
+          <ctrl:FeatureCard Grid.Row="3" Grid.Column="1" x:Name="CardBouncingText"  Icon="✨" Label="Bouncing Text"  Margin="3"/>
+          <ctrl:FeatureCard Grid.Row="3" Grid.Column="2" x:Name="CardSystem"        Icon="⚙" Label="System"         Margin="3"/>
+          <ctrl:FeatureCard Grid.Row="3" Grid.Column="3" x:Name="CardHaptics"       Icon="💗" Label="Haptics"        Margin="3"/>
+        </Grid>
+
+        <!-- RIGHT: detail / settings panel -->
+        <Grid Grid.Column="1" RowDefinitions="Auto,*">
+          <!-- detail panel header -->
+          <Border Grid.Row="0" Classes="panel" Margin="0,0,0,6">
+            <StackPanel>
+              <TextBlock x:Name="DetailTitle" Classes="head" Text="Select a tile"/>
+              <TextBlock x:Name="DetailHint"  Classes="muted" Text="Click any feature card to configure it"/>
+            </StackPanel>
+          </Border>
+
+          <!-- scrollable detail content -->
+          <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="8">
+
+              <!-- Default "nothing selected" hint -->
+              <StackPanel x:Name="DetailNone" Spacing="12">
+                <Border Classes="panel">
+                  <StackPanel Spacing="6">
+                    <TextBlock Classes="head"  Text="⚡ Flash Images"/>
+                    <TextBlock Classes="muted" Text="Flash images:"/>
+                    <TextBlock x:Name="DetailFlashStatus" Foreground="#3EE87A" Text="OFF" FontWeight="Bold"/>
+                    <CheckBox  x:Name="ChkFlashEnabled" Content="Enabled"/>
+                    <TextBlock Classes="label" Text="Frequency (s):"/>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Slider x:Name="SldFlashFreq" Minimum="1" Maximum="60" Value="8" Width="160" VerticalAlignment="Center"/>
+                      <TextBlock x:Name="TxtFlashFreq" VerticalAlignment="Center" Text="8s"/>
+                    </StackPanel>
+                    <TextBlock Classes="label" Text="Duration (ms):"/>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Slider x:Name="SldFlashDur" Minimum="500" Maximum="15000" Value="4000" Width="160" VerticalAlignment="Center"/>
+                      <TextBlock x:Name="TxtFlashDur" VerticalAlignment="Center" Text="4000ms"/>
+                    </StackPanel>
+                    <TextBlock Classes="label" Text="Amount:"/>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Slider x:Name="SldFlashAmount" Minimum="1" Maximum="6" Value="1" Width="160" VerticalAlignment="Center"/>
+                      <TextBlock x:Name="TxtFlashAmount" VerticalAlignment="Center" Text="1"/>
+                    </StackPanel>
+                    <TextBlock Classes="label" Text="Images folder:"/>
+                    <TextBox x:Name="TxtFlashPath" PlaceholderText="~/ccp-assets/images"/>
+                    <Button x:Name="BtnFlashNow" Content="⚡ Flash now"/>
                   </StackPanel>
-                  <TextBlock Grid.Row="2" Grid.Column="0" Classes="label" Text="Duration (ms):"/>
-                  <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                    <Slider x:Name="SldFlashDur" Minimum="500" Maximum="15000" Value="4000" Width="220" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="TxtFlashDur" Foreground="#F0F0F5" VerticalAlignment="Center" Text="4000ms"/>
+                </Border>
+
+                <Border Classes="panel">
+                  <StackPanel Spacing="6">
+                    <TextBlock Classes="head"  Text="💬 Subliminals"/>
+                    <CheckBox  x:Name="ChkSubEnabled" Content="Enabled"/>
+                    <TextBlock Classes="label" Text="Frequency (s):"/>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Slider x:Name="SldSubFreq" Minimum="1" Maximum="60" Value="12" Width="160" VerticalAlignment="Center"/>
+                      <TextBlock x:Name="TxtSubFreq" VerticalAlignment="Center" Text="12s"/>
+                    </StackPanel>
+                    <TextBlock Classes="label" Text="Duration (ms):"/>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Slider x:Name="SldSubDur" Minimum="100" Maximum="2000" Value="350" Width="160" VerticalAlignment="Center"/>
+                      <TextBlock x:Name="TxtSubDur" VerticalAlignment="Center" Text="350ms"/>
+                    </StackPanel>
+                    <TextBlock Classes="label" Text="Phrases (one per line):"/>
+                    <TextBox x:Name="TxtPhrases" AcceptsReturn="True" Height="100"
+                             PlaceholderText="good girl&#10;obey&#10;deeper"/>
+                    <Button x:Name="BtnSubNow" Content="💬 Flash subliminal now"/>
                   </StackPanel>
-                  <TextBlock Grid.Row="3" Grid.Column="0" Classes="label" Text="Amount:"/>
-                  <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                    <Slider x:Name="SldFlashAmount" Minimum="1" Maximum="6" Value="1" Width="220" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="TxtFlashAmount" Foreground="#F0F0F5" VerticalAlignment="Center" Text="1"/>
+                </Border>
+
+                <Border Classes="panel">
+                  <StackPanel Spacing="6">
+                    <TextBlock Classes="head" Text="🌸 Pink Filter / 🌀 Spiral"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Button x:Name="BtnSpiralToggle" Content="Toggle spiral"/>
+                      <Button x:Name="BtnFogToggle"    Content="Toggle fog"/>
+                    </StackPanel>
+                    <TextBlock Classes="label" Text="🔒 Lock Card phrase:"/>
+                    <TextBox x:Name="TxtLockPhrase" PlaceholderText="good girls don't think"/>
+                    <Button x:Name="BtnTriggerLock" Content="🔒 Trigger"/>
                   </StackPanel>
-                  <TextBlock Grid.Row="4" Grid.Column="0" Classes="label" Text="Images folder:"/>
-                  <TextBox  Grid.Row="4" Grid.Column="1" x:Name="TxtFlashPath" PlaceholderText="~/ccp-assets/images"/>
-                </Grid>
-              </Border>
-              <Button x:Name="BtnFlashNow" Content="⚡ Flash now" HorizontalAlignment="Left"/>
-            </StackPanel>
+                </Border>
 
-            <!-- Subliminals detail -->
-            <StackPanel x:Name="DetailSub" IsVisible="False" Spacing="10">
-              <TextBlock Classes="sectionHead" Text="💬 Subliminals"/>
-              <Border Classes="panel">
-                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
-                  <CheckBox Grid.Row="0" Grid.ColumnSpan="2" x:Name="ChkSubEnabled"
-                            Content="Subliminals enabled" Margin="0,0,0,10"/>
-                  <TextBlock Grid.Row="1" Grid.Column="0" Classes="label" Text="Frequency (s):"/>
-                  <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                    <Slider x:Name="SldSubFreq" Minimum="1" Maximum="60" Value="12" Width="220" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="TxtSubFreq" Foreground="#F0F0F5" VerticalAlignment="Center" Text="12s"/>
+                <Border Classes="panel">
+                  <StackPanel Spacing="6">
+                    <TextBlock Classes="head" Text="🤖 Companion Settings"/>
+                    <TextBlock Classes="label" Text="Letta URL:"/>
+                    <TextBox x:Name="TxtLettaUrl" PlaceholderText="http://localhost:8283"/>
+                    <TextBlock Classes="label" Text="LV agent ID:"/>
+                    <TextBox x:Name="TxtAgentId" PlaceholderText="agent-xxxxxxxx"/>
+                    <Button x:Name="BtnSaveCompanion" Content="💾 Save"/>
+                    <TextBlock x:Name="TxtAgentStatus" Classes="muted" Text="ScriptedReactiveAgent (Letta pending)"/>
                   </StackPanel>
-                  <TextBlock Grid.Row="2" Grid.Column="0" Classes="label" Text="Duration (ms):"/>
-                  <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                    <Slider x:Name="SldSubDur" Minimum="100" Maximum="2000" Value="350" Width="220" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="TxtSubDur" Foreground="#F0F0F5" VerticalAlignment="Center" Text="350ms"/>
-                  </StackPanel>
-                  <TextBlock Grid.Row="3" Grid.Column="0" Classes="label" Text="Phrases:" VerticalAlignment="Top"/>
-                  <TextBox  Grid.Row="3" Grid.Column="1" x:Name="TxtPhrases"
-                            AcceptsReturn="True" Height="130" PlaceholderText="one phrase per line"/>
-                </Grid>
-              </Border>
-              <Button x:Name="BtnSubNow" Content="⚡ Flash subliminal now" HorizontalAlignment="Left"/>
+                </Border>
+              </StackPanel>
+
             </StackPanel>
-
-            <!-- Spiral detail -->
-            <StackPanel x:Name="DetailSpiral" IsVisible="False" Spacing="10">
-              <TextBlock Classes="sectionHead" Text="🌀 Spiral Overlay"/>
-              <Border Classes="panel">
-                <StackPanel Spacing="8">
-                  <CheckBox x:Name="ChkSpiralEnabled" Content="Spiral enabled" IsChecked="True"/>
-                  <TextBlock Classes="muted" Text="Spiral animates over the screen when active. LV can trigger it via the spiral command."/>
-                  <Button x:Name="BtnSpiralToggle" Content="Toggle spiral" HorizontalAlignment="Left"/>
-                </StackPanel>
-              </Border>
-            </StackPanel>
-
-            <!-- Pink Fog detail -->
-            <StackPanel x:Name="DetailFog" IsVisible="False" Spacing="10">
-              <TextBlock Classes="sectionHead" Text="🌸 Pink Fog / Filter"/>
-              <Border Classes="panel">
-                <StackPanel Spacing="8">
-                  <CheckBox x:Name="ChkFogEnabled" Content="Pink fog enabled"/>
-                  <TextBlock Classes="muted" Text="Tints the screen with a soft pink overlay. LV controls via pink-fog command."/>
-                  <Button x:Name="BtnFogToggle" Content="Toggle fog" HorizontalAlignment="Left"/>
-                </StackPanel>
-              </Border>
-            </StackPanel>
-
-            <!-- Haptics detail -->
-            <StackPanel x:Name="DetailHaptics" IsVisible="False" Spacing="10">
-              <TextBlock Classes="sectionHead" Text="💗 Haptics"/>
-              <Border Classes="panel">
-                <StackPanel Spacing="8">
-                  <CheckBox x:Name="ChkHapticsEnabled" Content="Haptics enabled"/>
-                  <TextBlock Classes="muted" Text="Buttplug.io / Lovense integration. Cross-platform ✓ — wiring next."/>
-                </StackPanel>
-              </Border>
-            </StackPanel>
-
-            <!-- Lock Card detail -->
-            <StackPanel x:Name="DetailLockCard" IsVisible="False" Spacing="10">
-              <TextBlock Classes="sectionHead" Text="🔒 Lock Card"/>
-              <Border Classes="panel">
-                <StackPanel Spacing="8">
-                  <TextBlock Classes="muted" Text="Lock card displays a conditioning phrase prominently. LV triggers via lock-card command."/>
-                  <TextBox x:Name="TxtLockPhrase" PlaceholderText="good girls don't think"/>
-                  <Button x:Name="BtnTriggerLock" Content="🔒 Trigger lock card" HorizontalAlignment="Left"/>
-                </StackPanel>
-              </Border>
-            </StackPanel>
-
-          </StackPanel>
-        </ScrollViewer>
-
+          </ScrollViewer>
+        </Grid>
       </Grid>
-    </Grid>
-  </DockPanel>
+
+      <!-- ── PRESETS TAB ─────────────────────────────────────────────── -->
+      <Grid x:Name="ViewPresets" IsVisible="False" ColumnDefinitions="*,280" Margin="6">
+        <Border Grid.Column="0" Classes="panel">
+          <StackPanel Spacing="10">
+            <TextBlock Classes="head" Text="📋 Presets"/>
+            <TextBlock Classes="muted" Text="Save and load session configurations. (coming next)"/>
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="1" Classes="panel" Margin="6,0,0,0">
+          <StackPanel Spacing="8">
+            <TextBlock Classes="head" Text="Select a Preset"/>
+            <TextBlock Classes="muted" Text="⚡ Flash Images"/>
+            <TextBlock Classes="muted" Text="🎬 Mandatory Videos"/>
+            <TextBlock Classes="muted" Text="💬 Subliminals"/>
+            <TextBlock Classes="muted" Text="🔊 Audio"/>
+            <TextBlock Classes="muted" Text="🌀 Overlays"/>
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <!-- ── SESSIONS / QUESTS / ACHIEVEMENTS / LAB (placeholders) ──── -->
+      <Border x:Name="ViewQuests"       IsVisible="False" Classes="panel" Margin="6">
+        <TextBlock Classes="muted" Text="⭐ Quests — conditioning objectives. (coming next)"/>
+      </Border>
+      <Border x:Name="ViewEnhancements" IsVisible="False" Classes="panel" Margin="6">
+        <TextBlock Classes="muted" Text="✨ Enhancements — Deeper/CCPENH system. (coming next)"/>
+      </Border>
+      <Border x:Name="ViewDeeper"       IsVisible="False" Classes="panel" Margin="6">
+        <TextBlock Classes="muted" Text="🌊 Deeper — haptic/gaze enhancement authoring. (coming next)"/>
+      </Border>
+      <Border x:Name="ViewAssets"       IsVisible="False" Classes="panel" Margin="6">
+        <StackPanel Margin="10" Spacing="8">
+          <TextBlock Classes="head" Text="🗂 Assets"/>
+          <TextBlock Classes="label" Text="Assets root:"/>
+          <TextBox x:Name="TxtAssetsRoot" PlaceholderText="~/ccp-assets"/>
+          <TextBlock Classes="muted" Text="Images in assets/images · Videos in assets/videos"/>
+        </StackPanel>
+      </Border>
+
+      <!-- ── ACHIEVEMENTS (secondary nav) ─────────────────────────────── -->
+      <Border x:Name="ViewAchievements" IsVisible="False" Classes="panel" Margin="6">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="head" Text="🏆 Achievements"/>
+          <StackPanel Orientation="Horizontal" Spacing="30">
+            <StackPanel>
+              <TextBlock Classes="muted" Text="Level"/>
+              <TextBlock x:Name="TxtLevel" Foreground="#FF5CA8" FontSize="28" FontWeight="Bold" Text="1"/>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock Classes="muted" Text="XP"/>
+              <TextBlock x:Name="TxtXp" Foreground="#3EE87A" FontSize="28" FontWeight="Bold" Text="0"/>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock Classes="muted" Text="Sessions"/>
+              <TextBlock x:Name="TxtSessionCount" Foreground="#F0F0F5" FontSize="28" FontWeight="Bold" Text="0"/>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock Classes="muted" Text="Total time"/>
+              <TextBlock x:Name="TxtTotalTime" Foreground="#F0F0F5" FontSize="28" FontWeight="Bold" Text="0h"/>
+            </StackPanel>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <!-- ── COMPANION (secondary nav) ─────────────────────────────────── -->
+      <Border x:Name="ViewCompanion" IsVisible="False" Classes="panel" Margin="6">
+        <TextBlock Classes="muted" Text="🤖 Companion — use the right panel on Dashboard to configure Letta/Vesper."/>
+      </Border>
+
+      <!-- ── LAB (secondary nav) ───────────────────────────────────────── -->
+      <Border x:Name="ViewLab" IsVisible="False" Classes="panel" Margin="6">
+        <TextBlock Classes="muted" Text="🧪 Lab — session analytics, debug tools. (coming next)"/>
+      </Border>
+
+      <!-- ── LIVE REACTIVE STAGE (secondary nav) ───────────────────────── -->
+      <DockPanel x:Name="ViewLive" IsVisible="False" Margin="6" LastChildFill="True">
+        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+          <Button x:Name="BtnSpiral"   Content="🌀 spiral"     Margin="3"/>
+          <Button x:Name="BtnLock"     Content="🔒 lock card"  Margin="3"/>
+          <Button x:Name="BtnVideo"    Content="🎬 video done"  Margin="3"/>
+          <Button x:Name="BtnPresence" Content="👁 presence"   Margin="3"/>
+          <TextBox x:Name="TxtMsg" Width="200" PlaceholderText="say something to LV…" Margin="6,3,3,3"/>
+          <Button x:Name="BtnSend"     Content="➤ send"        Margin="3"/>
+        </WrapPanel>
+        <Border DockPanel.Dock="Bottom" Background="#1C1C35" BorderBrush="#FF5CA8"
+                BorderThickness="1" CornerRadius="10" Height="90" Margin="0,6,0,0">
+          <ScrollViewer>
+            <TextBlock x:Name="SayLog" Foreground="#FFB3E6" Margin="10"
+                       TextWrapping="Wrap" FontSize="13" Text="(LV's reactions appear here)"/>
+          </ScrollViewer>
+        </Border>
+        <Grid x:Name="Stage" Background="#0D0D18">
+          <Border x:Name="Fog" Background="#33FF5CA8" IsVisible="False"/>
+          <Viewbox x:Name="Spiral" IsVisible="False" Width="260" Height="260"
+                   HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Path Stroke="#FF5CA8" StrokeThickness="6"
+                  Data="M150,150 m0,0 a10,10 0 1,1 0,-20 a30,30 0 1,1 0,60 a55,55 0 1,1 0,-110 a85,85 0 1,1 0,170 a120,120 0 1,1 0,-240"/>
+          </Viewbox>
+          <TextBlock x:Name="FlashText" IsVisible="False" Text="" FontSize="80"
+                     FontWeight="Bold" Foreground="White"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          <TextBlock x:Name="StatusChip" Text="" FontSize="14" Foreground="#DF6BA0"
+                     HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,10"/>
+        </Grid>
+      </DockPanel>
+
+    </Grid><!-- end ROW 3 content -->
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         ROW 4 — BOTTOM BAR: ⭐ | START (gradient) | ▼ | Save | Exit
+         ═════════════════════════════════════════════════════════════════ -->
+    <Border Grid.Row="4" Background="#0D0D18" BorderBrush="#20FFFFFF" BorderThickness="0,1,0,0">
+      <Grid ColumnDefinitions="50,*,44,200,160" Margin="6,6">
+        <!-- ⭐ favourite / star button -->
+        <Button Grid.Column="0" x:Name="BtnFav" Content="⭐" Margin="0,0,4,0"
+                Background="#1A1A2E" CornerRadius="10" Padding="0,0" FontSize="18"
+                HorizontalContentAlignment="Center"/>
+
+        <!-- START — BrandGradient, full width -->
+        <Button Grid.Column="1" x:Name="BtnStart" Margin="0,0,0,0"
+                CornerRadius="10" FontSize="16" FontWeight="Bold" Foreground="White"
+                BorderThickness="0" Content="▶  START">
+          <Button.Background>
+            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+              <GradientStop Color="#E84393" Offset="0"/>
+              <GradientStop Color="#8B5CF6" Offset="1"/>
+            </LinearGradientBrush>
+          </Button.Background>
+        </Button>
+
+        <!-- ▼ session options dropdown -->
+        <Button Grid.Column="2" x:Name="BtnStartMenu" Content="▾" Margin="4,0,0,0"
+                Background="#222240" CornerRadius="10" Padding="0,0" FontSize="18"
+                HorizontalContentAlignment="Center"/>
+
+        <!-- Save -->
+        <Button Grid.Column="3" x:Name="BtnSave" Content="💾  Save" Margin="4,0,0,0"
+                Background="#1A1A2E" BorderBrush="#FF5CA8" CornerRadius="10" FontSize="14"/>
+
+        <!-- Exit -->
+        <Button Grid.Column="4" x:Name="BtnExit" Content="🚪  Exit" Margin="4,0,0,0"
+                Background="#E53935" BorderBrush="#E84050" CornerRadius="10" FontSize="14"/>
+      </Grid>
+    </Border>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         ROW 5 — SCROLLING MARQUEE at the very bottom
+         ═════════════════════════════════════════════════════════════════ -->
+    <Border Grid.Row="5" Background="#0A0A14">
+      <TextBlock x:Name="MarqueeText"
+                 Foreground="#FF5CA8" FontSize="11" FontWeight="Bold"
+                 VerticalAlignment="Center" Margin="10,0"
+                 Text="★  V6.2.2 IS OUT!  SHE CAN HEAR YOU NOW  🎤  ♥  V6.2.2 IS OUT!  SHE CAN HEAR YOU NOW  🎤  ♥  V6.2.2 IS OUT!  SHE CAN HEAR YOU NOW  🎤  ♥"/>
+    </Border>
+
+  </Grid><!-- end root Grid -->
 </Window>
