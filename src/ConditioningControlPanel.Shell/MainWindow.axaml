@@ -2,7 +2,25 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="ConditioningControlPanel.Shell.MainWindow"
         Title="Vesper · Conditioning Panel (prototype)"
+        RequestedThemeVariant="Dark"
         Width="900" Height="600" Background="#120512">
+  <Window.Styles>
+    <!-- high-contrast on the dark bg: light text everywhere, readable pink buttons -->
+    <Style Selector="Button">
+      <Setter Property="Foreground" Value="#ffffff"/>
+      <Setter Property="Background" Value="#7a1f5c"/>
+      <Setter Property="Padding" Value="12,8"/>
+      <Setter Property="FontSize" Value="14"/>
+    </Style>
+    <Style Selector="Button:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#a52d7e"/>
+    </Style>
+    <Style Selector="TextBox">
+      <Setter Property="Foreground" Value="#ffffff"/>
+      <Setter Property="Background" Value="#2a0f2a"/>
+      <Setter Property="CaretBrush" Value="#ffb3e6"/>
+    </Style>
+  </Window.Styles>
   <DockPanel LastChildFill="True">
 
     <!-- event triggers -->
