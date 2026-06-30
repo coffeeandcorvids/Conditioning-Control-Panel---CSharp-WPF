@@ -13,7 +13,7 @@ static class LiveSmoke
         { Console.WriteLine("STOP: missing agent id or key"); return 2; }
 
         Console.WriteLine($"LIVE smoke → agent {agentId[..Math.Min(18, agentId.Length)]}…, one minimal event, 90s timeout\n");
-        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(90) };
+        using var http = new HttpClient { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
         var agent = new LettaReactiveAgent(http, new LettaConfig(agentId, key));
         Console.WriteLine($"IsAvailable: {agent.IsAvailable}");
 

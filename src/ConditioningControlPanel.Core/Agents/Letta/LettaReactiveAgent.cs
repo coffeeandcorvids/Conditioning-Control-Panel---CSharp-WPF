@@ -30,13 +30,15 @@ public sealed class LettaReactiveAgent : IReactiveAgent
         var prompt = PanelEventPrompt.Build(e);
         var payload = JsonSerializer.Serialize(new
         {
+            agent_id = _cfg.AgentId,   // conversations path carries agent_id in the BODY (listener parity)
             messages = new[] { new { role = "user", content = prompt } },
-            stream_tokens = false,   // complete-message chunks (we want the whole reaction JSON)
-            include_pings = true,    // keepalive so long turns don't time out
+            stream_tokens = false,     // complete-message chunks (we want the whole reaction JSON)
+            include_pings = true,      // keepalive so long turns don't time out
         });
 
+        // listener-parity: conversations streaming on the "default" conversation (per Ezra, Jun 29)
         using var req = new HttpRequestMessage(HttpMethod.Post,
-            $"{_cfg.BaseUrl}/v1/agents/{_cfg.AgentId}/messages/stream")
+            $"{_cfg.BaseUrl}/v1/conversations/default/messages/stream")
         { Content = new StringContent(payload, Encoding.UTF8, "application/json") };
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _cfg.ApiKey);
         req.Headers.Accept.ParseAdd("text/event-stream");
