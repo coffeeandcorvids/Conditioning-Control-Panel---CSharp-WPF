@@ -45,9 +45,22 @@ data: {"message_type":"stop_reason","stop_reason":"end_turn"}
         var r = await agent.ReactAsync(new KeywordTriggered("spiral"));
         Assert.Equal("good girl", r.Say);
         Assert.Equal(new Spiral(true, 30), Assert.Single(r.Commands));
-        Assert.Contains("/messages/stream", h.LastUri);       // streaming endpoint
+        // proven route (Jul 5 live smoke): the messages POST itself is the SSE stream —
+        // no "/stream" suffix, and the body carries streaming:true
+        Assert.EndsWith("/v1/conversations/default/messages", h.LastUri);
+        Assert.Contains("\"streaming\":true", h.LastRequestBody);
         Assert.Contains("keyword trigger fired", h.LastRequestBody);
         Assert.Contains("include_pings", h.LastRequestBody);
+    }
+
+    [Fact]
+    public async Task Dedicated_conversation_id_is_used_when_configured()
+    {
+        var h = new SseHandler(Sse);
+        var agent = new LettaReactiveAgent(new HttpClient(h),
+            new LettaConfig("agent-x", "key-x", ConversationId: "conv-panel-123"));
+        _ = await agent.ReactAsync(new KeywordTriggered("spiral"));
+        Assert.EndsWith("/v1/conversations/conv-panel-123/messages", h.LastUri);
     }
 
     [Fact]

@@ -40,6 +40,47 @@ public static class ReactionParser
         catch (JsonException) { return AgentReaction.Silent; }
     }
 
+    /// <summary>
+    /// Parse a reply that may wrap the reaction JSON in prose — LV answers in character
+    /// (proven in the Jul 5 live smoke: roleplay lines, then the JSON on its own line).
+    /// Finds each balanced top-level {...} block and takes the LAST one that yields a
+    /// non-silent reaction; falls back to treating the whole text as a Say.
+    /// </summary>
+    public static AgentReaction ParseLoose(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return AgentReaction.Silent;
+
+        var direct = Parse(text);
+        if (direct.Say != null || direct.Commands.Count > 0) return direct;
+
+        AgentReaction? best = null;
+        for (var i = 0; i < text.Length; i++)
+        {
+            if (text[i] != '{') continue;
+            var depth = 0; var inStr = false; var esc = false;
+            for (var j = i; j < text.Length; j++)
+            {
+                var ch = text[j];
+                if (esc) { esc = false; continue; }
+                if (ch == '\\' && inStr) { esc = true; continue; }
+                if (ch == '"') { inStr = !inStr; continue; }
+                if (inStr) continue;
+                if (ch == '{') depth++;
+                else if (ch == '}' && --depth == 0)
+                {
+                    var candidate = Parse(text[i..(j + 1)]);
+                    if (candidate.Say != null || candidate.Commands.Count > 0) best = candidate;
+                    i = j; // resume scan after this block
+                    break;
+                }
+            }
+        }
+        if (best != null) return best;
+
+        // no reaction JSON anywhere: the prose itself is the reaction
+        return new AgentReaction(text.Trim(), new List<PanelCommand>());
+    }
+
     static string? Str(JsonElement e, string k) => e.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
     static bool Bool(JsonElement e, string k) => e.TryGetProperty(k, out var v) && (v.ValueKind == JsonValueKind.True);
     static int? Int(JsonElement e, string k) => e.TryGetProperty(k, out var v) && v.TryGetInt32(out var i) ? i : null;
