@@ -15,6 +15,7 @@ using ConditioningControlPanel.Core.Gamification;
 using ConditioningControlPanel.Core.Services;
 using ConditioningControlPanel.Core.Services.Flash;
 using ConditioningControlPanel.Core.Services.Haptics;
+using ConditioningControlPanel.Core.Services.Playlist;
 using ConditioningControlPanel.Core.Services.Subliminal;
 using ConditioningControlPanel.Core.Services.Session;
 using ConditioningControlPanel.Core.Settings;
@@ -35,6 +36,7 @@ public partial class MainWindow : Window, ICommandSink
     private readonly ReactionExecutor     _executor;
     private readonly EffectManager        _effects;
     private readonly HapticService        _haptics;
+    private readonly PlaylistEngine       _playlist = new();
 
     // ── Overlay pool ─────────────────────────────────────────────────────
     private const int FlashPoolSize = 6;
@@ -793,8 +795,41 @@ public partial class MainWindow : Window, ICommandSink
             case PinkFog pf: SetPinkFilter(pf.On); break;
             case LockCard l: _effects.ShowLockCard(l.Sentence); Chip($"🔒 {l.Sentence}"); break;
             case Haptics h:  _ = ExecuteHapticsAsync(h); break;
+            case PlaylistOp pl: ExecutePlaylistOp(pl); break;
         }
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// DJ playlist control. The engine owns selection state; actual audio playback
+    /// hooks in when the Shell's media layer lands (LibVLC) — until then the chip +
+    /// TrackChanged event are the observable surface.
+    /// </summary>
+    private void ExecutePlaylistOp(PlaylistOp pl)
+    {
+        try
+        {
+            switch (pl.Do.ToLowerInvariant())
+            {
+                case "next":      _playlist.Next(); break;
+                case "prev":      _playlist.Prev(); break;
+                case "shuffle":   _playlist.SetShuffle(true);  Chip("🎵 shuffle on"); return;
+                case "noshuffle": _playlist.SetShuffle(false); Chip("🎵 shuffle off"); return;
+                case "jump" when pl.Arg != null: _playlist.JumpTo(pl.Arg); break;
+                case "load" when pl.Arg != null:
+                    var path = System.IO.Path.Combine(
+                        Environment.ExpandEnvironmentVariables(_settings.AssetsRoot.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile))),
+                        "playlists", pl.Arg + ".json");
+                    _playlist.Load(PlaylistDefinition.LoadFile(path));
+                    break;
+                default: Chip($"🎵 playlist? {pl.Do}"); return;
+            }
+            Chip($"🎵 {_playlist.CurrentTrack?.Title ?? "(none)"}");
+        }
+        catch (Exception ex)
+        {
+            Chip($"🎵 playlist error: {ex.Message}");
+        }
     }
 
     /// <summary>

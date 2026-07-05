@@ -9,3 +9,6 @@ public sealed record Flash(string Text) : PanelCommand;
 public sealed record PinkFog(bool On) : PanelCommand;
 public sealed record LockCard(string? Sentence = null) : PanelCommand;
 public sealed record Haptics(double? Intensity = null, string? Pattern = null) : PanelCommand;
+
+/// <summary>DJ control of the native playlist engine. Do: next|prev|shuffle|noshuffle|load|jump. Arg: playlist name (load) or title/path query (jump).</summary>
+public sealed record PlaylistOp(string Do, string? Arg = null) : PanelCommand;
