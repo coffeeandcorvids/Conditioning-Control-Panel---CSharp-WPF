@@ -2,29 +2,46 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="ConditioningControlPanel.Shell.Controls.FeatureCard">
   <Border x:Name="CardBorder"
-          Background="#1C1C35"
-          BorderBrush="#FF5CA8"
-          BorderThickness="1.5"
+          Background="#17172C"
+          BorderBrush="#FF3FA3"
+          BorderThickness="2"
           CornerRadius="12"
-          Padding="10">
-    <Grid RowDefinitions="Auto,*,Auto">
-      <!-- top: icon + on/off dot -->
-      <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
-        <TextBlock Grid.Column="0" x:Name="IconText" FontSize="26" HorizontalAlignment="Center"/>
-        <Ellipse Grid.Column="1" x:Name="StatusDot" Width="8" Height="8"
-                 VerticalAlignment="Top" HorizontalAlignment="Right" Fill="#2E2E4A"/>
-      </Grid>
-      <!-- center: label -->
-      <TextBlock Grid.Row="1" x:Name="LabelText"
-                 FontSize="11" FontWeight="Bold" Foreground="#DF6BA0"
+          Padding="0"
+          ClipToBounds="True">
+    <Grid>
+      <!-- Upstream-style glowing feature art. The original CCP dashboard lives or dies by these images. -->
+      <Image x:Name="FeatureImage" Stretch="UniformToFill" Opacity="0.96"/>
+
+      <!-- Dark violet fade so white labels sit like the WPF app. -->
+      <Border VerticalAlignment="Bottom" Height="46">
+        <Border.Background>
+          <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#00121220" Offset="0"/>
+            <GradientStop Color="#CC090914" Offset="1"/>
+          </LinearGradientBrush>
+        </Border.Background>
+      </Border>
+
+      <!-- tiny ? bubble in the upper right, matching CCP's feature-card help dots -->
+      <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="6"
+              Width="18" Height="18" CornerRadius="9" Background="#44222240"
+              BorderBrush="#554C4C70" BorderThickness="1">
+        <TextBlock Text="?" FontSize="11" Foreground="#77778F"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      </Border>
+
+      <Ellipse x:Name="StatusDot" Width="7" Height="7" Margin="0,7,7,0"
+               VerticalAlignment="Top" HorizontalAlignment="Right" Fill="#2E2E4A"/>
+
+      <TextBlock x:Name="IconText" FontSize="1" Opacity="0"/>
+      <TextBlock x:Name="LabelText"
+                 FontSize="13" FontWeight="Bold" Foreground="#FFFFFF"
                  TextAlignment="Center" TextWrapping="Wrap"
-                 HorizontalAlignment="Center" VerticalAlignment="Center"
-                 Margin="0,4,0,0"/>
-      <!-- bottom: quick toggle -->
-      <Button Grid.Row="2" x:Name="ToggleBtn"
-              HorizontalAlignment="Stretch"
-              FontSize="11" Padding="4,4"
-              CornerRadius="8" Margin="0,6,0,0"/>
+                 HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                 Margin="8,0,8,17"/>
+
+      <!-- hidden but still present: code-behind uses this for quick toggle state -->
+      <Button x:Name="ToggleBtn" IsVisible="False"/>
     </Grid>
   </Border>
 </UserControl>

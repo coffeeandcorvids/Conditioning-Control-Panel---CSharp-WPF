@@ -1,7 +1,9 @@
 using System;
+using System.IO;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 
 namespace ConditioningControlPanel.Shell.Controls;
 
@@ -19,6 +21,8 @@ public partial class FeatureCard : UserControl
         AvaloniaProperty.Register<FeatureCard, string>(nameof(Label), "Feature");
     public static readonly StyledProperty<bool> IsEnabledFeatureProperty =
         AvaloniaProperty.Register<FeatureCard, bool>(nameof(IsEnabledFeature), false);
+    public static readonly StyledProperty<string> ImagePathProperty =
+        AvaloniaProperty.Register<FeatureCard, string>(nameof(ImagePath), "");
 
     public string Icon
     {
@@ -29,6 +33,11 @@ public partial class FeatureCard : UserControl
     {
         get => GetValue(LabelProperty);
         set { SetValue(LabelProperty, value); LabelText.Text = value; }
+    }
+    public string ImagePath
+    {
+        get => GetValue(ImagePathProperty);
+        set { SetValue(ImagePathProperty, value); SetImage(value); }
     }
     public bool IsEnabledFeature
     {
@@ -56,5 +65,31 @@ public partial class FeatureCard : UserControl
             ToggleChanged?.Invoke(this, IsEnabledFeature);
         };
         CardBorder.PointerPressed += (_, _) => CardClicked?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void SetImage(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return;
+        var resolved = Resolve(path);
+        if (resolved is null) return;
+        FeatureImage.Source = new Bitmap(resolved);
+    }
+
+    private static string? Resolve(string path)
+    {
+        if (Path.IsPathRooted(path) && File.Exists(path)) return path;
+
+        foreach (var root in new[] { Environment.CurrentDirectory, AppContext.BaseDirectory })
+        {
+            var dir = new DirectoryInfo(root);
+            while (dir is not null)
+            {
+                var candidate = Path.Combine(dir.FullName, path);
+                if (File.Exists(candidate)) return candidate;
+                dir = dir.Parent;
+            }
+        }
+
+        return null;
     }
 }

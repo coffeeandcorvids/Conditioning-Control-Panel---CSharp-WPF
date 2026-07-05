@@ -20,6 +20,8 @@ public sealed class PanelSettings
     public int    FlashAmount       { get; set; } = 1;
     /// 0–100 opacity.
     public int    FlashOpacity      { get; set; } = 95;
+    /// Fade intensity/duration, original-style percentage knob. Current Pi port stores it for parity.
+    public int    FlashFadePercent  { get; set; } = 50;
     /// Relative width of the flash window as a fraction of screen width (0.1–1.0).
     public double FlashSizeFraction { get; set; } = 0.45;
     public bool   FlashAudioEnabled { get; set; } = false;
@@ -46,7 +48,33 @@ public sealed class PanelSettings
     // ── Spiral / Overlays ──────────────────────────────────────────────────────
     public bool SpiralEnabled  { get; set; } = true;
     public int  SpiralSpeedMs  { get; set; } = 33;   // rotation tick in ms (33 ≈ 30fps)
+    public int  SpiralOpacity  { get; set; } = 35;   // original-style 5-50% fullscreen overlay opacity
+    public string? SpiralPath  { get; set; }          // empty/null = upstream Resources/spirals/spiral.gif
     public bool PinkFogEnabled { get; set; } = false;
+    public int  PinkFilterOpacity { get; set; } = 95; // 0-180 alpha for overlay tint
+
+    // ── CCP parity effects ────────────────────────────────────────────────────
+    public bool BubblePopEnabled { get; set; } = false;
+    public int BubblePopIntervalSeconds { get; set; } = 4;
+    public int BubblePopFrequencyPerHour { get; set; } = 20;
+    public int BubblePopVolume { get; set; } = 70;
+    public int BubblePopSpeedBoost { get; set; } = 0;
+    public bool BubblePopSolidMode { get; set; } = true;
+    public bool BouncingTextEnabled { get; set; } = false;
+    public List<string> BouncingTextPhrases { get; set; } = new()
+        { "OBEY", "DROP", "GOOD GIRL", "DON'T THINK", "EMPTY", "WATCH" };
+    public bool LockCardEnabled { get; set; } = true;
+    public int LockCardFrequencyPerHour { get; set; } = 4;
+    public int LockCardRepeats { get; set; } = 3;
+    public bool LockCardStrict { get; set; } = false;
+    public int LockCardDurationSeconds { get; set; } = 8;
+    public List<string> LockCardPhrases { get; set; } = new()
+        { "GOOD GIRLS DON'T THINK", "WATCH", "OBEY", "DROP DEEPER" };
+    public bool MindWipeEnabled { get; set; } = true;
+    public int MindWipeFrequencyPerHour { get; set; } = 6;
+    public int MindWipeVolume { get; set; } = 50;
+    public bool MindWipeLoop { get; set; } = false;
+    public string? MindWipeAudioPath { get; set; }
 
     // ── Keywords ───────────────────────────────────────────────────────────────
     /// Words/phrases that trigger a flash+subliminal burst when spoken to LV.
@@ -69,6 +97,10 @@ public sealed class PanelSettings
     /// Which Letta agent is LV (the controller).
     public string? LettaAgentId  { get; set; }
     public string? LettaBaseUrl  { get; set; } = "http://localhost:8283";
+
+    // ── Marquee ────────────────────────────────────────────────────────────────
+    /// Customizable scrolling ticker text at the bottom of the panel.
+    public string MarqueeMessage { get; set; } = "SHE CAN HEAR YOU NOW  💗  VESPER CONTROL PANEL IS ONLINE  -  LINUX PORT IN PROGRESS";
 
     // ── Gamification ───────────────────────────────────────────────────────────
     public int  Xp             { get; set; } = 0;

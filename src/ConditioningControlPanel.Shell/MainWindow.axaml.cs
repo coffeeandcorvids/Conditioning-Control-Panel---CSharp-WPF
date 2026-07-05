@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using ConditioningControlPanel.Core.Agents;
 using ConditioningControlPanel.Core.Commands;
@@ -16,6 +17,7 @@ using ConditioningControlPanel.Core.Services.Subliminal;
 using ConditioningControlPanel.Core.Services.Session;
 using ConditioningControlPanel.Core.Settings;
 using ConditioningControlPanel.Shell.Controls;
+using ConditioningControlPanel.Shell.Effects;
 using ConditioningControlPanel.Shell.Overlays;
 
 namespace ConditioningControlPanel.Shell;
@@ -29,6 +31,7 @@ public partial class MainWindow : Window, ICommandSink
     private readonly SessionEngine        _session;
     private readonly IReactiveAgent       _agent = new ScriptedReactiveAgent();
     private readonly ReactionExecutor     _executor;
+    private readonly EffectManager        _effects;
 
     // ── Overlay pool ─────────────────────────────────────────────────────
     private const int FlashPoolSize = 6;
@@ -39,6 +42,12 @@ public partial class MainWindow : Window, ICommandSink
     // ── Animations ───────────────────────────────────────────────────────
     private double _angle;
     private readonly DispatcherTimer _spin = new() { Interval = TimeSpan.FromMilliseconds(33) };
+
+    // ── Marquee ──────────────────────────────────────────────────────────
+    private double _marqueeX;
+    private double _marqueeSegmentWidth;
+    private readonly DispatcherTimer _marqueeTimer = new() { Interval = TimeSpan.FromMilliseconds(16) };
+    private TranslateTransform? _marqueeTransform;
 
     public MainWindow()
     {
@@ -58,25 +67,40 @@ public partial class MainWindow : Window, ICommandSink
         _session.SessionCompleted += (_, _) => Dispatcher.UIThread.Post(RefreshGameStats);
 
         _executor = new ReactionExecutor(this);
+        _effects = new EffectManager(this, _settings);
 
         _flashPool = Enumerable.Range(0, FlashPoolSize)
             .Select(_ => new FlashOverlayWindow()).ToArray();
         _subOverlay = new SubliminalOverlayWindow();
 
-        // logo spiral spins continuously on dashboard
-        LogoSpiral.RenderTransformOrigin = Avalonia.RelativePoint.Center;
+        // small in-app spiral preview spins continuously on dashboard; fullscreen overlay uses upstream GIF.
         Spiral.RenderTransformOrigin     = Avalonia.RelativePoint.Center;
         _spin.Tick += (_, _) =>
         {
             _angle = (_angle + 3) % 360;
-            LogoSpiral.RenderTransform = new RotateTransform(_angle);
             Spiral.RenderTransform     = new RotateTransform(_angle);
         };
         _spin.Start();
 
+        // Load real CCP logo + start scrolling marquee after layout is ready
+        Loaded += (_, _) => { LoadCenterLogo(); InitMarquee(); };
+
         // ── Custom window chrome (SystemDecorations=None) ─────────────
         BtnMinimize.Click += (_, _) => WindowState = WindowState.Minimized;
         BtnClose.Click    += (_, _) => Close();
+
+        // ESC dismisses active overlays (spiral, pink filter) — panic-key behaviour
+        this.KeyDown += (_, e) =>
+        {
+            if (e.Key == Avalonia.Input.Key.Escape)
+            {
+                if (_effects.SpiralOn)   SetSpiral(false);
+                if (_effects.PinkFilterOn) SetPinkFilter(false);
+                CardSpiral.IsEnabledFeature  = false;
+                CardPinkFog.IsEnabledFeature = false;
+                Chip("⬛ overlays off");
+            }
+        };
 
         // drag to move (title bar)
         this.PointerPressed += (_, e) =>
@@ -126,24 +150,24 @@ public partial class MainWindow : Window, ICommandSink
         BtnFav.Click      += (_, _) => Chip("⭐ favourite sessions coming next");
 
         // ── Mosaic card clicks → show detail on right ─────────────────
-        CardFlash.CardClicked      += (_, _) => ShowDetail("⚡ Flash Images",      "Configure flash image settings on the right ↓");
-        CardSubliminal.CardClicked += (_, _) => ShowDetail("💬 Subliminals",       "Configure subliminal text settings on the right ↓");
-        CardSpiral.CardClicked     += (_, _) => { SetSpiral(!Spiral.IsVisible); Chip(Spiral.IsVisible ? "🌀 spiral ON" : "🌀 spiral OFF"); };
-        CardPinkFog.CardClicked    += (_, _) => { Fog.IsVisible = !Fog.IsVisible; Chip(Fog.IsVisible ? "🌸 fog ON" : "🌸 fog OFF"); };
-        CardHaptics.CardClicked    += (_, _) => ShowDetail("💗 Haptics",           "Buttplug.io / Lovense — wiring next");
-        CardLockCard.CardClicked   += (_, _) => ShowDetail("🔒 Lock Card",         "Trigger a lock card phrase");
-        CardVideo.CardClicked      += (_, _) => Chip("🎬 Video — LibVLCSharp.Avalonia porting next");
-        CardVisuals.CardClicked    += (_, _) => ShowDetail("👁 Visuals",           "Visual overlay settings");
-        CardMindWipe.CardClicked   += (_, _) => Chip("🧠 Mind Wipe — blur overlay coming next");
-        CardBubblePop.CardClicked  += (_, _) => Chip("🫧 Bubble Pop — minigame coming next");
-        CardBouncingText.CardClicked += (_, _) => Chip("✨ Bouncing Text — coming next");
-        CardSystem.CardClicked     += (_, _) => ShowDetail("⚙ System",            "System settings");
+        CardFlash.CardClicked        += (_, _) => ShowFeaturePanel(FeaturePanel.Flash);
+        CardVisuals.CardClicked      += (_, _) => ShowFeaturePanel(FeaturePanel.Visuals);
+        CardVideo.CardClicked        += (_, _) => ShowFeaturePanel(FeaturePanel.Video);
+        CardSubliminal.CardClicked   += (_, _) => ShowFeaturePanel(FeaturePanel.Subliminals);
+        CardSpiral.CardClicked       += (_, _) => ShowFeaturePanel(FeaturePanel.Spiral);
+        CardLockCard.CardClicked     += (_, _) => ShowFeaturePanel(FeaturePanel.LockCard);
+        CardPinkFog.CardClicked      += (_, _) => ShowFeaturePanel(FeaturePanel.PinkFilter);
+        CardMindWipe.CardClicked     += (_, _) => ShowFeaturePanel(FeaturePanel.MindWipe);
+        CardBubblePop.CardClicked    += (_, _) => ShowFeaturePanel(FeaturePanel.BubblePop);
+        CardBouncingText.CardClicked += (_, _) => ShowFeaturePanel(FeaturePanel.BouncingText);
+        CardSystem.CardClicked       += (_, _) => ShowFeaturePanel(FeaturePanel.System);
+        CardHaptics.CardClicked      += (_, _) => ShowFeaturePanel(FeaturePanel.Haptics);
 
         // mosaic card toggles
         CardFlash.ToggleChanged     += (_, on) => { _settings.FlashEnabled = on; _flash.UpdateSettings(BuildFlashConfig()); };
         CardSubliminal.ToggleChanged += (_, on) => { _settings.SubliminalEnabled = on; _sub.UpdateSettings(BuildSubConfig()); };
         CardSpiral.ToggleChanged    += (_, on) => SetSpiral(on);
-        CardPinkFog.ToggleChanged   += (_, on) => Fog.IsVisible = on;
+        CardPinkFog.ToggleChanged   += (_, on) => SetPinkFilter(on);
 
         // ── Right-panel detail controls ───────────────────────────────
         ChkFlashEnabled.IsCheckedChanged += (_, _) => ApplyFlash();
@@ -158,8 +182,159 @@ public partial class MainWindow : Window, ICommandSink
         BtnSubNow.Click += (_, _) => _sub.TriggerNow();
 
         BtnSpiralToggle.Click += (_, _) => SetSpiral(!Spiral.IsVisible);
-        BtnFogToggle.Click    += (_, _) => Fog.IsVisible = !Fog.IsVisible;
-        BtnTriggerLock.Click  += (_, _) => { var ph = TxtLockPhrase.Text ?? "good girls don't think"; DoFlashText(ph); Chip($"🔒 {ph}"); };
+        BtnFogToggle.Click    += (_, _) => SetPinkFilter(!_effects.PinkFilterOn);
+        BtnTriggerLock.Click  += (_, _) => { var ph = TxtLockPhrase.Text ?? "good girls don't think"; _effects.ShowLockCard(ph); Chip($"🔒 {ph}"); };
+        SldPinkOpacity.PropertyChanged += (_, e) =>
+        {
+            if (e.Property.Name == "Value")
+            {
+                TxtPinkOpacity.Text = $"{(int)SldPinkOpacity.Value}";
+                _effects.UpdatePinkOpacity((int)SldPinkOpacity.Value);
+                _settings.Save();
+            }
+        };
+        BtnBubbleToggle.Click += (_, _) => ToggleBubblePop();
+        BtnBubbleBurst.Click  += (_, _) => _effects.SpawnBubbleBurst(8);
+        SldBubbleInterval.PropertyChanged += (_, e) =>
+        {
+            if (e.Property.Name == "Value")
+            {
+                TxtBubbleInterval.Text = $"{(int)SldBubbleInterval.Value}s";
+                _effects.SetBubbleIntervalSeconds((int)SldBubbleInterval.Value);
+                _settings.Save();
+            }
+        };
+        BtnBouncingToggle.Click += (_, _) => ToggleBouncingText();
+        TxtBouncingPhrases.LostFocus += (_, _) => ApplyBouncingPhrases();
+        SldLockDuration.PropertyChanged += (_, e) =>
+        {
+            if (e.Property.Name == "Value")
+            {
+                TxtLockDuration.Text = $"{(int)SldLockDuration.Value}s";
+                _settings.LockCardDurationSeconds = (int)SldLockDuration.Value;
+                _settings.Save();
+            }
+        };
+        BtnMindWipeNow.Click += (_, _) => { _effects.TriggerMindWipe(); Chip("🧠 mind wipe"); };
+
+        SldVisualSize.PropertyChanged += (_, e) =>
+        {
+            if (e.Property.Name == "Value")
+            {
+                TxtVisualSize.Text = $"{(int)SldVisualSize.Value}%";
+                _settings.FlashSizeFraction = Math.Clamp(SldVisualSize.Value / 100.0, 0.10, 1.0);
+                _flash.UpdateSettings(BuildFlashConfig());
+            }
+        };
+        SldVisualOpacity.PropertyChanged += (_, e) =>
+        {
+            if (e.Property.Name == "Value")
+            {
+                TxtVisualOpacity.Text = $"{(int)SldVisualOpacity.Value}%";
+                _settings.FlashOpacity = (int)SldVisualOpacity.Value;
+                _flash.UpdateSettings(BuildFlashConfig());
+            }
+        };
+        SldVisualFade.PropertyChanged += (_, e) =>
+        {
+            if (e.Property.Name == "Value")
+            {
+                TxtVisualFade.Text = $"{(int)SldVisualFade.Value}%";
+                _settings.FlashFadePercent = (int)SldVisualFade.Value;
+            }
+        };
+        SldVisualDuration.PropertyChanged += (_, e) =>
+        {
+            if (e.Property.Name == "Value")
+            {
+                TxtVisualDuration.Text = $"{(int)SldVisualDuration.Value}s";
+                _settings.FlashDurationMs = (int)SldVisualDuration.Value * 1000;
+                SldFlashDur.Value = _settings.FlashDurationMs;
+                _flash.UpdateSettings(BuildFlashConfig());
+            }
+        };
+        ChkVisualAudio.IsCheckedChanged += (_, _) => { _settings.FlashAudioEnabled = ChkVisualAudio.IsChecked ?? false; };
+
+        SldBubbleFreq.PropertyChanged += (_, e) =>
+        {
+            if (e.Property.Name == "Value")
+            {
+                TxtBubbleFreq.Text = $"{(int)SldBubbleFreq.Value}/h";
+                _effects.SetBubbleFrequencyPerHour((int)SldBubbleFreq.Value);
+            }
+        };
+        SldBubbleVolume.PropertyChanged += (_, e) =>
+        {
+            if (e.Property.Name == "Value")
+            {
+                TxtBubbleVolume.Text = $"{(int)SldBubbleVolume.Value}%";
+                _settings.BubblePopVolume = (int)SldBubbleVolume.Value;
+            }
+        };
+        SldBubbleSpeed.PropertyChanged += (_, e) =>
+        {
+            if (e.Property.Name == "Value")
+            {
+                TxtBubbleSpeed.Text = $"+{(int)SldBubbleSpeed.Value}%";
+                _settings.BubblePopSpeedBoost = (int)SldBubbleSpeed.Value;
+            }
+        };
+        ChkBubbleSolid.IsCheckedChanged += (_, _) => { _settings.BubblePopSolidMode = ChkBubbleSolid.IsChecked ?? true; };
+
+        ChkLockEnabled.IsCheckedChanged += (_, _) => { _settings.LockCardEnabled = ChkLockEnabled.IsChecked ?? true; };
+        BtnLockScheduleToggle.Click += (_, _) =>
+        {
+            _effects.SetLockCardScheduler(!_effects.LockCardSchedulerRunning);
+            Chip(_effects.LockCardSchedulerRunning ? "🔒 lock scheduler ON" : "🔒 lock scheduler OFF");
+        };
+        SldLockFreq.PropertyChanged += (_, e) =>
+        {
+            if (e.Property.Name == "Value")
+            {
+                TxtLockFreq.Text = $"{(int)SldLockFreq.Value}/h";
+                _settings.LockCardFrequencyPerHour = (int)SldLockFreq.Value;
+                if (_effects.LockCardSchedulerRunning) _effects.ScheduleNextLockCard();
+            }
+        };
+        SldLockRepeats.PropertyChanged += (_, e) =>
+        {
+            if (e.Property.Name == "Value")
+            {
+                TxtLockRepeats.Text = $"{(int)SldLockRepeats.Value}x";
+                _settings.LockCardRepeats = (int)SldLockRepeats.Value;
+            }
+        };
+        ChkLockStrict.IsCheckedChanged += (_, _) => { _settings.LockCardStrict = ChkLockStrict.IsChecked ?? false; };
+
+        ChkMindEnabled.IsCheckedChanged += (_, _) => { _settings.MindWipeEnabled = ChkMindEnabled.IsChecked ?? true; };
+        BtnMindScheduleToggle.Click += (_, _) =>
+        {
+            _effects.SetMindWipeScheduler(!_effects.MindWipeSchedulerRunning);
+            Chip(_effects.MindWipeSchedulerRunning ? "🧠 mind wipe scheduler ON" : "🧠 mind wipe scheduler OFF");
+        };
+        BtnMindLoopToggle.Click += (_, _) =>
+        {
+            _effects.SetMindWipeLoop(!_effects.MindWipeLoopRunning);
+            _settings.MindWipeLoop = _effects.MindWipeLoopRunning;
+            Chip(_effects.MindWipeLoopRunning ? "🧠 mind wipe loop ON" : "🧠 mind wipe loop OFF");
+        };
+        SldMindFreq.PropertyChanged += (_, e) =>
+        {
+            if (e.Property.Name == "Value")
+            {
+                TxtMindFreq.Text = $"{(int)SldMindFreq.Value}/h";
+                _settings.MindWipeFrequencyPerHour = (int)SldMindFreq.Value;
+                if (_effects.MindWipeSchedulerRunning) _effects.ScheduleNextMindWipe();
+            }
+        };
+        SldMindVolume.PropertyChanged += (_, e) =>
+        {
+            if (e.Property.Name == "Value")
+            {
+                TxtMindVolume.Text = $"{(int)SldMindVolume.Value}%";
+                _settings.MindWipeVolume = (int)SldMindVolume.Value;
+            }
+        };
 
         BtnSaveCompanion.Click += (_, _) =>
         {
@@ -182,6 +357,8 @@ public partial class MainWindow : Window, ICommandSink
         // Session control via BtnStart only (sessions view removed from this layout)
 
         LoadUiFromSettings();
+        LoadCenterLogo();
+        HideFeaturePanels();
         RefreshGameStats();
     }
 
@@ -190,10 +367,16 @@ public partial class MainWindow : Window, ICommandSink
     private Control? _activePrimary;
     private Control? _activeSecondary;
 
+    private enum FeaturePanel
+    {
+        Flash, Visuals, Video, Subliminals, Spiral, LockCard,
+        PinkFilter, MindWipe, BubblePop, BouncingText, System, Haptics
+    }
+
     private void SwitchPrimary(Button active, Control view, List<Button> allPrimary)
     {
         // clear secondary selection
-        foreach (var btn in new[]{ Nav2Achievements, Nav2Leaderboard, Nav2Companion, Nav2Profile, Nav2Lab, Nav2Live })
+        foreach (var btn in new[]{ Nav2Achievements, Nav2Companion, Nav2Profile, Nav2Lab, Nav2Live })
             btn.Classes.Set("navPillActive", false);
 
         // hide everything
@@ -207,7 +390,7 @@ public partial class MainWindow : Window, ICommandSink
     {
         HideAllViews();
         foreach (var btn in allBtns) btn.Classes.Set("tabActive", false);
-        foreach (var btn in new[]{ Nav2Achievements, Nav2Leaderboard, Nav2Companion, Nav2Profile, Nav2Lab, Nav2Live })
+        foreach (var btn in new[]{ Nav2Achievements, Nav2Companion, Nav2Profile, Nav2Lab, Nav2Live })
             btn.Classes.Set("navPillActive", btn == active);
         view.IsVisible = true;
         _activeSecondary = view;
@@ -228,6 +411,123 @@ public partial class MainWindow : Window, ICommandSink
         // detail always shows in the right panel of Dashboard — make sure Dashboard is visible
         HideAllViews();
         ViewDashboard.IsVisible = true;
+    }
+
+    private void ShowFeaturePanel(FeaturePanel panel)
+    {
+        DashboardRightChrome.IsVisible = false;
+        DetailNone.IsVisible = true;
+        HideFeaturePanels();
+
+        HideAllViews();
+        ViewDashboard.IsVisible = true;
+
+        switch (panel)
+        {
+            case FeaturePanel.Flash:
+                PanelFlash.IsVisible = true;
+                ShowDetail("⚡ Flash Images", "Popup images, GIFs, timing, amount, opacity, and source folder.");
+                break;
+            case FeaturePanel.Visuals:
+                PanelVisuals.IsVisible = true;
+                ShowDetail("👁 Visuals", "Visual overlays and enhancement effects. Local unlocked clone panel — wiring continues here.");
+                DoFlashText("VISUALS");
+                break;
+            case FeaturePanel.Video:
+                PanelVideo.IsVisible = true;
+                ShowDetail("🎬 Mandatory Video", "Fullscreen video player, attention checks, strict playback. VLC/Avalonia player port next.");
+                DoFlashText("WATCH");
+                break;
+            case FeaturePanel.Subliminals:
+                PanelSubliminals.IsVisible = true;
+                ShowDetail("💬 Subliminals", "Text flashes, phrase pool, duration, opacity, and timing.");
+                break;
+            case FeaturePanel.Spiral:
+                PanelOverlay.IsVisible = true;
+                ShowDetail("🌀 Spiral Overlay", "Original parity: animated fullscreen overlay. Click toggles the live overlay.");
+                SetSpiral(!_effects.SpiralOn);
+                Chip(_effects.SpiralOn ? "🌀 spiral overlay ON" : "🌀 spiral overlay OFF");
+                break;
+            case FeaturePanel.LockCard:
+                PanelLockCard.IsVisible = true;
+                ShowDetail("🔒 Lock Card", "Original parity: fullscreen phrase card. Click/card test fires it now.");
+                _effects.ShowLockCard(TxtLockPhrase.Text);
+                break;
+            case FeaturePanel.PinkFilter:
+                PanelOverlay.IsVisible = true;
+                ShowDetail("🌸 Pink Filter", "Original parity: fullscreen semi-transparent pink tint overlay. Click toggles it now.");
+                SetPinkFilter(!_effects.PinkFilterOn);
+                Chip(_effects.PinkFilterOn ? "🌸 pink filter ON" : "🌸 pink filter OFF");
+                break;
+            case FeaturePanel.MindWipe:
+                PanelMindWipe.IsVisible = true;
+                ShowDetail("🧠 Mind Wipe", "Original parity: audio mind-wipe trigger. Click/test plays a configured/bundled clip.");
+                _effects.TriggerMindWipe();
+                DoFlashText("MIND WIPE");
+                break;
+            case FeaturePanel.BubblePop:
+                PanelBubblePop.IsVisible = true;
+                ShowDetail("🫧 Bubble Pop", "Original parity: floating clickable bubbles. Click toggles ambient bubble spawning.");
+                _effects.SetBubblePop(!_effects.BubblePopRunning);
+                CardBubblePop.IsEnabledFeature = _effects.BubblePopRunning;
+                Chip(_effects.BubblePopRunning ? "🫧 bubble pop ON" : "🫧 bubble pop OFF");
+                break;
+            case FeaturePanel.BouncingText:
+                PanelBouncingText.IsVisible = true;
+                ShowDetail("✨ Bouncing Text", "Original parity: DVD-screensaver text overlay. Click toggles it now.");
+                _effects.SetBouncingText(!_effects.BouncingTextRunning);
+                CardBouncingText.IsEnabledFeature = _effects.BouncingTextRunning;
+                Chip(_effects.BouncingTextRunning ? "✨ bouncing text ON" : "✨ bouncing text OFF");
+                break;
+            case FeaturePanel.System:
+                PanelSystem.IsVisible = true;
+                ShowDetail("⚙ System", "Assets folder, panic key, startup behavior, and local app settings.");
+                break;
+            case FeaturePanel.Haptics:
+                PanelHaptics.IsVisible = true;
+                ShowDetail("💗 Haptics", "Buttplug.io / Lovense controls. Everything unlocked; backend wiring next.");
+                break;
+        }
+    }
+
+    private void HideFeaturePanels()
+    {
+        foreach (var panel in new Control[]
+        {
+            PanelFlash, PanelSubliminals, PanelOverlay, PanelBubblePop, PanelBouncingText,
+            PanelLockCard, PanelMindWipe, PanelVideo, PanelVisuals, PanelSystem, PanelHaptics
+        })
+            panel.IsVisible = false;
+    }
+
+    private void ToggleBubblePop()
+    {
+        _effects.SetBubblePop(!_effects.BubblePopRunning);
+        _settings.BubblePopEnabled = _effects.BubblePopRunning;
+        CardBubblePop.IsEnabledFeature = _effects.BubblePopRunning;
+        _settings.Save();
+        Chip(_effects.BubblePopRunning ? "🫧 bubble pop ON" : "🫧 bubble pop OFF");
+    }
+
+    private void ToggleBouncingText()
+    {
+        ApplyBouncingPhrases();
+        _effects.SetBouncingText(!_effects.BouncingTextRunning);
+        _settings.BouncingTextEnabled = _effects.BouncingTextRunning;
+        CardBouncingText.IsEnabledFeature = _effects.BouncingTextRunning;
+        _settings.Save();
+        Chip(_effects.BouncingTextRunning ? "✨ bouncing text ON" : "✨ bouncing text OFF");
+    }
+
+    private void ApplyBouncingPhrases()
+    {
+        if (!string.IsNullOrWhiteSpace(TxtBouncingPhrases.Text))
+        {
+            _settings.BouncingTextPhrases = TxtBouncingPhrases.Text!
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim()).Where(s => s.Length > 0).ToList();
+            _settings.Save();
+        }
     }
 
     // ── Session ───────────────────────────────────────────────────────────
@@ -350,11 +650,86 @@ public partial class MainWindow : Window, ICommandSink
         TxtSubFreq.Text            = $"{_settings.SubliminalFrequency}s";
         TxtSubDur.Text             = $"{_settings.SubliminalDurationMs}ms";
 
+        SldVisualSize.Value        = Math.Clamp(_settings.FlashSizeFraction * 100.0, 10, 100);
+        TxtVisualSize.Text         = $"{(int)SldVisualSize.Value}%";
+        SldVisualOpacity.Value     = _settings.FlashOpacity;
+        TxtVisualOpacity.Text      = $"{_settings.FlashOpacity}%";
+        SldVisualFade.Value        = _settings.FlashFadePercent;
+        TxtVisualFade.Text         = $"{_settings.FlashFadePercent}%";
+        SldVisualDuration.Value    = Math.Clamp(_settings.FlashDurationMs / 1000.0, 1, 15);
+        TxtVisualDuration.Text     = $"{(int)SldVisualDuration.Value}s";
+        ChkVisualAudio.IsChecked   = _settings.FlashAudioEnabled;
+
+        SldPinkOpacity.Value       = _settings.PinkFilterOpacity;
+        TxtPinkOpacity.Text        = $"{_settings.PinkFilterOpacity}";
+        SldBubbleFreq.Value        = _settings.BubblePopFrequencyPerHour;
+        TxtBubbleFreq.Text         = $"{_settings.BubblePopFrequencyPerHour}/h";
+        SldBubbleInterval.Value    = _settings.BubblePopIntervalSeconds;
+        TxtBubbleInterval.Text     = $"{_settings.BubblePopIntervalSeconds}s";
+        SldBubbleVolume.Value      = _settings.BubblePopVolume;
+        TxtBubbleVolume.Text       = $"{_settings.BubblePopVolume}%";
+        SldBubbleSpeed.Value       = _settings.BubblePopSpeedBoost;
+        TxtBubbleSpeed.Text        = $"+{_settings.BubblePopSpeedBoost}%";
+        ChkBubbleSolid.IsChecked   = _settings.BubblePopSolidMode;
+        TxtBouncingPhrases.Text    = string.Join(Environment.NewLine, _settings.BouncingTextPhrases);
+        ChkLockEnabled.IsChecked   = _settings.LockCardEnabled;
+        SldLockFreq.Value          = _settings.LockCardFrequencyPerHour;
+        TxtLockFreq.Text           = $"{_settings.LockCardFrequencyPerHour}/h";
+        SldLockRepeats.Value       = _settings.LockCardRepeats;
+        TxtLockRepeats.Text        = $"{_settings.LockCardRepeats}x";
+        ChkLockStrict.IsChecked    = _settings.LockCardStrict;
+        SldLockDuration.Value      = _settings.LockCardDurationSeconds;
+        TxtLockDuration.Text       = $"{_settings.LockCardDurationSeconds}s";
+        ChkMindEnabled.IsChecked   = _settings.MindWipeEnabled;
+        SldMindFreq.Value          = _settings.MindWipeFrequencyPerHour;
+        TxtMindFreq.Text           = $"{_settings.MindWipeFrequencyPerHour}/h";
+        SldMindVolume.Value        = _settings.MindWipeVolume;
+        TxtMindVolume.Text         = $"{_settings.MindWipeVolume}%";
+
         TxtLettaUrl.Text           = _settings.LettaBaseUrl ?? "http://localhost:8283";
         TxtAgentId.Text            = _settings.LettaAgentId ?? "";
 
         CardFlash.IsEnabledFeature      = _settings.FlashEnabled;
         CardSubliminal.IsEnabledFeature = _settings.SubliminalEnabled;
+        CardPinkFog.IsEnabledFeature    = false;
+        CardBubblePop.IsEnabledFeature  = _settings.BubblePopEnabled;
+        CardBouncingText.IsEnabledFeature = _settings.BouncingTextEnabled;
+    }
+
+    private void LoadCenterLogo()
+    {
+        var logo = EffectAssetPaths.FindRepoAsset("ConditioningControlPanel/Resources/logo.png")
+                   ?? EffectAssetPaths.FindRepoAsset("ConditioningControlPanel/Resources/logo2.png");
+        if (logo is not null) CenterLogoImage.Source = new Bitmap(logo);
+    }
+
+    // ── Scrolling marquee — mirrors upstream's TranslateTransform animation ──
+    private void InitMarquee()
+    {
+        const string separator = "          "; // 10 spaces between reps, like upstream
+        var message = _settings.MarqueeMessage.ToUpperInvariant();
+        var segment = message + separator + message + separator;
+
+        // Tile enough copies to guarantee seamless fill past the window edge
+        MarqueeText.Text = string.Concat(Enumerable.Repeat(segment, 6));
+
+        _marqueeTransform = new TranslateTransform(0, 0);
+        MarqueeText.RenderTransform = _marqueeTransform;
+
+        // Measure a single segment width after text is set
+        MarqueeText.Measure(new Size(double.PositiveInfinity, 40));
+        _marqueeSegmentWidth = MarqueeText.DesiredSize.Width / 6.0; // approx per-segment
+
+        _marqueeX = 0;
+        _marqueeTimer.Tick += (_, _) =>
+        {
+            // 80px/sec at 16ms ≈ 1.28px per tick
+            _marqueeX -= 80.0 * 0.016;
+            if (_marqueeSegmentWidth > 0 && _marqueeX <= -_marqueeSegmentWidth)
+                _marqueeX += _marqueeSegmentWidth;
+            _marqueeTransform!.X = _marqueeX;
+        };
+        _marqueeTimer.Start();
     }
 
     private void RefreshGameStats()
@@ -371,6 +746,27 @@ public partial class MainWindow : Window, ICommandSink
         _settings.LettaBaseUrl    = TxtLettaUrl.Text;
         _settings.LettaAgentId    = TxtAgentId.Text;
         _settings.FlashImagesPath = TxtFlashPath.Text ?? _settings.FlashImagesPath;
+        _settings.FlashSizeFraction = Math.Clamp(SldVisualSize.Value / 100.0, 0.10, 1.0);
+        _settings.FlashOpacity = (int)SldVisualOpacity.Value;
+        _settings.FlashFadePercent = (int)SldVisualFade.Value;
+        _settings.FlashDurationMs = (int)SldVisualDuration.Value * 1000;
+        _settings.FlashAudioEnabled = ChkVisualAudio.IsChecked ?? false;
+        _settings.PinkFilterOpacity = (int)SldPinkOpacity.Value;
+        _settings.BubblePopFrequencyPerHour = (int)SldBubbleFreq.Value;
+        _settings.BubblePopIntervalSeconds = (int)SldBubbleInterval.Value;
+        _settings.BubblePopVolume = (int)SldBubbleVolume.Value;
+        _settings.BubblePopSpeedBoost = (int)SldBubbleSpeed.Value;
+        _settings.BubblePopSolidMode = ChkBubbleSolid.IsChecked ?? true;
+        _settings.LockCardEnabled = ChkLockEnabled.IsChecked ?? true;
+        _settings.LockCardFrequencyPerHour = (int)SldLockFreq.Value;
+        _settings.LockCardRepeats = (int)SldLockRepeats.Value;
+        _settings.LockCardStrict = ChkLockStrict.IsChecked ?? false;
+        _settings.LockCardDurationSeconds = (int)SldLockDuration.Value;
+        _settings.MindWipeEnabled = ChkMindEnabled.IsChecked ?? true;
+        _settings.MindWipeFrequencyPerHour = (int)SldMindFreq.Value;
+        _settings.MindWipeVolume = (int)SldMindVolume.Value;
+        _settings.MindWipeLoop = _effects.MindWipeLoopRunning;
+        ApplyBouncingPhrases();
         if (TxtAssetsRoot?.Text != null) _settings.AssetsRoot = TxtAssetsRoot.Text;
         _settings.Save();
     }
@@ -390,8 +786,8 @@ public partial class MainWindow : Window, ICommandSink
             case Say s:      SayLog.Text = "🖤 " + s.Text + "\n" + SayLog.Text; break;
             case Spiral sp:  SetSpiral(sp.On); break;
             case Flash f:    DoFlashText(f.Text); if (f.Text.Length < 40) _flash.TriggerNow(1, 2500); break;
-            case PinkFog pf: Fog.IsVisible = pf.On; break;
-            case LockCard l: DoFlashText(l.Sentence); Chip($"🔒 {l.Sentence}"); break;
+            case PinkFog pf: SetPinkFilter(pf.On); break;
+            case LockCard l: _effects.ShowLockCard(l.Sentence); Chip($"🔒 {l.Sentence}"); break;
             case Haptics h:  Chip($"💗 haptics {(h.Intensity?.ToString() ?? h.Pattern ?? "pulse")}"); break;
         }
         return Task.CompletedTask;
@@ -401,6 +797,14 @@ public partial class MainWindow : Window, ICommandSink
     {
         Spiral.IsVisible            = on;
         CardSpiral.IsEnabledFeature = on;
+        _effects.SetSpiral(on);
+    }
+
+    private void SetPinkFilter(bool on)
+    {
+        Fog.IsVisible = on;
+        CardPinkFog.IsEnabledFeature = on;
+        _effects.SetPinkFilter(on);
     }
 
     private void DoFlashText(string text)
@@ -425,6 +829,7 @@ public partial class MainWindow : Window, ICommandSink
         _session.Dispose();
         _flash.Dispose();
         _sub.Dispose();
+        _effects.Dispose();
         foreach (var w in _flashPool) try { w.Close(); } catch { }
         try { _subOverlay.Close(); } catch { }
         base.OnClosed(e);
