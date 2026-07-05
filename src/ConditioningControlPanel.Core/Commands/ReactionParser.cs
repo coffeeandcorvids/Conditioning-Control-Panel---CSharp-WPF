@@ -25,7 +25,7 @@ public static class ReactionParser
                     PanelCommand? c = op switch
                     {
                         "say"     => new Say(Str(e, "text") ?? ""),
-                        "spiral"  => new Spiral(Bool(e, "on"), Int(e, "secs")),
+                        "spiral"  => new Spiral(Bool(e, "on"), Int(e, "secs"), Int(e, "opacity"), Str(e, "asset")),
                         "flash"   => new Flash(Str(e, "text") ?? ""),
                         "pinkfog" => new PinkFog(Bool(e, "on")),
                         "lockcard"=> new LockCard(Str(e, "sentence")),

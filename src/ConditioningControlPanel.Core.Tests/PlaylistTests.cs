@@ -81,3 +81,17 @@ public class PlaylistTests
         Assert.Equal("deeper", c.Arg);
     }
 }
+
+public class SpiralDjTests
+{
+    [Fact]
+    public void Parser_handles_spiral_opacity_and_asset()
+    {
+        var r = ConditioningControlPanel.Core.Commands.ReactionParser.Parse(
+            """{ "commands": [ {"op":"spiral","on":true,"opacity":22,"asset":"velvet"} ] }""");
+        var c = Assert.IsType<ConditioningControlPanel.Core.Commands.Spiral>(Assert.Single(r.Commands));
+        Assert.True(c.On);
+        Assert.Equal(22, c.Opacity);
+        Assert.Equal("velvet", c.Asset);
+    }
+}

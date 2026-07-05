@@ -4,7 +4,8 @@ namespace ConditioningControlPanel.Core.Commands;
 public abstract record PanelCommand;
 
 public sealed record Say(string Text) : PanelCommand;
-public sealed record Spiral(bool On, int? Seconds = null) : PanelCommand;
+/// <summary>Spiral overlay. Opacity 5–50 (%); Asset picks a gif from &lt;assets&gt;/spirals/ by name — both live-switchable mid-scene (DJ surface).</summary>
+public sealed record Spiral(bool On, int? Seconds = null, int? Opacity = null, string? Asset = null) : PanelCommand;
 public sealed record Flash(string Text) : PanelCommand;
 public sealed record PinkFog(bool On) : PanelCommand;
 public sealed record LockCard(string? Sentence = null) : PanelCommand;

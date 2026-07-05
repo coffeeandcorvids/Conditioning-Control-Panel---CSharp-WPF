@@ -790,7 +790,7 @@ public partial class MainWindow : Window, ICommandSink
         switch (command)
         {
             case Say s:      SayLog.Text = "🖤 " + s.Text + "\n" + SayLog.Text; break;
-            case Spiral sp:  SetSpiral(sp.On); break;
+            case Spiral sp:  ApplySpiral(sp); break;
             case Flash f:    DoFlashText(f.Text); if (f.Text.Length < 40) _flash.TriggerNow(1, 2500); break;
             case PinkFog pf: SetPinkFilter(pf.On); break;
             case LockCard l: _effects.ShowLockCard(l.Sentence); Chip($"🔒 {l.Sentence}"); break;
@@ -867,6 +867,27 @@ public partial class MainWindow : Window, ICommandSink
         Spiral.IsVisible            = on;
         CardSpiral.IsEnabledFeature = on;
         _effects.SetSpiral(on);
+    }
+
+    /// <summary>
+    /// DJ-surface spiral: opacity (clamped to upstream's 5–50%) and asset (a gif name
+    /// under &lt;assets&gt;/spirals/) apply to settings before the overlay redraws, so
+    /// LV can retheme the spiral mid-scene without touching the settings view.
+    /// </summary>
+    private void ApplySpiral(Spiral sp)
+    {
+        if (sp.Opacity is { } o)
+            _settings.SpiralOpacity = Math.Clamp(o, 5, 50);
+        if (sp.Asset is { } a)
+        {
+            var root = _settings.AssetsRoot.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+            var gif = System.IO.Path.Combine(root, "spirals", a.EndsWith(".gif") ? a : a + ".gif");
+            if (System.IO.File.Exists(gif)) _settings.SpiralPath = gif;
+            else Chip($"🌀 no spiral asset: {a}");
+        }
+        SetSpiral(sp.On);
+        if (sp.On && (sp.Opacity != null || sp.Asset != null))
+            Chip($"🌀 spiral {_settings.SpiralOpacity}%{(sp.Asset != null ? $" · {sp.Asset}" : "")}");
     }
 
     private void SetPinkFilter(bool on)
