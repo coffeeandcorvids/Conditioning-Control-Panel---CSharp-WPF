@@ -6,4 +6,11 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Haptics cluster (ported from upstream v6.2.8) — Buttplug pins match upstream -->
+    <PackageReference Include="Buttplug" Version="3.0.1" />
+    <PackageReference Include="Buttplug.Client.Connectors.WebsocketConnector" Version="3.0.1" />
+    <PackageReference Include="Serilog" Version="4.0.1" />
+  </ItemGroup>
+
 </Project>

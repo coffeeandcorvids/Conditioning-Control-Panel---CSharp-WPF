@@ -12,7 +12,9 @@ using ConditioningControlPanel.Core.Agents;
 using ConditioningControlPanel.Core.Commands;
 using ConditioningControlPanel.Core.Events;
 using ConditioningControlPanel.Core.Gamification;
+using ConditioningControlPanel.Core.Services;
 using ConditioningControlPanel.Core.Services.Flash;
+using ConditioningControlPanel.Core.Services.Haptics;
 using ConditioningControlPanel.Core.Services.Subliminal;
 using ConditioningControlPanel.Core.Services.Session;
 using ConditioningControlPanel.Core.Settings;
@@ -32,6 +34,7 @@ public partial class MainWindow : Window, ICommandSink
     private readonly IReactiveAgent       _agent = new ScriptedReactiveAgent();
     private readonly ReactionExecutor     _executor;
     private readonly EffectManager        _effects;
+    private readonly HapticService        _haptics;
 
     // ── Overlay pool ─────────────────────────────────────────────────────
     private const int FlashPoolSize = 6;
@@ -68,6 +71,7 @@ public partial class MainWindow : Window, ICommandSink
 
         _executor = new ReactionExecutor(this);
         _effects = new EffectManager(this, _settings);
+        _haptics = new HapticService(new HapticSettings { Provider = HapticProviderType.Buttplug });
 
         _flashPool = Enumerable.Range(0, FlashPoolSize)
             .Select(_ => new FlashOverlayWindow()).ToArray();
@@ -788,9 +792,39 @@ public partial class MainWindow : Window, ICommandSink
             case Flash f:    DoFlashText(f.Text); if (f.Text.Length < 40) _flash.TriggerNow(1, 2500); break;
             case PinkFog pf: SetPinkFilter(pf.On); break;
             case LockCard l: _effects.ShowLockCard(l.Sentence); Chip($"🔒 {l.Sentence}"); break;
-            case Haptics h:  Chip($"💗 haptics {(h.Intensity?.ToString() ?? h.Pattern ?? "pulse")}"); break;
+            case Haptics h:  _ = ExecuteHapticsAsync(h); break;
         }
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// haptics(intensity|pattern) → real toy via HapticService (Buttplug/Intiface).
+    /// Lazy-connects on first use so the panel runs fine with no Intiface up;
+    /// pattern strings map to VibrationMode (pulse/wave/heartbeat/escalate/earthquake).
+    /// </summary>
+    private async Task ExecuteHapticsAsync(Haptics h)
+    {
+        try
+        {
+            if (!_haptics.IsConnected && !await _haptics.ConnectAsync())
+            {
+                Chip("💗 haptics: no device (Intiface up? toy on?)");
+                return;
+            }
+
+            if (h.Pattern is { } p && Enum.TryParse<VibrationMode>(p, true, out var mode))
+                await _haptics.ApplyVibrationModeAsync(h.Intensity ?? 0.6, 1500, mode);
+            else if (h.Intensity is { } i)
+                await _haptics.ApplyVibrationModeAsync(i, 800, VibrationMode.Constant);
+            else
+                await _haptics.ApplyVibrationModeAsync(0.6, 800, VibrationMode.Pulse);
+
+            Chip($"💗 haptics {(h.Pattern ?? (h.Intensity?.ToString("F1") ?? "pulse"))}");
+        }
+        catch (Exception ex)
+        {
+            Chip($"💗 haptics error: {ex.Message}");
+        }
     }
 
     private void SetSpiral(bool on)
@@ -830,6 +864,7 @@ public partial class MainWindow : Window, ICommandSink
         _flash.Dispose();
         _sub.Dispose();
         _effects.Dispose();
+        _haptics.Dispose();
         foreach (var w in _flashPool) try { w.Close(); } catch { }
         try { _subOverlay.Close(); } catch { }
         base.OnClosed(e);
