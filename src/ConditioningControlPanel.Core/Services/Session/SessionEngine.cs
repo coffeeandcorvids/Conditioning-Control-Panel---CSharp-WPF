@@ -19,6 +19,10 @@ public sealed class SessionEngine : IDisposable
     public event EventHandler<SessionProgressArgs>?     ProgressUpdated;
     public event EventHandler?                          SessionCompleted;
 
+    /// <summary>Raised while a scripted session runs, whenever the evaluated moment
+    /// changes — feature windows opening/closing, ramp values moving.</summary>
+    public event EventHandler<SessionMoment>?           MomentChanged;
+
     // ── Services ──────────────────────────────────────────────────────────────
     private readonly IFlashService       _flash;
     private readonly ISubliminalService  _subliminal;
@@ -32,8 +36,13 @@ public sealed class SessionEngine : IDisposable
     private CancellationTokenSource? _cts;
     private Task?          _progressLoop;
     private bool           _disposed;
+    private Models.Session? _script;
+    private SessionMoment? _lastMoment;
 
     public SessionState State => _state;
+
+    /// <summary>The scripted session currently driving the engine, if any.</summary>
+    public Models.Session? Script => _script;
     public TimeSpan     Elapsed => _state == SessionState.Running
         ? (DateTime.UtcNow - _startedAt) - _pauseAccum
         : (_state == SessionState.Paused ? (_pausedAt - _startedAt) - _pauseAccum : TimeSpan.Zero);
@@ -47,11 +56,15 @@ public sealed class SessionEngine : IDisposable
 
     // ── Public control ────────────────────────────────────────────────────────
 
-    public void Start()
+    /// <summary>Start a session; pass a <paramref name="script"/> to run its feature
+    /// windows and ramps (evaluated per tick, surfaced via <see cref="MomentChanged"/>).</summary>
+    public void Start(Models.Session? script = null)
     {
         if (_state == SessionState.Running) return;
         if (_state == SessionState.Paused)  { Resume(); return; }
 
+        _script     = script;
+        _lastMoment = null;
         _startedAt  = DateTime.UtcNow;
         _pauseAccum = TimeSpan.Zero;
         _cts        = new CancellationTokenSource();
@@ -88,6 +101,13 @@ public sealed class SessionEngine : IDisposable
         _flash.Stop();
         _subliminal.Stop();
         RecordSession();
+        if (_script != null)
+        {
+            // close any feature windows the script opened
+            MomentChanged?.Invoke(this, default);
+            _script = null;
+            _lastMoment = null;
+        }
         SetState(SessionState.Idle);
         SessionCompleted?.Invoke(this, EventArgs.Empty);
     }
@@ -102,7 +122,19 @@ public sealed class SessionEngine : IDisposable
             while (await ticker.WaitForNextTickAsync(ct))
             {
                 if (_state != SessionState.Running) continue;
-                ProgressUpdated?.Invoke(this, new SessionProgressArgs(Elapsed));
+                var elapsed = Elapsed;
+                ProgressUpdated?.Invoke(this, new SessionProgressArgs(elapsed));
+
+                if (_script is { } script)
+                {
+                    if (elapsed.TotalMinutes >= script.DurationMinutes) { Stop(); return; }
+                    var moment = SessionScript.MomentAt(script.Settings, script.DurationMinutes, elapsed);
+                    if (moment != _lastMoment)
+                    {
+                        _lastMoment = moment;
+                        MomentChanged?.Invoke(this, moment);
+                    }
+                }
             }
         }
         catch (OperationCanceledException) { /* normal */ }

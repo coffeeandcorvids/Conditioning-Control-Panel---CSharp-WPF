@@ -536,19 +536,19 @@
       <!-- ── PRESETS TAB ─────────────────────────────────────────────── -->
       <Grid x:Name="ViewPresets" IsVisible="False" ColumnDefinitions="*,280" Margin="6">
         <Border Grid.Column="0" Classes="panel">
-          <StackPanel Spacing="10">
-            <TextBlock Classes="head" Text="📋 Presets"/>
-            <TextBlock Classes="muted" Text="Save and load session configurations. (coming next)"/>
-          </StackPanel>
+          <ScrollViewer>
+            <StackPanel Spacing="10">
+              <TextBlock Classes="head" Text="📋 Sessions"/>
+              <TextBlock Classes="muted" Text="Scripted sessions — feature windows and intensity ramps run automatically. ▶ starts, the STOP bar ends early."/>
+              <StackPanel x:Name="PanelSessionList" Spacing="8"/>
+            </StackPanel>
+          </ScrollViewer>
         </Border>
         <Border Grid.Column="1" Classes="panel" Margin="6,0,0,0">
           <StackPanel Spacing="8">
-            <TextBlock Classes="head" Text="Select a Preset"/>
-            <TextBlock Classes="muted" Text="⚡ Flash Images"/>
-            <TextBlock Classes="muted" Text="🎬 Mandatory Videos"/>
-            <TextBlock Classes="muted" Text="💬 Subliminals"/>
-            <TextBlock Classes="muted" Text="🔊 Audio"/>
-            <TextBlock Classes="muted" Text="🌀 Overlays"/>
+            <TextBlock Classes="head" Text="Now Running"/>
+            <TextBlock x:Name="TxtRunningSession" Classes="muted" Text="(nothing scripted)"/>
+            <TextBlock x:Name="TxtRunningMoment"  Classes="muted" Text="" TextWrapping="Wrap"/>
           </StackPanel>
         </Border>
       </Grid>

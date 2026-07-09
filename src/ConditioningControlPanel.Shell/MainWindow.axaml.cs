@@ -70,6 +70,8 @@ public partial class MainWindow : Window, ICommandSink
         _session.StateChanged    += OnSessionStateChanged;
         _session.ProgressUpdated += OnSessionProgress;
         _session.SessionCompleted += (_, _) => Dispatcher.UIThread.Post(RefreshGameStats);
+        _session.MomentChanged   += OnSessionMoment;
+        PopulateSessionList();
 
         _executor = new ReactionExecutor(this);
         _effects = new EffectManager(this, _settings);
@@ -633,6 +635,83 @@ public partial class MainWindow : Window, ICommandSink
         {
             var t = e.Elapsed;
             var ts = $"{(int)t.TotalHours:D2}:{t.Minutes:D2}:{t.Seconds:D2}";
+            if (_session.Script is { } s)
+                TxtRunningSession.Text = $"{s.Icon} {s.Name} — {ts} / {s.DurationMinutes}m";
+        });
+    }
+
+    // ── Scripted sessions (presets view) ──────────────────────────────────
+
+    private void PopulateSessionList()
+    {
+        foreach (var session in ConditioningControlPanel.Core.Models.Session.GetAllSessions())
+        {
+            var s = session;
+            var row = new Border
+            {
+                Classes = { "panel" },
+                Padding = new Thickness(10),
+            };
+            var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+            var text = new StackPanel { Spacing = 2 };
+            text.Children.Add(new TextBlock
+            {
+                Text = $"{s.Icon} {s.Name}  ·  {s.DurationMinutes}m · {s.Difficulty}",
+                FontWeight = Avalonia.Media.FontWeight.Bold,
+            });
+            text.Children.Add(new TextBlock
+            {
+                Text = s.Description,
+                Classes = { "muted" },
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+            });
+            Grid.SetColumn(text, 0);
+            grid.Children.Add(text);
+
+            var run = new Button { Content = "▶", FontSize = 16, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+            run.Click += (_, _) => StartScriptedSession(s);
+            Grid.SetColumn(run, 1);
+            grid.Children.Add(run);
+
+            row.Child = grid;
+            PanelSessionList.Children.Add(row);
+        }
+    }
+
+    private void StartScriptedSession(ConditioningControlPanel.Core.Models.Session s)
+    {
+        if (_session.State != SessionState.Idle) _session.Stop();
+        _session.Start(s);
+        TxtRunningSession.Text = $"{s.Icon} {s.Name} — starting…";
+        Chip($"{s.Icon} {s.Name} ({s.DurationMinutes}m)");
+    }
+
+    /// <summary>Apply a scripted moment to the live effect surfaces. A default
+    /// (all-off) moment arrives when the script ends — closes everything.</summary>
+    private void OnSessionMoment(object? _, SessionMoment m)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (m.SpiralOn) _settings.SpiralOpacity = Math.Clamp(m.SpiralOpacity, 5, 50);
+            if (_effects.SpiralOn != m.SpiralOn) SetSpiral(m.SpiralOn);
+            else if (m.SpiralOn) _effects.SetSpiral(true);           // live opacity re-apply
+
+            if (_effects.PinkFilterOn != m.PinkOn) SetPinkFilter(m.PinkOn);
+            if (m.PinkOn) _effects.UpdatePinkOpacity((byte)Math.Clamp(m.PinkOpacity * 255 / 100, 0, 255));
+
+            if (m.FlashOn)
+            {
+                _settings.FlashOpacity = Math.Clamp(m.FlashOpacity, 5, 100);
+                // script speaks per-hour, panel speaks seconds-between-flashes
+                _settings.FlashFrequency = Math.Max(1, 3600 / Math.Max(1, m.FlashPerHour));
+                _flash.UpdateSettings(BuildFlashConfig());
+            }
+
+            TxtRunningMoment.Text = _session.Script is null
+                ? ""
+                : $"spiral {(m.SpiralOn ? m.SpiralOpacity + "%" : "off")} · pink {(m.PinkOn ? m.PinkOpacity + "%" : "off")}"
+                  + $" · flash {(m.FlashOn ? m.FlashOpacity + "% @" + m.FlashPerHour + "/h" : "off")}"
+                  + $" · subs {(m.SubliminalOn ? "on" : "off")}";
         });
     }
 
