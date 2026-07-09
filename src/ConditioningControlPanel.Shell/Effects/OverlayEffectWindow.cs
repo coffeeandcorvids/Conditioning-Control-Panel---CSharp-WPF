@@ -20,6 +20,7 @@ internal sealed class OverlayEffectWindow : Window
     private readonly List<Bitmap> _spiralFrames = new();
     private int _frameIndex;
     private double _angle;
+    private string? _loadedPath;
 
     public event EventHandler? EscapePressed;
 
@@ -51,11 +52,15 @@ internal sealed class OverlayEffectWindow : Window
         _spiralImage.RenderTransformOrigin = RelativePoint.Center;
         _root.Children.Add(_spiralImage);
 
+        // rotation is independent of frame animation: static (single-frame) spirals
+        // still spin, multi-frame GIFs additionally advance frames
         _gifTimer.Tick += (_, _) =>
         {
-            if (_spiralFrames.Count == 0) return;
-            _frameIndex = (_frameIndex + 1) % _spiralFrames.Count;
-            _spiralImage.Source = _spiralFrames[_frameIndex];
+            if (_spiralFrames.Count > 1)
+            {
+                _frameIndex = (_frameIndex + 1) % _spiralFrames.Count;
+                _spiralImage.Source = _spiralFrames[_frameIndex];
+            }
             _angle = (_angle + 1.25) % 360;
             _spiralImage.RenderTransform = new RotateTransform(_angle);
         };
@@ -80,7 +85,7 @@ internal sealed class OverlayEffectWindow : Window
         if (on) EnsureSpiralLoaded(path);
         _spiralImage.Opacity = Math.Clamp(opacityPercent, 5, 100) / 100.0;
         _spiralImage.IsVisible = on;
-        if (on && _spiralFrames.Count > 1) _gifTimer.Start();
+        if (on && _spiralFrames.Count > 0) _gifTimer.Start();
         else _gifTimer.Stop();
         EnsureVisibility();
     }
@@ -89,12 +94,15 @@ internal sealed class OverlayEffectWindow : Window
 
     private void EnsureSpiralLoaded(string? path)
     {
-        if (_spiralFrames.Count > 0) return;
         var resolved = !string.IsNullOrWhiteSpace(path) && File.Exists(path)
             ? path
             : EffectAssetPaths.FindRepoAsset("ConditioningControlPanel/Resources/spirals/spiral.gif")
               ?? EffectAssetPaths.FindRepoAsset("ConditioningControlPanel/Resources/spiral.gif");
-        if (resolved is null) return;
+        if (resolved is null || resolved == _loadedPath) return;
+
+        foreach (var f in _spiralFrames) f.Dispose();
+        _spiralFrames.Clear();
+        _frameIndex = 0;
 
         try
         {
@@ -119,7 +127,11 @@ internal sealed class OverlayEffectWindow : Window
             _spiralFrames.Add(new Bitmap(resolved));
         }
 
-        if (_spiralFrames.Count > 0) _spiralImage.Source = _spiralFrames[0];
+        if (_spiralFrames.Count > 0)
+        {
+            _spiralImage.Source = _spiralFrames[0];
+            _loadedPath = resolved;
+        }
     }
 
     private void EnsureVisibility()

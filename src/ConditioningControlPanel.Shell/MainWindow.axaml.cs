@@ -199,6 +199,40 @@ public partial class MainWindow : Window, ICommandSink
                 _settings.Save();
             }
         };
+        SldSpiralOpacity.Value = _settings.SpiralOpacity;
+        TxtSpiralOpacity.Text  = $"{_settings.SpiralOpacity}%";
+        SldSpiralOpacity.PropertyChanged += (_, e) =>
+        {
+            if (e.Property.Name == "Value")
+            {
+                TxtSpiralOpacity.Text = $"{(int)SldSpiralOpacity.Value}%";
+                _settings.SpiralOpacity = (int)SldSpiralOpacity.Value;
+                _settings.Save();
+                if (_effects.SpiralOn) _effects.SetSpiral(true);   // live re-apply
+            }
+        };
+        RescanSpiralAssets();
+        CmbSpiralAsset.SelectionChanged += (_, _) =>
+        {
+            if (CmbSpiralAsset.SelectedItem is SpiralAssetItem item)
+                ApplySpiralAssetPath(item.Path);
+        };
+        BtnSpiralRescan.Click += (_, _) => RescanSpiralAssets();
+        BtnSpiralBrowse.Click += async (_, _) =>
+        {
+            var files = await StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
+            {
+                Title = "Choose spiral image",
+                AllowMultiple = false,
+                FileTypeFilter = new[] { new Avalonia.Platform.Storage.FilePickerFileType("Spiral images")
+                    { Patterns = new[] { "*.gif", "*.png", "*.webp", "*.jpg" } } }
+            });
+            var path = files.Count > 0 && files[0].Path.IsAbsoluteUri && files[0].Path.Scheme == "file"
+                ? files[0].Path.LocalPath : null;
+            if (path is null) return;
+            ApplySpiralAssetPath(path);
+            RescanSpiralAssets(selectPath: path);
+        };
         BtnBubbleToggle.Click += (_, _) => ToggleBubblePop();
         BtnBubbleBurst.Click  += (_, _) => _effects.SpawnBubbleBurst(8);
         SldBubbleInterval.PropertyChanged += (_, e) =>
@@ -867,6 +901,46 @@ public partial class MainWindow : Window, ICommandSink
         Spiral.IsVisible            = on;
         CardSpiral.IsEnabledFeature = on;
         _effects.SetSpiral(on);
+    }
+
+    private sealed record SpiralAssetItem(string Name, string? Path)
+    {
+        public override string ToString() => Name;
+    }
+
+    private string SpiralAssetsDir()
+    {
+        var root = _settings.AssetsRoot.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+        return System.IO.Path.Combine(root, "spirals");
+    }
+
+    private void RescanSpiralAssets(string? selectPath = null)
+    {
+        var items = new List<SpiralAssetItem> { new("(bundled default)", null) };
+        var dir = SpiralAssetsDir();
+        if (System.IO.Directory.Exists(dir))
+        {
+            foreach (var f in System.IO.Directory.EnumerateFiles(dir).OrderBy(f => f))
+            {
+                var ext = System.IO.Path.GetExtension(f).ToLowerInvariant();
+                if (ext is ".gif" or ".png" or ".webp" or ".jpg" or ".jpeg")
+                    items.Add(new(System.IO.Path.GetFileName(f), f));
+            }
+        }
+        var target = selectPath ?? _settings.SpiralPath;
+        if (target != null && System.IO.File.Exists(target) && items.All(i => i.Path != target))
+            items.Add(new(System.IO.Path.GetFileName(target) + " (custom)", target));
+
+        CmbSpiralAsset.ItemsSource  = items;
+        CmbSpiralAsset.SelectedItem = items.FirstOrDefault(i => i.Path == target) ?? items[0];
+    }
+
+    private void ApplySpiralAssetPath(string? path)
+    {
+        _settings.SpiralPath = path;
+        _settings.Save();
+        if (_effects.SpiralOn) _effects.SetSpiral(true);   // live swap
+        Chip($"🌀 spiral asset: {(path is null ? "bundled default" : System.IO.Path.GetFileName(path))}");
     }
 
     /// <summary>

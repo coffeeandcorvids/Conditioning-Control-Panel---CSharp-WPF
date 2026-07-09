@@ -366,7 +366,18 @@
                       <Slider x:Name="SldPinkOpacity" Minimum="0" Maximum="180" Value="95" Width="160" VerticalAlignment="Center"/>
                       <TextBlock x:Name="TxtPinkOpacity" VerticalAlignment="Center" Text="95"/>
                     </StackPanel>
-                    <TextBlock Classes="muted" Text="Parity note: original Pink Filter is a fullscreen semi-transparent tint; Spiral is a fullscreen animated overlay."/>
+                    <TextBlock Classes="label" Text="Spiral opacity (%):"/>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Slider x:Name="SldSpiralOpacity" Minimum="5" Maximum="50" Value="35" Width="160" VerticalAlignment="Center"/>
+                      <TextBlock x:Name="TxtSpiralOpacity" VerticalAlignment="Center" Text="35%"/>
+                    </StackPanel>
+                    <TextBlock Classes="label" Text="Spiral asset:"/>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <ComboBox x:Name="CmbSpiralAsset" Width="200" VerticalAlignment="Center"/>
+                      <Button x:Name="BtnSpiralBrowse" Content="Browse…"/>
+                      <Button x:Name="BtnSpiralRescan" Content="↻" ToolTip.Tip="Rescan spiral assets"/>
+                    </StackPanel>
+                    <TextBlock Classes="muted" Text="Assets scan bundled spirals + &lt;assets root&gt;/spirals/. Drop .gif/.png/.webp files there and rescan."/>
                   </StackPanel>
                 </Border>
 
