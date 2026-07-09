@@ -878,11 +878,15 @@ public partial class MainWindow : Window, ICommandSink
                 case "noshuffle": _playlist.SetShuffle(false); Chip("🎵 shuffle off"); return;
                 case "jump" when pl.Arg != null: _playlist.JumpTo(pl.Arg); break;
                 case "load" when pl.Arg != null:
-                    var path = System.IO.Path.Combine(
-                        Environment.ExpandEnvironmentVariables(_settings.AssetsRoot.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile))),
-                        "playlists", pl.Arg + ".json");
-                    _playlist.Load(PlaylistDefinition.LoadFile(path));
+                    _playlist.Load(PlaylistDefinition.LoadFile(
+                        System.IO.Path.Combine(PlaylistsDir(), pl.Arg + ".json")));
                     break;
+                case "import" when pl.Arg != null:
+                    _ = ImportBambiCloudPlaylist(pl.Arg);   // async; chips on completion
+                    return;
+                case "browse":
+                    _ = BrowseBambiCloudPlaylists();
+                    return;
                 default: Chip($"🎵 playlist? {pl.Do}"); return;
             }
             Chip($"🎵 {_playlist.CurrentTrack?.Title ?? "(none)"}");
@@ -890,6 +894,56 @@ public partial class MainWindow : Window, ICommandSink
         catch (Exception ex)
         {
             Chip($"🎵 playlist error: {ex.Message}");
+        }
+    }
+
+    private string PlaylistsDir() => System.IO.Path.Combine(
+        Environment.ExpandEnvironmentVariables(_settings.AssetsRoot.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile))),
+        "playlists");
+
+    /// <summary>
+    /// playlist(import:&lt;name-or-id&gt;) — pull a public BambiCloud playlist through the
+    /// JSON API, save it as a native playlist under &lt;assets&gt;/playlists/, and load it.
+    /// Tracks keep their CDN audio + haptics-pattern URLs.
+    /// </summary>
+    private async Task ImportBambiCloudPlaylist(string query)
+    {
+        try
+        {
+            Chip($"🎵 fetching '{query}' from BambiCloud…");
+            using var bc = new ConditioningControlPanel.Core.Services.BambiCloud.BambiCloudClient();
+            var found = await bc.FindPlaylistAsync(query);
+            if (found is null) { Chip($"🎵 no BambiCloud playlist matches '{query}'"); return; }
+
+            var def = ConditioningControlPanel.Core.Services.BambiCloud.BambiCloudClient.ToPlaylistDefinition(found);
+            if (def.Tracks.Count == 0) { Chip($"🎵 '{found.Name}' has no playable tracks"); return; }
+
+            System.IO.Directory.CreateDirectory(PlaylistsDir());
+            var slug = string.Concat(def.Name.ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) ? c : '-')).Trim('-');
+            def.SaveFile(System.IO.Path.Combine(PlaylistsDir(), slug + ".json"));
+
+            _playlist.Load(def);
+            Chip($"🎵 imported '{def.Name}' ({def.Tracks.Count} tracks) → {slug}.json");
+        }
+        catch (Exception ex)
+        {
+            Chip($"🎵 import failed: {ex.Message}");
+        }
+    }
+
+    private async Task BrowseBambiCloudPlaylists()
+    {
+        try
+        {
+            Chip("🎵 listing BambiCloud playlists…");
+            using var bc = new ConditioningControlPanel.Core.Services.BambiCloud.BambiCloudClient();
+            var all = await bc.GetPlaylistsAsync();
+            var top = string.Join(" · ", all.Take(8).Select(p => $"{p.Name} ({p.Files.Count})"));
+            Chip(all.Count == 0 ? "🎵 no playlists returned" : $"🎵 {all.Count} playlists: {top}…");
+        }
+        catch (Exception ex)
+        {
+            Chip($"🎵 browse failed: {ex.Message}");
         }
     }
 

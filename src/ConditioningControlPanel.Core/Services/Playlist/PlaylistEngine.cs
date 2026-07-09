@@ -12,6 +12,17 @@ namespace ConditioningControlPanel.Core.Services.Playlist
     {
         [JsonPropertyName("path")]  public string Path  { get; set; } = "";
         [JsonPropertyName("title")] public string Title { get; set; } = "";
+
+        /// <summary>Optional haptics pattern (local file or URL) synced to this track.</summary>
+        [JsonPropertyName("haptics"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? HapticsPath { get; set; }
+
+        [JsonPropertyName("durationMs"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public long? DurationMs { get; set; }
+
+        /// <summary>Free-form type tag, e.g. induction/deepener/loop/music.</summary>
+        [JsonPropertyName("kind"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Kind { get; set; }
     }
 
     /// <summary>A named, ordered set of tracks. Serializes to plain JSON on disk.</summary>

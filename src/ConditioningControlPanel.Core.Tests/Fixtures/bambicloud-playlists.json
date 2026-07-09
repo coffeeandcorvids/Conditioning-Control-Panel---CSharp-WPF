@@ -1,0 +1,3548 @@
+{
+ "playlists": [
+  {
+   "id": 74468,
+   "name": "Bambi music ",
+   "isPublic": false,
+   "isCore": false,
+   "creator": {
+    "id": 59591,
+    "username": "kellythebunny28"
+   },
+   "expLevel": "Beginner",
+   "description": "Just music",
+   "dateCreated": "2025-10-27",
+   "uuid": "4fe81269-5743-4cbc-9e46-cb6829a40eed",
+   "imageURL": null,
+   "files": [
+    {
+     "id": 2083,
+     "name": "She's a Demon Girl (Barbie Girl Parody - Laced & Triggered)",
+     "uuid": "719196ea-f599-4a48-aa7c-3a4742663971",
+     "duration": 258471,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 16375,
+      "username": "dumbdory",
+      "patreonName": null
+     },
+     "description": "This is my first try with subliminal messaging, any constructive feedback is always welcome. ",
+     "releaseDate": "2025-09-25",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/719196ea-f599-4a48-aa7c-3a4742663971.wav",
+     "fileType": "ai music",
+     "audioType": "wav",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 16375,
+     "isPublic": true,
+     "plays": 2833,
+     "warnings": []
+    },
+    {
+     "id": 2080,
+     "name": "Post it Online",
+     "uuid": "b2b6c756-a798-42a4-a792-0b66b6ebbaeb",
+     "duration": 263664,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 16375,
+      "username": "dumbdory",
+      "patreonName": null
+     },
+     "description": "",
+     "releaseDate": "2025-09-23",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/b2b6c756-a798-42a4-a792-0b66b6ebbaeb.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 16375,
+     "isPublic": true,
+     "plays": 551,
+     "warnings": []
+    },
+    {
+     "id": 2079,
+     "name": "Folded Wings",
+     "uuid": "75ba248c-af15-4493-970c-5f7dd60c7469",
+     "duration": 271359,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 16375,
+      "username": "dumbdory",
+      "patreonName": null
+     },
+     "description": "",
+     "releaseDate": "2025-09-22",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/75ba248c-af15-4493-970c-5f7dd60c7469.wav",
+     "fileType": "ai music",
+     "audioType": "wav",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 16375,
+     "isPublic": true,
+     "plays": 509,
+     "warnings": []
+    },
+    {
+     "id": 2077,
+     "name": "A Maze that's Hot",
+     "uuid": "101acf4a-62f0-4e5c-89b4-1603d1ab2226",
+     "duration": 264279,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 16375,
+      "username": "dumbdory",
+      "patreonName": null
+     },
+     "description": "",
+     "releaseDate": "2025-09-22",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/101acf4a-62f0-4e5c-89b4-1603d1ab2226.wav",
+     "fileType": "ai music",
+     "audioType": "wav",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 16375,
+     "isPublic": true,
+     "plays": 1147,
+     "warnings": []
+    },
+    {
+     "id": 2074,
+     "name": "Bubble Dumb Bones",
+     "uuid": "8e68340d-4c7c-4e99-b6a2-edd958b2d072",
+     "duration": 292839,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 16375,
+      "username": "dumbdory",
+      "patreonName": null
+     },
+     "description": "",
+     "releaseDate": "2025-09-22",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/8e68340d-4c7c-4e99-b6a2-edd958b2d072.wav",
+     "fileType": "ai music",
+     "audioType": "wav",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 16375,
+     "isPublic": false,
+     "plays": 192,
+     "warnings": []
+    },
+    {
+     "id": 2072,
+     "name": "Rewired Puppet (Rock Version)",
+     "uuid": "64d51f7e-0e55-4ae5-8d19-eda66c57f563",
+     "duration": 283319,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 16375,
+      "username": "dumbdory",
+      "patreonName": null
+     },
+     "description": "",
+     "releaseDate": "2025-09-22",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/64d51f7e-0e55-4ae5-8d19-eda66c57f563.wav",
+     "fileType": "ai music",
+     "audioType": "wav",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 16375,
+     "isPublic": true,
+     "plays": 328,
+     "warnings": []
+    },
+    {
+     "id": 2071,
+     "name": "Whore of the World (Song Only - 80s Synthpop)",
+     "uuid": "b1918a94-4490-4e70-96c6-4acf79476bf7",
+     "duration": 364959,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 16375,
+      "username": "dumbdory",
+      "patreonName": null
+     },
+     "description": "",
+     "releaseDate": "2025-09-22",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/b1918a94-4490-4e70-96c6-4acf79476bf7.wav",
+     "fileType": "ai music",
+     "audioType": "wav",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 16375,
+     "isPublic": true,
+     "plays": 524,
+     "warnings": []
+    },
+    {
+     "id": 1998,
+     "name": "Bambi Psychosis ",
+     "uuid": "df9d45ff-9961-4ac0-b475-25d32f498c2c",
+     "duration": 320016,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 16375,
+      "username": "dumbdory",
+      "patreonName": null
+     },
+     "description": "This one is pretty violent and to do with psychosis in a twisted hospital where Bambi confronts her shadow and fucks it up lol",
+     "releaseDate": "2025-08-27",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/df9d45ff-9961-4ac0-b475-25d32f498c2c.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 16375,
+     "isPublic": true,
+     "plays": 512,
+     "warnings": []
+    },
+    {
+     "id": 1997,
+     "name": "Drip Down Low",
+     "uuid": "905dab07-a53d-4c58-9325-b58a2395c3e0",
+     "duration": 262079,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 16375,
+      "username": "dumbdory",
+      "patreonName": null
+     },
+     "description": "",
+     "releaseDate": "2025-08-27",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/905dab07-a53d-4c58-9325-b58a2395c3e0.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 16375,
+     "isPublic": true,
+     "plays": 660,
+     "warnings": []
+    },
+    {
+     "id": 1996,
+     "name": "The Good Word",
+     "uuid": "26226e15-874c-43fd-9164-5bce8157c34f",
+     "duration": 223224,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 16375,
+      "username": "dumbdory",
+      "patreonName": null
+     },
+     "description": "",
+     "releaseDate": "2025-08-27",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/26226e15-874c-43fd-9164-5bce8157c34f.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 16375,
+     "isPublic": true,
+     "plays": 465,
+     "warnings": []
+    },
+    {
+     "id": 1990,
+     "name": "Whore of the Worlds (A Bambi Sleep Song)",
+     "uuid": "bba7f60c-dd59-49e0-ab7d-57d8a31f0271",
+     "duration": 474792,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 16375,
+      "username": "dumbdory",
+      "patreonName": null
+     },
+     "description": " ",
+     "releaseDate": "2025-08-27",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/bba7f60c-dd59-49e0-ab7d-57d8a31f0271.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 16375,
+     "isPublic": true,
+     "plays": 609,
+     "warnings": []
+    },
+    {
+     "id": 1985,
+     "name": "My Daddy",
+     "uuid": "532fff49-b398-42bf-882b-2059085aa0ea",
+     "duration": 243864,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 6464,
+      "username": "veronicaloxeight",
+      "patreonName": "VeronicaLoxeight"
+     },
+     "description": "Only for Patrons music song by Veronica Loxeight Theme: Daddy, Obedience, Bimbo doll, Good girl",
+     "releaseDate": "2025-08-12",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/532fff49-b398-42bf-882b-2059085aa0ea.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 1,
+       "name": "Bimbo doll",
+       "description": "Causes feelings of relaxation and emptiness.",
+       "uuid": "8d78b494-79b2-4319-89d0-57e0a0a45973",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 6464,
+     "isPublic": true,
+     "plays": 552,
+     "warnings": []
+    },
+    {
+     "id": 1925,
+     "name": "Dizzy Airhead",
+     "uuid": "014ae090-d0e5-48d9-83ee-74badcd16187",
+     "duration": 121920,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 50897,
+      "username": "soylentgreen",
+      "patreonName": null
+     },
+     "description": "Bambi has another one of her Blonde Moments!",
+     "releaseDate": "2025-06-15",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/014ae090-d0e5-48d9-83ee-74badcd16187.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 50897,
+     "isPublic": true,
+     "plays": 1046,
+     "warnings": []
+    },
+    {
+     "id": 1929,
+     "name": "Reset, No Regrets",
+     "uuid": "ef961545-d080-4cf0-9b53-104a39017211",
+     "duration": 216864,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 50897,
+      "username": "soylentgreen",
+      "patreonName": null
+     },
+     "description": "A trip to a pink spa has Bambi dancing in her lingerie and high heels",
+     "releaseDate": "2025-06-15",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/ef961545-d080-4cf0-9b53-104a39017211.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [
+      {
+       "id": 9,
+       "name": "Bambi reset",
+       "description": "Memory wipe and replacement. Self-acceptance and belief that everything conditioned has always been that way.",
+       "uuid": "25467c39-43e8-4e26-928e-a7164871163a",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 50897,
+     "isPublic": true,
+     "plays": 687,
+     "warnings": []
+    },
+    {
+     "id": 1930,
+     "name": "On Your Knees",
+     "uuid": "211cfca9-858b-4c33-baeb-13890caad1ae",
+     "duration": 137381,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 50897,
+      "username": "soylentgreen",
+      "patreonName": null
+     },
+     "description": "Be a compliant Bee Jay Dee, kneel down and wait for your next customer",
+     "releaseDate": "2025-06-15",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/211cfca9-858b-4c33-baeb-13890caad1ae.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 50897,
+     "isPublic": true,
+     "plays": 623,
+     "warnings": []
+    },
+    {
+     "id": 1941,
+     "name": "Stepford Bambi",
+     "uuid": "38267ef4-759f-43ab-a294-6c841ac92d95",
+     "duration": 185002,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 50897,
+      "username": "soylentgreen",
+      "patreonName": null
+     },
+     "description": "Is everything as it seems in Bambi\u2019s perfect Stepford Wife life?",
+     "releaseDate": "2025-06-15",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/38267ef4-759f-43ab-a294-6c841ac92d95.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 50897,
+     "isPublic": true,
+     "plays": 1874,
+     "warnings": []
+    },
+    {
+     "id": 1939,
+     "name": "Daddy's Little Girl",
+     "uuid": "36fe2f13-bd80-4213-808c-57ca4006629e",
+     "duration": 167657,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 50897,
+      "username": "soylentgreen",
+      "patreonName": null
+     },
+     "description": "Daddy's Little Girl ain\u2019t the one you know... Project: Moist Mess adjacent",
+     "releaseDate": "2025-06-15",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/36fe2f13-bd80-4213-808c-57ca4006629e.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 50897,
+     "isPublic": true,
+     "plays": 918,
+     "warnings": []
+    },
+    {
+     "id": 1937,
+     "name": "Locked Tight?",
+     "uuid": "6e438e0a-d00d-4801-b283-642214bd2aca",
+     "duration": 222192,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 50897,
+      "username": "soylentgreen",
+      "patreonName": null
+     },
+     "description": "Bambi is locked away, all safe and secure, but is she really? The cage is a lie! Project: Moist Mess adjacent",
+     "releaseDate": "2025-06-15",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/6e438e0a-d00d-4801-b283-642214bd2aca.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 50897,
+     "isPublic": true,
+     "plays": 756,
+     "warnings": []
+    },
+    {
+     "id": 1935,
+     "name": "Don't Fight It",
+     "uuid": "80a16e3a-9969-4422-910d-6fb44291ebfb",
+     "duration": 174971,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 50897,
+      "username": "soylentgreen",
+      "patreonName": null
+     },
+     "description": "Will this make you Cum and Collapse? Hit play to find out",
+     "releaseDate": "2025-06-15",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/80a16e3a-9969-4422-910d-6fb44291ebfb.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [
+      {
+       "id": 15,
+       "name": "Bambi cum and collapse",
+       "description": "Cum-on-command trigger for instant orgasm and reinforcement of conditioning.",
+       "uuid": "3ff8a9bb-9ef7-4569-88e4-c2fd270f183d",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 50897,
+     "isPublic": true,
+     "plays": 988,
+     "warnings": []
+    },
+    {
+     "id": 1925,
+     "name": "Dizzy Airhead",
+     "uuid": "014ae090-d0e5-48d9-83ee-74badcd16187",
+     "duration": 121920,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 50897,
+      "username": "soylentgreen",
+      "patreonName": null
+     },
+     "description": "Bambi has another one of her Blonde Moments!",
+     "releaseDate": "2025-06-15",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/014ae090-d0e5-48d9-83ee-74badcd16187.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 50897,
+     "isPublic": true,
+     "plays": 1046,
+     "warnings": []
+    },
+    {
+     "id": 1900,
+     "name": "I Will Obey",
+     "uuid": "c5ed4d28-0c28-4591-9c5a-690830201941",
+     "duration": 186312,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 6464,
+      "username": "veronicaloxeight",
+      "patreonName": "VeronicaLoxeight"
+     },
+     "description": "100% Free music song by Veronica Loxeight\nTheme: Obedience, Mindwash, Dumb, Mantra",
+     "releaseDate": "2025-06-10",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/c5ed4d28-0c28-4591-9c5a-690830201941.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 6464,
+     "isPublic": true,
+     "plays": 1858,
+     "warnings": []
+    },
+    {
+     "id": 1862,
+     "name": "Bambi Brain Off",
+     "uuid": "8c001d13-ed75-489b-8d56-1f4c70be0e5d",
+     "duration": 126000,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 38957,
+      "username": "bambi_beats",
+      "patreonName": "BambiBeats"
+     },
+     "description": "This chill lo-fi beat might seem harmless at first. After all, how dangerous could something as relaxing as this beat be? Just listen and let the soothing voices guide you. But be careful, because before you know, you will be in a deep trance and completely unable to think. That's right, Bambi. This session will completely destroy your brain and leave you behind as an empty-headed, pink bimbo.\n***\nRepeatedly listen to this track and make music playlists with it to increase and cement its effects.\n***\nIMPORTANT: Make sure that you are in a safe environment. It is always possible that one of your triggers is set off by a track. Don't listen to files if you have to focus, e.g., while driving or operating other machinery. Stay safe and don't endanger yourself or others by listening to these files.",
+     "releaseDate": "2025-04-29",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/8c001d13-ed75-489b-8d56-1f4c70be0e5d.wav",
+     "fileType": "music",
+     "audioType": "wav",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [
+      {
+       "id": 1,
+       "name": "Bimbo doll",
+       "description": "Causes feelings of relaxation and emptiness.",
+       "uuid": "8d78b494-79b2-4319-89d0-57e0a0a45973",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 4,
+       "name": "Bambi freeze",
+       "description": "Deepens trance, blanks mind, and erases all thought. Ensures acceptance and amnesia of further suggestions.",
+       "uuid": "ae9ea265-b313-4d3a-886b-3c797cddfea9",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 38957,
+     "isPublic": true,
+     "plays": 3623,
+     "warnings": []
+    },
+    {
+     "id": 1898,
+     "name": "Tick Tock",
+     "uuid": "cb1c4060-55df-4c28-a3d6-555137c6670b",
+     "duration": 129503,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 6464,
+      "username": "veronicaloxeight",
+      "patreonName": "VeronicaLoxeight"
+     },
+     "description": "100% Free music song by Veronica Loxeight\nTheme: Loop, Triggers, Mantra, Confusion",
+     "releaseDate": "2025-06-10",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/cb1c4060-55df-4c28-a3d6-555137c6670b.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [
+      {
+       "id": 9,
+       "name": "Bambi reset",
+       "description": "Memory wipe and replacement. Self-acceptance and belief that everything conditioned has always been that way.",
+       "uuid": "25467c39-43e8-4e26-928e-a7164871163a",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 1,
+       "name": "Bimbo doll",
+       "description": "Causes feelings of relaxation and emptiness.",
+       "uuid": "8d78b494-79b2-4319-89d0-57e0a0a45973",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 6464,
+     "isPublic": true,
+     "plays": 1473,
+     "warnings": []
+    },
+    {
+     "id": 1878,
+     "name": "BNWO Brainwashing Extended",
+     "uuid": "f9864e9c-42ea-4db3-8c0d-2092f595d206",
+     "duration": 605318,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 38957,
+      "username": "bambi_beats",
+      "patreonName": "BambiBeats"
+     },
+     "description": "BNWO stands for Black New World Order. It means that you have no chance against superior black cock. Women are not interested in you anymore. They just want BBC. The only thing left for you is to accept your new place in society at the bottom. You can serve your new purpose best as Bambi. This song will brainwash you into accepting your purpose as Bambi in life. You will be forced to accept the black new world order and serve delicious cock as Bambi. What do you say Bambi? Are you ready for your new place in society and serve cock?\n***\nRepeatedly listen to this track and make music playlists with it to increase and cement its effects.\n***\nMake sure that you are in a safe environment. It is always possible that one of your triggers is set off by a track. Don't listen to files if you have to focus, e.g., while driving or operating other machinery. Stay safe and don't endanger yourself or others by listening to these files.\n***\nCredit for the original song goes to goonlimp.",
+     "releaseDate": "2025-05-24",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/f9864e9c-42ea-4db3-8c0d-2092f595d206.mp3",
+     "fileType": "music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 38957,
+     "isPublic": true,
+     "plays": 805,
+     "warnings": []
+    },
+    {
+     "id": 1836,
+     "name": "Sleepy Time Lullaby",
+     "uuid": "4839c9b5-4e1f-4c04-8534-17ef27db7c37",
+     "duration": 326999,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 10547,
+      "username": "bellmar",
+      "patreonName": "Bellmars_Bambi_files"
+     },
+     "description": "A subliminally enhanced lullaby intended to begin a playlist with.  Subliminal messages are only focused on falling into trance, nothing shady (like the moist mess ones):)",
+     "releaseDate": "2025-04-09",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/4839c9b5-4e1f-4c04-8534-17ef27db7c37.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 10547,
+     "isPublic": true,
+     "plays": 5931,
+     "warnings": []
+    },
+    {
+     "id": 1862,
+     "name": "Bambi Brain Off",
+     "uuid": "8c001d13-ed75-489b-8d56-1f4c70be0e5d",
+     "duration": 126000,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 38957,
+      "username": "bambi_beats",
+      "patreonName": "BambiBeats"
+     },
+     "description": "This chill lo-fi beat might seem harmless at first. After all, how dangerous could something as relaxing as this beat be? Just listen and let the soothing voices guide you. But be careful, because before you know, you will be in a deep trance and completely unable to think. That's right, Bambi. This session will completely destroy your brain and leave you behind as an empty-headed, pink bimbo.\n***\nRepeatedly listen to this track and make music playlists with it to increase and cement its effects.\n***\nIMPORTANT: Make sure that you are in a safe environment. It is always possible that one of your triggers is set off by a track. Don't listen to files if you have to focus, e.g., while driving or operating other machinery. Stay safe and don't endanger yourself or others by listening to these files.",
+     "releaseDate": "2025-04-29",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/8c001d13-ed75-489b-8d56-1f4c70be0e5d.wav",
+     "fileType": "music",
+     "audioType": "wav",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [
+      {
+       "id": 1,
+       "name": "Bimbo doll",
+       "description": "Causes feelings of relaxation and emptiness.",
+       "uuid": "8d78b494-79b2-4319-89d0-57e0a0a45973",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 4,
+       "name": "Bambi freeze",
+       "description": "Deepens trance, blanks mind, and erases all thought. Ensures acceptance and amnesia of further suggestions.",
+       "uuid": "ae9ea265-b313-4d3a-886b-3c797cddfea9",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 38957,
+     "isPublic": true,
+     "plays": 3623,
+     "warnings": []
+    },
+    {
+     "id": 1776,
+     "name": "Remembering how to Forget",
+     "uuid": "567dcbaf-bc2e-496f-901b-1cecded1a99e",
+     "duration": 270439,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 10547,
+      "username": "bellmar",
+      "patreonName": "Bellmars_Bambi_files"
+     },
+     "description": "A Project:  Moist Mess unarmed audio file.  No subliminal messages, music only.",
+     "releaseDate": "2025-03-12",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/567dcbaf-bc2e-496f-901b-1cecded1a99e.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 10547,
+     "isPublic": true,
+     "plays": 1890,
+     "warnings": []
+    },
+    {
+     "id": 1778,
+     "name": "This Moment is Real",
+     "uuid": "46f6a759-098f-4dc8-8390-ab38ee7fd53c",
+     "duration": 239039,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 10547,
+      "username": "bellmar",
+      "patreonName": "Bellmars_Bambi_files"
+     },
+     "description": "A Project:  Moist Mess unarmed audio file.  No subliminal messages, music only.",
+     "releaseDate": "2025-03-12",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/46f6a759-098f-4dc8-8390-ab38ee7fd53c.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 10547,
+     "isPublic": true,
+     "plays": 1874,
+     "warnings": []
+    },
+    {
+     "id": 1777,
+     "name": "She Can't Explain",
+     "uuid": "8e5f1f94-c0ef-4296-8517-5ec930becba2",
+     "duration": 195799,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 10547,
+      "username": "bellmar",
+      "patreonName": "Bellmars_Bambi_files"
+     },
+     "description": "A Project:  Moist Mess unarmed audio file.  No subliminal messages, music only.",
+     "releaseDate": "2025-03-12",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/8e5f1f94-c0ef-4296-8517-5ec930becba2.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 10547,
+     "isPublic": true,
+     "plays": 1864,
+     "warnings": []
+    },
+    {
+     "id": 1787,
+     "name": "Bambi Fades",
+     "uuid": "30c6b1fb-84f9-4b81-bbb1-2ba2e04235e2",
+     "duration": 191959,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 10547,
+      "username": "bellmar",
+      "patreonName": "Bellmars_Bambi_files"
+     },
+     "description": "A Project: Moist Mess unarmed audio file. No subliminal messages, music only.",
+     "releaseDate": "2025-03-17",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/30c6b1fb-84f9-4b81-bbb1-2ba2e04235e2.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 10547,
+     "isPublic": true,
+     "plays": 1698,
+     "warnings": []
+    },
+    {
+     "id": 1785,
+     "name": "Bambi Accepts",
+     "uuid": "b37db8a8-e6e3-49ec-96b5-6ad182e2bb00",
+     "duration": 194999,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 10547,
+      "username": "bellmar",
+      "patreonName": "Bellmars_Bambi_files"
+     },
+     "description": "A Project: Moist Mess unarmed audio file. No subliminal messages, music only.",
+     "releaseDate": "2025-03-17",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/b37db8a8-e6e3-49ec-96b5-6ad182e2bb00.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 10547,
+     "isPublic": true,
+     "plays": 2110,
+     "warnings": []
+    },
+    {
+     "id": 1757,
+     "name": "Curse Set",
+     "uuid": "d2d4c9d1-82e7-48bf-b198-2b72d75184fd",
+     "duration": 240104,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 10547,
+      "username": "bellmar",
+      "patreonName": "Bellmars_Bambi_files"
+     },
+     "description": "A Project:  Moist Mess unarmed audio file.  No subliminal messages, music only.",
+     "releaseDate": "2025-03-12",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/d2d4c9d1-82e7-48bf-b198-2b72d75184fd.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 10547,
+     "isPublic": true,
+     "plays": 1564,
+     "warnings": []
+    },
+    {
+     "id": 1764,
+     "name": "Good Girl Will",
+     "uuid": "d810d9a1-652b-470c-9126-241a234bea17",
+     "duration": 197399,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 10547,
+      "username": "bellmar",
+      "patreonName": "Bellmars_Bambi_files"
+     },
+     "description": "A Project:  Moist Mess unarmed audio file.  No subliminal messages, music only.",
+     "releaseDate": "2025-03-12",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/d810d9a1-652b-470c-9126-241a234bea17.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 10547,
+     "isPublic": true,
+     "plays": 2959,
+     "warnings": []
+    },
+    {
+     "id": 1758,
+     "name": "Darkness Calls",
+     "uuid": "661551fa-3269-4111-beff-453f6f51bed0",
+     "duration": 229879,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 10547,
+      "username": "bellmar",
+      "patreonName": "Bellmars_Bambi_files"
+     },
+     "description": "A Project:  Moist Mess unarmed audio file.  No subliminal messages, music only.",
+     "releaseDate": "2025-03-12",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/661551fa-3269-4111-beff-453f6f51bed0.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 10547,
+     "isPublic": true,
+     "plays": 1414,
+     "warnings": []
+    },
+    {
+     "id": 1755,
+     "name": "Bimbo Doll",
+     "uuid": "6538ca2c-a6a7-48d4-a4e3-a904566e63ad",
+     "duration": 219959,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 10547,
+      "username": "bellmar",
+      "patreonName": "Bellmars_Bambi_files"
+     },
+     "description": "A Project:  Moist Mess unarmed audio file.  No subliminal messages, music only.",
+     "releaseDate": "2025-03-12",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/6538ca2c-a6a7-48d4-a4e3-a904566e63ad.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 10547,
+     "isPublic": true,
+     "plays": 2086,
+     "warnings": []
+    },
+    {
+     "id": 1754,
+     "name": "Bambi No Touch",
+     "uuid": "71db9ee7-594f-4771-bb72-28adc4a64dbb",
+     "duration": 198799,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 10547,
+      "username": "bellmar",
+      "patreonName": "Bellmars_Bambi_files"
+     },
+     "description": "A Project:  Moist Mess unarmed audio file.  No subliminal messages, music only.",
+     "releaseDate": "2025-03-12",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/71db9ee7-594f-4771-bb72-28adc4a64dbb.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 10547,
+     "isPublic": true,
+     "plays": 463,
+     "warnings": []
+    },
+    {
+     "id": 1741,
+     "name": "Z*C*D*O",
+     "uuid": "74dcf40e-32d1-4051-b57a-667fa5baa0e8",
+     "duration": 210000,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 8838,
+      "username": "bambidaddi",
+      "patreonName": "BambiDaddi"
+     },
+     "description": null,
+     "releaseDate": "2025-02-25",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/74dcf40e-32d1-4051-b57a-667fa5baa0e8.m4a",
+     "fileType": "ai music",
+     "audioType": "m4a",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 8838,
+     "isPublic": true,
+     "plays": 2796,
+     "warnings": []
+    },
+    {
+     "id": 1749,
+     "name": "Bambi Rave Intro ",
+     "uuid": "2bc4824e-342d-42eb-818b-bf96972170ad",
+     "duration": 166039,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 8838,
+      "username": "bambidaddi",
+      "patreonName": "BambiDaddi"
+     },
+     "description": "Right now I am going to play you a very slutty song, and you won't be able to help but sing along. ",
+     "releaseDate": "2025-03-02",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/2bc4824e-342d-42eb-818b-bf96972170ad.wav",
+     "fileType": "music",
+     "audioType": "wav",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 8838,
+     "isPublic": true,
+     "plays": 1412,
+     "warnings": []
+    },
+    {
+     "id": 1748,
+     "name": "Bambi Body Rave",
+     "uuid": "e1143681-28c6-4ba3-aa00-6bd5f92af488",
+     "duration": 1664000,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 8838,
+      "username": "bambidaddi",
+      "patreonName": "BambiDaddi"
+     },
+     "description": "A six song, 30 minute remix of Bambi Body Lock. Enjoy!\n\nDownload for free on SoundCloud!  https://soundcloud.com/bambi-daddi/bambi-body-rave",
+     "releaseDate": "2025-03-02",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/e1143681-28c6-4ba3-aa00-6bd5f92af488.wav",
+     "fileType": "ai music",
+     "audioType": "wav",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 21,
+       "name": "Bambi butt lock",
+       "description": "Strengthens the perception of Bambi's augmented bimbo butt.",
+       "uuid": "48562832-205e-42f8-b066-94d5f24e8ddf",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 18,
+       "name": "Bambi face lock",
+       "description": "Strengthens the perception of Bambi's augmented bimbo face.",
+       "uuid": "969979e8-8805-4560-bd5d-b3eb46f932cf",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 20,
+       "name": "Bambi hips lock",
+       "description": "Strengthens the perception of Bambi's augmented bimbo hips.",
+       "uuid": "f5ea2a75-53b4-419f-8876-7bc5f9cc5101",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 23,
+       "name": "Bambi limbs lock",
+       "description": "Strengthens the perception of Bambi's augmented bimbo limbs.",
+       "uuid": "6f885d6c-ef45-4ea4-bd76-e7a80d1427b3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 17,
+       "name": "Bambi lips lock",
+       "description": "Strengthens the perception of Bambi's augmented bimbo lips.",
+       "uuid": "b9e016c8-2f2f-4f59-850e-6616a651fc48",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 25,
+       "name": "Bambi posture lock",
+       "description": "Enforces submissive feminine posture.",
+       "uuid": "957297cf-cf23-4e5b-903d-ab97739db140",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 16,
+       "name": "Bambi tits lock",
+       "description": "Strengthens the perception of Bambi's augmented bimbo tits.",
+       "uuid": "dd03d253-c556-47dd-8730-bcda7e015b8a",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 19,
+       "name": "Bambi waist lock",
+       "description": "Strengthens the perception of Bambi's augmented bimbo waist.",
+       "uuid": "e5b523b1-5968-4e6c-9aa9-84853d2ac2d5",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 8838,
+     "isPublic": true,
+     "plays": 458,
+     "warnings": []
+    },
+    {
+     "id": 1747,
+     "name": "Bambi Body Rave",
+     "uuid": "ce5b70d1-549a-4010-8390-9686a35589a6",
+     "duration": 1664000,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 8838,
+      "username": "bambidaddi",
+      "patreonName": "BambiDaddi"
+     },
+     "description": "A 30 Minute Remix of Bambi Body Lock. Follow me on Sound Cloud!\n\nhttps://soundcloud.com/bambi-daddi/bambi-body-rave\n",
+     "releaseDate": "2025-03-02",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/ce5b70d1-549a-4010-8390-9686a35589a6.wav",
+     "fileType": "ai music",
+     "audioType": "wav",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 8838,
+     "isPublic": true,
+     "plays": 763,
+     "warnings": []
+    },
+    {
+     "id": 1742,
+     "name": "Yes Brain Remix",
+     "uuid": "9f908ab1-68cb-408d-98a9-0528b5ec897c",
+     "duration": 258000,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 8838,
+      "username": "bambidaddi",
+      "patreonName": "BambiDaddi"
+     },
+     "description": "A tribute to Platinum Puppet\u2019s amazing \u201cBambi Gives In\u201d and \u201cYes Brain Loop\u201d files. Featuring one of the best Bambi Earworms, Platinum broke the mold and brought Bambi Sleep to a new level.\\\n\\\nAs you will find out a few seconds in, this is not a trance file. This is a song, and part of an EP I am working on releasing in August 2024, \u201cBambi Deeper\u201d.",
+     "releaseDate": "2025-02-25",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/9f908ab1-68cb-408d-98a9-0528b5ec897c.mp3",
+     "fileType": "ai music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 8838,
+     "isPublic": true,
+     "plays": 1833,
+     "warnings": []
+    },
+    {
+     "id": 1737,
+     "name": "Relapse Trap Remix",
+     "uuid": "0f05dec2-a8ae-403b-9a01-a40abc9968e0",
+     "duration": 832000,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 8838,
+      "username": "bambidaddi",
+      "patreonName": "BambiDaddi"
+     },
+     "description": "Featuring:\\\nVirtual Mage - Sleepy\\\nFantom 97 - Pay Phone\\\nFrench 79 - Between the Buttons\\\nBellmar - Relapse Trap\\\n\\\nBig thanks to Bellmar for permission to remix this latest entry in his trap series.\\\n\\\nWelcome back Bambi\u2026 You\u2019ll be here forever now\u2026.",
+     "releaseDate": "2025-02-25",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/0f05dec2-a8ae-403b-9a01-a40abc9968e0.mp3",
+     "fileType": "music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 8838,
+     "isPublic": true,
+     "plays": 896,
+     "warnings": []
+    },
+    {
+     "id": 1740,
+     "name": "LoFi Bambi Vol. 1",
+     "uuid": "f0dfc317-0d27-462e-80a0-bf3b5a4d8872",
+     "duration": 3808000,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 8838,
+      "username": "bambidaddi",
+      "patreonName": "BambiDaddi"
+     },
+     "description": "A blended LoFi playlist coupled with day one of the 20 day Bambi takeover. Meant for just vibing, chilling, doing housework, or watching sunsets.",
+     "releaseDate": "2025-02-25",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/f0dfc317-0d27-462e-80a0-bf3b5a4d8872.mp3",
+     "fileType": "music",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 8838,
+     "isPublic": true,
+     "plays": 636,
+     "warnings": []
+    },
+    {
+     "id": 1733,
+     "name": "Bambi Rave 5: Bambi Addiction",
+     "uuid": "2216b9de-3c14-46f1-ba20-c024d15495ad",
+     "duration": 614000,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 8838,
+      "username": "bambidaddi",
+      "patreonName": "BambiDaddi"
+     },
+     "description": "FINALLY! Another piece of Bambi Rave! This time, it 100% original music, but the lyrics are Bambi Prime's Bimbo Addiction.",
+     "releaseDate": "2025-02-25",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/2216b9de-3c14-46f1-ba20-c024d15495ad.flac",
+     "fileType": "ai music",
+     "audioType": "flac",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 8838,
+     "isPublic": true,
+     "plays": 2003,
+     "warnings": []
+    }
+   ],
+   "order": null,
+   "isPlan": false,
+   "likes": 0,
+   "dislikes": 0
+  },
+  {
+   "id": 235,
+   "name": "g",
+   "isPublic": false,
+   "isCore": false,
+   "creator": {
+    "id": 269,
+    "username": "164597852"
+   },
+   "expLevel": "Advanced",
+   "description": "g",
+   "dateCreated": "2023-06-13",
+   "uuid": "b42d5b91-541c-4bc2-bfbe-ff96fcd915a3",
+   "imageURL": null,
+   "files": [
+    {
+     "id": 1,
+     "name": "Rapid Induction",
+     "uuid": "a15c22e0-d347-4d92-9f78-0fb37099e549",
+     "duration": 162000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/a15c22e0-d347-4d92-9f78-0fb37099e549.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "Rapid induction that places the subject in deep trance very quickly. Requires training with track 10 until the \"Bambi Sleep\" trigger has been learned.",
+     "releaseDate": "2017-04-21",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/a15c22e0-d347-4d92-9f78-0fb37099e549.mp3",
+     "fileType": "induction",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": "https://cdn.bambicloud.com/scripts/a15c22e0-d347-4d92-9f78-0fb37099e549.txt",
+     "triggers": [
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": "induction",
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 275041,
+     "warnings": []
+    },
+    {
+     "id": 3,
+     "name": "Bubble Acceptance",
+     "uuid": "396cd1de-d462-45cf-aa9d-ba51501429cd",
+     "duration": 1734000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/396cd1de-d462-45cf-aa9d-ba51501429cd.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "Powerful deepener that makes the subject mindlessly, compulsively obedient, and massively increases the strength of all following tracks. Sets the \"Good Girl\" trigger, which is used throughout.",
+     "releaseDate": "2017-04-21",
+     "trackNum": 2,
+     "audioURL": "https://cdn.bambicloud.com/396cd1de-d462-45cf-aa9d-ba51501429cd.mp3",
+     "fileType": "deepener",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": "https://cdn.bambicloud.com/scripts/396cd1de-d462-45cf-aa9d-ba51501429cd.txt",
+     "triggers": [
+      {
+       "id": 1,
+       "name": "Bimbo doll",
+       "description": "Causes feelings of relaxation and emptiness.",
+       "uuid": "8d78b494-79b2-4319-89d0-57e0a0a45973",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      }
+     ],
+     "hypnosisType": "deepener",
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 67751,
+     "warnings": []
+    },
+    {
+     "id": 4,
+     "name": "Bambi Named and Drained",
+     "uuid": "86b98576-c8e9-4776-ad3d-873cc36cd596",
+     "duration": 949000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/86b98576-c8e9-4776-ad3d-873cc36cd596.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "The subject learns that her name is Bambi. Her old personality is drained away. She learns that she is a bimbo and is prepared for futher training with more deepeners.",
+     "releaseDate": "2017-04-21",
+     "trackNum": 3,
+     "audioURL": "https://cdn.bambicloud.com/86b98576-c8e9-4776-ad3d-873cc36cd596.mp3",
+     "fileType": "programming",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": "https://cdn.bambicloud.com/scripts/86b98576-c8e9-4776-ad3d-873cc36cd596.txt",
+     "triggers": [
+      {
+       "id": 1,
+       "name": "Bimbo doll",
+       "description": "Causes feelings of relaxation and emptiness.",
+       "uuid": "8d78b494-79b2-4319-89d0-57e0a0a45973",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 80719,
+     "warnings": []
+    },
+    {
+     "id": 5,
+     "name": "Bambi IQ Lock",
+     "uuid": "6c909be2-7a5b-495b-9f09-fabe1e3d5c16",
+     "duration": 726000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/6c909be2-7a5b-495b-9f09-fabe1e3d5c16.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "Bambi's intelligence is completely erased. Her IQ is drastically reduced and her higher thought functions disabled. Her mind is trained to wipe itself over and over again and this effect is linked to many different triggers. Bambi is a helplessly dumb bimbo.",
+     "releaseDate": "2017-04-21",
+     "trackNum": 4,
+     "audioURL": "https://cdn.bambicloud.com/6c909be2-7a5b-495b-9f09-fabe1e3d5c16.mp3",
+     "fileType": "programming",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": "https://cdn.bambicloud.com/scripts/6c909be2-7a5b-495b-9f09-fabe1e3d5c16.txt",
+     "triggers": [
+      {
+       "id": 1,
+       "name": "Bimbo doll",
+       "description": "Causes feelings of relaxation and emptiness.",
+       "uuid": "8d78b494-79b2-4319-89d0-57e0a0a45973",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 40192,
+     "warnings": []
+    },
+    {
+     "id": 6,
+     "name": "Bambi Body Lock",
+     "uuid": "b97ad669-f0f1-487c-9587-2dc57012c912",
+     "duration": 908000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/b97ad669-f0f1-487c-9587-2dc57012c912.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "Bambi is anaesthetized for hypnotic surgery. Her body is transformed into that of a perfect bimbo fuckdoll. Includes breast and butt enlargement, waist reduction, facial restructuring, and collagen injections. The effects are made to feel completely real.",
+     "releaseDate": "2017-04-21",
+     "trackNum": 5,
+     "audioURL": "https://cdn.bambicloud.com/b97ad669-f0f1-487c-9587-2dc57012c912.mp3",
+     "fileType": "programming",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": "https://cdn.bambicloud.com/scripts/b97ad669-f0f1-487c-9587-2dc57012c912.txt",
+     "triggers": [
+      {
+       "id": 1,
+       "name": "Bimbo doll",
+       "description": "Causes feelings of relaxation and emptiness.",
+       "uuid": "8d78b494-79b2-4319-89d0-57e0a0a45973",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 28646,
+     "warnings": []
+    },
+    {
+     "id": 9,
+     "name": "Bambi Cockslut",
+     "uuid": "aa5c82d0-9766-4d27-ba08-9851fa744371",
+     "duration": 1081000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/aa5c82d0-9766-4d27-ba08-9851fa744371.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "Bambi is trained to suck and fuck. This consists of a lengthy erotic fantasy including obedience, cocksucking, and being fucked to orgasm. Sexual submission and orgasm are linked to pleasurable bimbo enforcement triggers. Bambi is made to cum on command and this reinforces her conditioning.",
+     "releaseDate": "2017-04-21",
+     "trackNum": 9,
+     "audioURL": "https://cdn.bambicloud.com/aa5c82d0-9766-4d27-ba08-9851fa744371.mp3",
+     "fileType": "programming",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": "https://cdn.bambicloud.com/scripts/aa5c82d0-9766-4d27-ba08-9851fa744371.txt",
+     "triggers": [
+      {
+       "id": 1,
+       "name": "Bimbo doll",
+       "description": "Causes feelings of relaxation and emptiness.",
+       "uuid": "8d78b494-79b2-4319-89d0-57e0a0a45973",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 14,
+       "name": "Drop for cock",
+       "description": "Legs buckle, body drops to its knees, mind goes blank, and mouth opens.",
+       "uuid": "e31d6936-61ab-47df-bb3a-9d135fd7314e",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 29961,
+     "warnings": []
+    },
+    {
+     "id": 10,
+     "name": "Bambi Awakens",
+     "uuid": "e422c9a9-d24e-4318-bc35-a966b0a24f95",
+     "duration": 591000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/e422c9a9-d24e-4318-bc35-a966b0a24f95.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "Bambi is made much more susceptible to hypnotic conditioning. Her training is reinforced completely before she is awakened as a perfect bimbo doll. Sets the \"Bambi Sleep\" trigger, which strengthens the inductions used in the session for next time.",
+     "releaseDate": "2017-04-21",
+     "trackNum": 10,
+     "audioURL": "https://cdn.bambicloud.com/e422c9a9-d24e-4318-bc35-a966b0a24f95.mp3",
+     "fileType": "awakener",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": "https://cdn.bambicloud.com/scripts/e422c9a9-d24e-4318-bc35-a966b0a24f95.txt",
+     "triggers": [
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 1,
+       "name": "Bimbo doll",
+       "description": "Causes feelings of relaxation and emptiness.",
+       "uuid": "8d78b494-79b2-4319-89d0-57e0a0a45973",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": "awakener",
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 76083,
+     "warnings": []
+    },
+    {
+     "id": 11,
+     "name": "Training Loop: Subliminal",
+     "uuid": "f83019f7-a685-470a-ac49-7bea1be0b371",
+     "duration": 480000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/f83019f7-a685-470a-ac49-7bea1be0b371.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "Contains subliminals and affirmations that reinforce Bambi's conditioning. This file does not induce sleep, and can be listened to while performing other tasks.",
+     "releaseDate": "2017-05-03",
+     "trackNum": 1,
+     "audioURL": "https://cdn.bambicloud.com/f83019f7-a685-470a-ac49-7bea1be0b371.mp3",
+     "fileType": "loop",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": "loop",
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 56522,
+     "warnings": []
+    },
+    {
+     "id": 12,
+     "name": "Training Loop: Cockslut",
+     "uuid": "0a176df3-e3b6-4771-93c2-7f5878764239",
+     "duration": 491000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/0a176df3-e3b6-4771-93c2-7f5878764239.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "Contains subliminals and affirmations that reinforce Bambi's conditioning. This file does not induce sleep, and can be listened to while performing other tasks.",
+     "releaseDate": "2017-05-03",
+     "trackNum": 2,
+     "audioURL": "https://cdn.bambicloud.com/0a176df3-e3b6-4771-93c2-7f5878764239.mp3",
+     "fileType": "loop",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [
+      {
+       "id": 1,
+       "name": "Bimbo doll",
+       "description": "Causes feelings of relaxation and emptiness.",
+       "uuid": "8d78b494-79b2-4319-89d0-57e0a0a45973",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": "loop",
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 33797,
+     "warnings": []
+    },
+    {
+     "id": 16,
+     "name": "Control Loop: Puppet",
+     "uuid": "50f846cf-c400-4689-8d3b-7a2ab007cf92",
+     "duration": 596000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/50f846cf-c400-4689-8d3b-7a2ab007cf92.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "Bambi is put to sleep and given commands on how to move her body.",
+     "releaseDate": "2017-05-03",
+     "trackNum": 6,
+     "audioURL": "https://cdn.bambicloud.com/50f846cf-c400-4689-8d3b-7a2ab007cf92.mp3",
+     "fileType": "loop",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": "loop",
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 7103,
+     "warnings": []
+    }
+   ],
+   "order": null,
+   "isPlan": false,
+   "likes": 0,
+   "dislikes": 0
+  },
+  {
+   "id": 32398,
+   "name": "11-15",
+   "isPublic": false,
+   "isCore": false,
+   "creator": {
+    "id": 30298,
+    "username": "hypnotizing-raqui"
+   },
+   "expLevel": "Advanced",
+   "description": "",
+   "dateCreated": "2024-07-29",
+   "uuid": "7b951aff-6ed5-4ef1-833c-c044c2640284",
+   "imageURL": null,
+   "files": [
+    {
+     "id": 32,
+     "name": "Bimbo Drone",
+     "uuid": "cbe2f9b9-3e01-4b0b-9102-dff2ec64720e",
+     "duration": 122000,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "Two minutes of the background binaural.",
+     "releaseDate": "2018-07-24",
+     "trackNum": 0,
+     "audioURL": "https://cdn.bambicloud.com/cbe2f9b9-3e01-4b0b-9102-dff2ec64720e.mp3",
+     "fileType": "loop",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": "loop",
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 237551,
+     "warnings": []
+    },
+    {
+     "id": 29,
+     "name": "Fake Plastic Fuckpuppet",
+     "uuid": "fc2c71d0-b53d-41f5-9ab9-e38d4726657b",
+     "duration": 916000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/fc2c71d0-b53d-41f5-9ab9-e38d4726657b.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "Bambi is put to sleep and placed in a transformation tank. She is turned into a fake plastic fuckpuppet. She is given bolted-on tits and lips and other extreme body modifications. Her cunt is made permanently desperate to be filled and her posture is enforced. These changes are locked in place with powerful triggers.",
+     "releaseDate": "2018-03-18",
+     "trackNum": 1,
+     "audioURL": "https://cdn.bambicloud.com/fc2c71d0-b53d-41f5-9ab9-e38d4726657b.mp3",
+     "fileType": "programming",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": "https://cdn.bambicloud.com/scripts/fc2c71d0-b53d-41f5-9ab9-e38d4726657b.txt",
+     "triggers": [
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 4,
+       "name": "Bambi freeze",
+       "description": "Deepens trance, blanks mind, and erases all thought. Ensures acceptance and amnesia of further suggestions.",
+       "uuid": "ae9ea265-b313-4d3a-886b-3c797cddfea9",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 13,
+       "name": "Bambi does as she's told",
+       "description": "Instant obedience override. Causes automatic mindless compliance with the last command given until fully carried out.",
+       "uuid": "56b18879-2028-4b9a-bcaa-bc79a78ee712",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 15,
+       "name": "Bambi cum and collapse",
+       "description": "Cum-on-command trigger for instant orgasm and reinforcement of conditioning.",
+       "uuid": "3ff8a9bb-9ef7-4569-88e4-c2fd270f183d",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 16,
+       "name": "Bambi tits lock",
+       "description": "Strengthens the perception of Bambi's augmented bimbo tits.",
+       "uuid": "dd03d253-c556-47dd-8730-bcda7e015b8a",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 17,
+       "name": "Bambi lips lock",
+       "description": "Strengthens the perception of Bambi's augmented bimbo lips.",
+       "uuid": "b9e016c8-2f2f-4f59-850e-6616a651fc48",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 18,
+       "name": "Bambi face lock",
+       "description": "Strengthens the perception of Bambi's augmented bimbo face.",
+       "uuid": "969979e8-8805-4560-bd5d-b3eb46f932cf",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 19,
+       "name": "Bambi waist lock",
+       "description": "Strengthens the perception of Bambi's augmented bimbo waist.",
+       "uuid": "e5b523b1-5968-4e6c-9aa9-84853d2ac2d5",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 20,
+       "name": "Bambi hips lock",
+       "description": "Strengthens the perception of Bambi's augmented bimbo hips.",
+       "uuid": "f5ea2a75-53b4-419f-8876-7bc5f9cc5101",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 21,
+       "name": "Bambi butt lock",
+       "description": "Strengthens the perception of Bambi's augmented bimbo butt.",
+       "uuid": "48562832-205e-42f8-b066-94d5f24e8ddf",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 22,
+       "name": "Bambi cunt lock",
+       "description": "Strengthens the perception of Bambi's augmented bimbo cunt.",
+       "uuid": "fb31de28-9127-4a6e-90d6-3f09b1dd8931",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 23,
+       "name": "Bambi limbs lock",
+       "description": "Strengthens the perception of Bambi's augmented bimbo limbs.",
+       "uuid": "6f885d6c-ef45-4ea4-bd76-e7a80d1427b3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 24,
+       "name": "Bambi throat lock",
+       "description": "Strengthens the perception of Bambi's augmented bimbo throat.",
+       "uuid": "1e36e686-532b-4067-80ff-5cddbefeaafc",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 25,
+       "name": "Bambi posture lock",
+       "description": "Enforces submissive feminine posture.",
+       "uuid": "957297cf-cf23-4e5b-903d-ab97739db140",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 17678,
+     "warnings": []
+    },
+    {
+     "id": 1135,
+     "name": "Vain Horny Happy (BambiLite)",
+     "uuid": "4729788a-2519-4047-b441-521e2633004e",
+     "duration": 444000,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 4911,
+      "username": "tmetamorph",
+      "patreonName": null
+     },
+     "description": "Bambi is in control. She is a vain pretty slut with perfect thoughts. She has bimbo memories and a bimbo awareness. She can only remember having always been Bambi.\\\n\\\n**Changes from the original series: Removed the section about placing the old self in bondage. Removed the suggestions that Bambi can influence life outside of uniform.",
+     "releaseDate": "2023-03-10",
+     "trackNum": 4,
+     "audioURL": "https://cdn.bambicloud.com/4729788a-2519-4047-b441-521e2633004e.mp3",
+     "fileType": "programming",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 4911,
+     "isPublic": true,
+     "plays": 622,
+     "warnings": []
+    },
+    {
+     "id": 30,
+     "name": "Designer Pleasure Puppet",
+     "uuid": "11885f58-561d-4828-9e6f-97acf8934cc3",
+     "duration": 924000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/11885f58-561d-4828-9e6f-97acf8934cc3.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "Bambi is conditioned to feel deep distress whenever she is not perfectly dolled up in full uniform and make-up. She is vain and obsessed with her appearance. She craves to be dressed to please in tight, slutty, designer clothing. Feelings of extreme pleasure and bimbo bliss are associated with wearing heels, heavy make-up and fashionable clothing.",
+     "releaseDate": "2018-03-18",
+     "trackNum": 2,
+     "audioURL": "https://cdn.bambicloud.com/11885f58-561d-4828-9e6f-97acf8934cc3.mp3",
+     "fileType": "programming",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": "https://cdn.bambicloud.com/scripts/11885f58-561d-4828-9e6f-97acf8934cc3.txt",
+     "triggers": [
+      {
+       "id": 1,
+       "name": "Bimbo doll",
+       "description": "Causes feelings of relaxation and emptiness.",
+       "uuid": "8d78b494-79b2-4319-89d0-57e0a0a45973",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 4,
+       "name": "Bambi freeze",
+       "description": "Deepens trance, blanks mind, and erases all thought. Ensures acceptance and amnesia of further suggestions.",
+       "uuid": "ae9ea265-b313-4d3a-886b-3c797cddfea9",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 6,
+       "name": "Bambi uniform lock",
+       "description": "Strengthens all conditioning when in uniform and reinforces the inability to undress.",
+       "uuid": "267e07ea-dd14-4d7e-b8d2-0fea5cdab8e8",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 7,
+       "name": "Primped and pampered",
+       "description": "Causes deep cravings to be dolled up and pretty. Rewards with pleasure if already the case, and overwhelms with anxiety otherwise.",
+       "uuid": "93a415ec-c7e8-411a-a711-468b3a96183a",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 13,
+       "name": "Bambi does as she's told",
+       "description": "Instant obedience override. Causes automatic mindless compliance with the last command given until fully carried out.",
+       "uuid": "56b18879-2028-4b9a-bcaa-bc79a78ee712",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 16,
+       "name": "Bambi tits lock",
+       "description": "Strengthens the perception of Bambi's augmented bimbo tits.",
+       "uuid": "dd03d253-c556-47dd-8730-bcda7e015b8a",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 22,
+       "name": "Bambi cunt lock",
+       "description": "Strengthens the perception of Bambi's augmented bimbo cunt.",
+       "uuid": "fb31de28-9127-4a6e-90d6-3f09b1dd8931",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 25,
+       "name": "Bambi posture lock",
+       "description": "Enforces submissive feminine posture.",
+       "uuid": "957297cf-cf23-4e5b-903d-ab97739db140",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 11278,
+     "warnings": []
+    },
+    {
+     "id": 1150,
+     "name": "Bimbo Fuckpuppet Oblivion (BambiLite)",
+     "uuid": "3a9798fc-bd6c-462d-b43e-925cb35ff70e",
+     "duration": 1627000,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 4911,
+      "username": "tmetamorph",
+      "patreonName": null
+     },
+     "description": "Bambi is strapped into a brainwashing machine. Her mind is pacified and eradicated. Her memories and thoughts are replaced. Any ability to resist her conditioning is removed. Heavy restrictions are placed on her intelligence and free will. This track is very long, and can also double as a powerful deepener. Sets the Snap and Forget trigger, which causes Bambi to forget everything that she is instructed to. Installs the Bambi Reset trigger, which wipes Bambi's memory of the old life and replaces it all with memories of her existence as a bimbo doll, creating self-acceptance and belief that everything has always been this way. Note: this trigger is the same as the reset phrase used to end the effects of several other triggers which incapacitate Bambi, which means that ending those states may also cause the memory wipe and replacement.\\\n\\\n**Changes from the original series: Removed the section about placing a needle-injecting \"control collar\" on the old self. Removed explicit references to surgery and body modification. Removed the section about losing relationships with friends and family. Removed the section about sex work. Removed suggestions about the inability to read or count.",
+     "releaseDate": "2023-03-10",
+     "trackNum": 3,
+     "audioURL": "https://cdn.bambicloud.com/3a9798fc-bd6c-462d-b43e-925cb35ff70e.mp3",
+     "fileType": "programming",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 4911,
+     "isPublic": true,
+     "plays": 1919,
+     "warnings": []
+    },
+    {
+     "id": 33,
+     "name": "Bimbo Relaxation",
+     "uuid": "d391e120-ad4c-45d4-a70e-3c330ea4ba17",
+     "duration": 252000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/d391e120-ad4c-45d4-a70e-3c330ea4ba17.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "Bambi is made to relax, placed in her bimbo bubble and prepared for training. Intended to begin an induction followed by deepeners.",
+     "releaseDate": "2018-07-24",
+     "trackNum": 1,
+     "audioURL": "https://cdn.bambicloud.com/d391e120-ad4c-45d4-a70e-3c330ea4ba17.mp3",
+     "fileType": "induction",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": "https://cdn.bambicloud.com/scripts/d391e120-ad4c-45d4-a70e-3c330ea4ba17.txt",
+     "triggers": [
+      {
+       "id": 1,
+       "name": "Bimbo doll",
+       "description": "Causes feelings of relaxation and emptiness.",
+       "uuid": "8d78b494-79b2-4319-89d0-57e0a0a45973",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 10,
+       "name": "Safe and secure",
+       "description": "Reinforces feelings of comfort and acceptance for all conditioning.",
+       "uuid": "b916cf7c-2d5d-49bd-b3c5-fdd06eeda6a9",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 61166,
+     "warnings": []
+    },
+    {
+     "id": 1157,
+     "name": "Bimbo Servitude (BambiLite)",
+     "uuid": "e537cc31-3d85-4299-b520-9d1cdd266ca6",
+     "duration": 476000,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 4911,
+      "username": "tmetamorph",
+      "patreonName": null
+     },
+     "description": "Bambi learns to helplessly obey all commands at all times, and is given powerful triggers to ensure compliance. Sets the Bambi Does as She's Told trigger, which ensures automatic compliance with whatever instruction preceded it.\\\n\\\n**Changes from the original series: Removed some of the more extreme obedience suggestions (\"any command from any source at any time\", etc)",
+     "releaseDate": "2023-03-10",
+     "trackNum": 7,
+     "audioURL": "https://cdn.bambicloud.com/e537cc31-3d85-4299-b520-9d1cdd266ca6.mp3",
+     "fileType": "programming",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 4911,
+     "isPublic": true,
+     "plays": 3128,
+     "warnings": []
+    },
+    {
+     "id": 35,
+     "name": "Bimbo Slumber",
+     "uuid": "ca515ccb-2c37-448f-bafc-a4d8298a16cb",
+     "duration": 332000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/ca515ccb-2c37-448f-bafc-a4d8298a16cb.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "Bambi's sleep command is reinforced and used to drop her deeper. Can serve as a rapid induction.",
+     "releaseDate": "2018-07-24",
+     "trackNum": 3,
+     "audioURL": "https://cdn.bambicloud.com/ca515ccb-2c37-448f-bafc-a4d8298a16cb.mp3",
+     "fileType": "deepener",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": "https://cdn.bambicloud.com/scripts/ca515ccb-2c37-448f-bafc-a4d8298a16cb.txt",
+     "triggers": [
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 10,
+       "name": "Safe and secure",
+       "description": "Reinforces feelings of comfort and acceptance for all conditioning.",
+       "uuid": "b916cf7c-2d5d-49bd-b3c5-fdd06eeda6a9",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 69675,
+     "warnings": []
+    },
+    {
+     "id": 24,
+     "name": "Blowup Pleasure Toy",
+     "uuid": "7c90b30d-6a22-48c0-8448-84894018c081",
+     "duration": 1192000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/7c90b30d-6a22-48c0-8448-84894018c081.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "Bambi is turned into a mindless and inflated blow-up sex doll. Her weightless plastic body is filled with air and extremely sensitive. Her purpose is to accept cock into her holes. She is used by multiple cocks and foced to cum over and over again as a lifeless blow-up toy.",
+     "releaseDate": "2017-09-17",
+     "trackNum": 1,
+     "audioURL": "https://cdn.bambicloud.com/7c90b30d-6a22-48c0-8448-84894018c081.mp3",
+     "fileType": "programming",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": "https://cdn.bambicloud.com/scripts/7c90b30d-6a22-48c0-8448-84894018c081.txt",
+     "triggers": [
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 4,
+       "name": "Bambi freeze",
+       "description": "Deepens trance, blanks mind, and erases all thought. Ensures acceptance and amnesia of further suggestions.",
+       "uuid": "ae9ea265-b313-4d3a-886b-3c797cddfea9",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 11,
+       "name": "Giggletime",
+       "description": "Causes immediate fits of happy bimbo giggles and ditziness followed by relaxation and acceptance.",
+       "uuid": "81d7893c-f3ba-4a66-b29e-f5ff638ba484",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 13,
+       "name": "Bambi does as she's told",
+       "description": "Instant obedience override. Causes automatic mindless compliance with the last command given until fully carried out.",
+       "uuid": "56b18879-2028-4b9a-bcaa-bc79a78ee712",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 14,
+       "name": "Drop for cock",
+       "description": "Legs buckle, body drops to its knees, mind goes blank, and mouth opens.",
+       "uuid": "e31d6936-61ab-47df-bb3a-9d135fd7314e",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 15,
+       "name": "Bambi cum and collapse",
+       "description": "Cum-on-command trigger for instant orgasm and reinforcement of conditioning.",
+       "uuid": "3ff8a9bb-9ef7-4569-88e4-c2fd270f183d",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 12860,
+     "warnings": []
+    },
+    {
+     "id": 34,
+     "name": "Bimbo Mindwipe",
+     "uuid": "6be86b5c-5f63-4db2-8e69-b6f0ae13e5ed",
+     "duration": 210000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/6be86b5c-5f63-4db2-8e69-b6f0ae13e5ed.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "A short deepener that wipes Bambi's mind. Can be used as part of an induction, or to deepen trance during longer sessions.",
+     "releaseDate": "2018-07-24",
+     "trackNum": 2,
+     "audioURL": "https://cdn.bambicloud.com/6be86b5c-5f63-4db2-8e69-b6f0ae13e5ed.mp3",
+     "fileType": "deepener",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": "https://cdn.bambicloud.com/scripts/6be86b5c-5f63-4db2-8e69-b6f0ae13e5ed.txt",
+     "triggers": [
+      {
+       "id": 1,
+       "name": "Bimbo doll",
+       "description": "Causes feelings of relaxation and emptiness.",
+       "uuid": "8d78b494-79b2-4319-89d0-57e0a0a45973",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 4,
+       "name": "Bambi freeze",
+       "description": "Deepens trance, blanks mind, and erases all thought. Ensures acceptance and amnesia of further suggestions.",
+       "uuid": "ae9ea265-b313-4d3a-886b-3c797cddfea9",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 8,
+       "name": "Snap and forget",
+       "description": "Amnesia trigger. Erases all memory of whatever is instructed to be forgotten.",
+       "uuid": "3ad2fad9-5b69-424b-b9d9-080e8814c29a",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 15,
+       "name": "Bambi cum and collapse",
+       "description": "Cum-on-command trigger for instant orgasm and reinforcement of conditioning.",
+       "uuid": "3ff8a9bb-9ef7-4569-88e4-c2fd270f183d",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": "deepener",
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 50018,
+     "warnings": []
+    },
+    {
+     "id": 37,
+     "name": "Bimbo Pride",
+     "uuid": "a89790af-4437-489c-a2b6-655ec639684f",
+     "duration": 462000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/a89790af-4437-489c-a2b6-655ec639684f.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "Bambi's good girl trigger is reinforced, and she is provided with an intense sense of bimbo pride and obedience.",
+     "releaseDate": "2018-07-24",
+     "trackNum": 5,
+     "audioURL": "https://cdn.bambicloud.com/a89790af-4437-489c-a2b6-655ec639684f.mp3",
+     "fileType": "programming",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": "https://cdn.bambicloud.com/scripts/a89790af-4437-489c-a2b6-655ec639684f.txt",
+     "triggers": [
+      {
+       "id": 1,
+       "name": "Bimbo doll",
+       "description": "Causes feelings of relaxation and emptiness.",
+       "uuid": "8d78b494-79b2-4319-89d0-57e0a0a45973",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 4,
+       "name": "Bambi freeze",
+       "description": "Deepens trance, blanks mind, and erases all thought. Ensures acceptance and amnesia of further suggestions.",
+       "uuid": "ae9ea265-b313-4d3a-886b-3c797cddfea9",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 7,
+       "name": "Primped and pampered",
+       "description": "Causes deep cravings to be dolled up and pretty. Rewards with pleasure if already the case, and overwhelms with anxiety otherwise.",
+       "uuid": "93a415ec-c7e8-411a-a711-468b3a96183a",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 10,
+       "name": "Safe and secure",
+       "description": "Reinforces feelings of comfort and acceptance for all conditioning.",
+       "uuid": "b916cf7c-2d5d-49bd-b3c5-fdd06eeda6a9",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 13,
+       "name": "Bambi does as she's told",
+       "description": "Instant obedience override. Causes automatic mindless compliance with the last command given until fully carried out.",
+       "uuid": "56b18879-2028-4b9a-bcaa-bc79a78ee712",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 23872,
+     "warnings": []
+    },
+    {
+     "id": 40,
+     "name": "Bimbo Addiction",
+     "uuid": "6ec42901-1e34-409c-9ee6-040ff105acd4",
+     "duration": 598000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/6ec42901-1e34-409c-9ee6-040ff105acd4.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "Bambi's addiction to her training and to being a dolled-up and uniformed bimbo is reinforced, making continued acceptance of her programming more and more impossible to resist.",
+     "releaseDate": "2018-07-24",
+     "trackNum": 8,
+     "audioURL": "https://cdn.bambicloud.com/6ec42901-1e34-409c-9ee6-040ff105acd4.mp3",
+     "fileType": "programming",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": "https://cdn.bambicloud.com/scripts/6ec42901-1e34-409c-9ee6-040ff105acd4.txt",
+     "triggers": [
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 4,
+       "name": "Bambi freeze",
+       "description": "Deepens trance, blanks mind, and erases all thought. Ensures acceptance and amnesia of further suggestions.",
+       "uuid": "ae9ea265-b313-4d3a-886b-3c797cddfea9",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 6,
+       "name": "Bambi uniform lock",
+       "description": "Strengthens all conditioning when in uniform and reinforces the inability to undress.",
+       "uuid": "267e07ea-dd14-4d7e-b8d2-0fea5cdab8e8",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 7,
+       "name": "Primped and pampered",
+       "description": "Causes deep cravings to be dolled up and pretty. Rewards with pleasure if already the case, and overwhelms with anxiety otherwise.",
+       "uuid": "93a415ec-c7e8-411a-a711-468b3a96183a",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 8,
+       "name": "Snap and forget",
+       "description": "Amnesia trigger. Erases all memory of whatever is instructed to be forgotten.",
+       "uuid": "3ad2fad9-5b69-424b-b9d9-080e8814c29a",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 9,
+       "name": "Bambi reset",
+       "description": "Memory wipe and replacement. Self-acceptance and belief that everything conditioned has always been that way.",
+       "uuid": "25467c39-43e8-4e26-928e-a7164871163a",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 10,
+       "name": "Safe and secure",
+       "description": "Reinforces feelings of comfort and acceptance for all conditioning.",
+       "uuid": "b916cf7c-2d5d-49bd-b3c5-fdd06eeda6a9",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 37586,
+     "warnings": []
+    },
+    {
+     "id": 1143,
+     "name": "Perfect Bimbo Maid (BambiLite)",
+     "uuid": "eb9a56de-9804-4a37-83fa-72377002cf2e",
+     "duration": 1093000,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 4911,
+      "username": "tmetamorph",
+      "patreonName": null
+     },
+     "description": "Bambi is trained to be completely obedient whenever she wears a maid uniform. She has perfect bimbo-maid posture and mindlessly awaits instructions. She is compelled to clean and tidy. Following instructions and performing her duties as a maid brings her incredible pleasure. Her will is overridden and she is forced to comply. Sets the Bambi Does as She's Told trigger, which ensures automatic compliance with whatever instruction preceded it.\\\n\\\n**Changes from the original series: Removed some of the more extreme obedience language (\"unable to say no\", \"no concept of free will\", etc). Removed some negative reinforcement related to cleaning.",
+     "releaseDate": "2023-03-10",
+     "trackNum": 2,
+     "audioURL": "https://cdn.bambicloud.com/eb9a56de-9804-4a37-83fa-72377002cf2e.mp3",
+     "fileType": "programming",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 4911,
+     "isPublic": true,
+     "plays": 894,
+     "warnings": []
+    },
+    {
+     "id": 1165,
+     "name": "Bimbo Protection (BambiLite)",
+     "uuid": "eef442ef-2722-4bfc-bd76-536f2bf8ec9e",
+     "duration": 332000,
+     "hapticsURL": null,
+     "patreonTiers": null,
+     "author": {
+      "id": 4911,
+      "username": "tmetamorph",
+      "patreonName": null
+     },
+     "description": "Bambi is completely happy and satisfied with all of her training. Deep and permanent protections are installed that will prevent her from being able to remove the effects and triggers established by her conditioning. Sets the Safe and Secure trigger, which creates a sense of comfort and contentment with all conditioning.\\\n\\\n**Changes from the original series: Removed language around trusting all files and considering all bimbo training to be good. Removed suggestions about being unable to wake up once a session is started. Removed suggestions that cause the old self to be deprogrammed.",
+     "releaseDate": "2023-03-10",
+     "trackNum": 10,
+     "audioURL": "https://cdn.bambicloud.com/eef442ef-2722-4bfc-bd76-536f2bf8ec9e.mp3",
+     "fileType": "programming",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": null,
+     "triggers": [],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 4911,
+     "isPublic": true,
+     "plays": 1181,
+     "warnings": []
+    },
+    {
+     "id": 41,
+     "name": "Bimbo Amnesia",
+     "uuid": "a5e80d17-d8cd-452f-becb-3628142bcef3",
+     "duration": 728000,
+     "hapticsURL": "https://cdn.bambicloud.com/haptics/a5e80d17-d8cd-452f-becb-3628142bcef3.json",
+     "patreonTiers": null,
+     "author": {
+      "id": 1,
+      "username": "bimbodollbambi",
+      "patreonName": null
+     },
+     "description": "Bambi is programmed to helplessly and automatically forget everything she must forget. She will no longer be able to remember anything that could distract her from being a perfect bimbo doll.",
+     "releaseDate": "2018-07-24",
+     "trackNum": 9,
+     "audioURL": "https://cdn.bambicloud.com/a5e80d17-d8cd-452f-becb-3628142bcef3.mp3",
+     "fileType": "programming",
+     "audioType": "mp3",
+     "imageURL": null,
+     "scriptURL": "https://cdn.bambicloud.com/scripts/a5e80d17-d8cd-452f-becb-3628142bcef3.txt",
+     "triggers": [
+      {
+       "id": 2,
+       "name": "Good girl",
+       "description": "Causes feelings of happiness, euphoria, and pleasure.",
+       "uuid": "30ed48d9-e38c-445c-92ee-1eec3214e080",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 3,
+       "name": "Bambi sleep",
+       "description": "Instant deep trance trigger.",
+       "uuid": "ade689df-970d-4c34-8c31-c9bfe1ffdc15",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 4,
+       "name": "Bambi freeze",
+       "description": "Deepens trance, blanks mind, and erases all thought. Ensures acceptance and amnesia of further suggestions.",
+       "uuid": "ae9ea265-b313-4d3a-886b-3c797cddfea9",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 8,
+       "name": "Snap and forget",
+       "description": "Amnesia trigger. Erases all memory of whatever is instructed to be forgotten.",
+       "uuid": "3ad2fad9-5b69-424b-b9d9-080e8814c29a",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": true
+      },
+      {
+       "id": 9,
+       "name": "Bambi reset",
+       "description": "Memory wipe and replacement. Self-acceptance and belief that everything conditioned has always been that way.",
+       "uuid": "25467c39-43e8-4e26-928e-a7164871163a",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 10,
+       "name": "Safe and secure",
+       "description": "Reinforces feelings of comfort and acceptance for all conditioning.",
+       "uuid": "b916cf7c-2d5d-49bd-b3c5-fdd06eeda6a9",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      },
+      {
+       "id": 28,
+       "name": "Bambi",
+       "description": "Causes feelings of happiness.",
+       "uuid": "2aeba802-dd55-4889-988d-d7ed4b3777e3",
+       "creator": {
+        "id": 1,
+        "username": "bimbodollbambi"
+       },
+       "trains": false
+      }
+     ],
+     "hypnosisType": null,
+     "userUploaded": false,
+     "uploaderId": 1,
+     "isPublic": true,
+     "plays": 36501,
+     "warnings": []
+    }
+   ],
+   "order": null,
+   "isPlan": false,
+   "likes": 0,
+   "dislikes": 0
+  }
+ ],
+ "totalItems": 77293,
+ "pageSize": 12,
+ "pageOffset": 0
+}
