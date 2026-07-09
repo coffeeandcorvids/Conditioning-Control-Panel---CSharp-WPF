@@ -1114,9 +1114,15 @@ public partial class MainWindow : Window, ICommandSink
             _settings.SpiralOpacity = Math.Clamp(o, 5, 50);
         if (sp.Asset is { } a)
         {
-            var root = _settings.AssetsRoot.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
-            var gif = System.IO.Path.Combine(root, "spirals", a.EndsWith(".gif") ? a : a + ".gif");
-            if (System.IO.File.Exists(gif)) _settings.SpiralPath = gif;
+            // accept any spiral asset by bare name — LV picks per scene without
+            // knowing the extension (video formats land with the LibVLC layer)
+            var dir = SpiralAssetsDir();
+            var hit = System.IO.Path.HasExtension(a) && System.IO.File.Exists(System.IO.Path.Combine(dir, a))
+                ? System.IO.Path.Combine(dir, a)
+                : new[] { ".gif", ".webp", ".png", ".jpg" }
+                    .Select(ext => System.IO.Path.Combine(dir, a + ext))
+                    .FirstOrDefault(System.IO.File.Exists);
+            if (hit != null) _settings.SpiralPath = hit;
             else Chip($"🌀 no spiral asset: {a}");
         }
         SetSpiral(sp.On);
