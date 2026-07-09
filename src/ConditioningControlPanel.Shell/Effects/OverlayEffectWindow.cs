@@ -7,7 +7,6 @@ using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
-using SkiaSharp;
 
 namespace ConditioningControlPanel.Shell.Effects;
 
@@ -100,38 +99,16 @@ internal sealed class OverlayEffectWindow : Window
               ?? EffectAssetPaths.FindRepoAsset("ConditioningControlPanel/Resources/spiral.gif");
         if (resolved is null || resolved == _loadedPath) return;
 
+        var anim = AnimatedImageSource.Load(resolved);
+        if (anim is null) return;
+
         foreach (var f in _spiralFrames) f.Dispose();
         _spiralFrames.Clear();
         _frameIndex = 0;
+        _spiralFrames.AddRange(anim.Frames);
 
-        try
-        {
-            using var codec = SKCodec.Create(resolved);
-            if (codec is null) throw new InvalidOperationException("SKCodec could not load spiral GIF");
-            var info = codec.Info;
-            var frameCount = Math.Max(1, codec.FrameCount);
-            for (var i = 0; i < frameCount; i++)
-            {
-                using var bitmap = new SKBitmap(info.Width, info.Height, info.ColorType, info.AlphaType);
-                var result = codec.GetPixels(info, bitmap.GetPixels(), new SKCodecOptions(i));
-                if (result is not (SKCodecResult.Success or SKCodecResult.IncompleteInput)) continue;
-                using var image = SKImage.FromBitmap(bitmap);
-                using var data = image.Encode(SKEncodedImageFormat.Png, 90);
-                using var ms = new MemoryStream(data.ToArray());
-                _spiralFrames.Add(new Bitmap(ms));
-            }
-        }
-        catch
-        {
-            _spiralFrames.Clear();
-            _spiralFrames.Add(new Bitmap(resolved));
-        }
-
-        if (_spiralFrames.Count > 0)
-        {
-            _spiralImage.Source = _spiralFrames[0];
-            _loadedPath = resolved;
-        }
+        _spiralImage.Source = _spiralFrames[0];
+        _loadedPath = resolved;
     }
 
     private void EnsureVisibility()

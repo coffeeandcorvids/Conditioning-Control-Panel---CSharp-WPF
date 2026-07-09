@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using ConditioningControlPanel.Core.Services.Flash;
+using ConditioningControlPanel.Shell.Effects;
 
 namespace ConditioningControlPanel.Shell.Overlays;
 
@@ -11,10 +12,14 @@ namespace ConditioningControlPanel.Shell.Overlays;
 /// Topmost transparent window that shows a flash image for a fixed duration then hides itself.
 /// One instance is created per concurrent flash slot (pool size: 6). Reused via Show/Hide
 /// to avoid the overhead of creating/destroying native windows mid-session.
+/// Animated GIF/WebP flashes play through their frames while shown.
 /// </summary>
 public partial class FlashOverlayWindow : Window
 {
     private DispatcherTimer? _hideTimer;
+    private DispatcherTimer? _frameTimer;
+    private AnimatedImageSource? _anim;
+    private int _frame;
 
     public FlashOverlayWindow()
     {
@@ -36,21 +41,31 @@ public partial class FlashOverlayWindow : Window
 
         Opacity = args.Opacity / 100.0;
 
-        try
+        _frameTimer?.Stop();
+        _anim?.Dispose();
+        _anim = AnimatedImageSource.Load(imagePath);
+        _frame = 0;
+        // null = load failed — show anyway as a pink square (conditioning still fires)
+        Img.Source = _anim?.Frames[0];
+
+        if (_anim is { IsAnimated: true })
         {
-            Img.Source = new Bitmap(imagePath);
-        }
-        catch
-        {
-            // image load failed — show anyway as a pink square (conditioning still fires)
-            Img.Source = null;
+            _frameTimer = new DispatcherTimer { Interval = _anim.Durations[0] };
+            _frameTimer.Tick += (_, _) =>
+            {
+                if (_anim is not { IsAnimated: true }) { _frameTimer?.Stop(); return; }
+                _frame = (_frame + 1) % _anim.Frames.Count;
+                Img.Source = _anim.Frames[_frame];
+                _frameTimer!.Interval = _anim.Durations[_frame];
+            };
+            _frameTimer.Start();
         }
 
         Show();
 
         _hideTimer?.Stop();
         _hideTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(args.DurationMs) };
-        _hideTimer.Tick += (_, _) => { _hideTimer.Stop(); Hide(); };
+        _hideTimer.Tick += (_, _) => { _hideTimer.Stop(); _frameTimer?.Stop(); Hide(); };
         _hideTimer.Start();
     }
 }
