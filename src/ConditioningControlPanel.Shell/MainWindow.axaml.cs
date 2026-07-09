@@ -126,6 +126,13 @@ public partial class MainWindow : Window, ICommandSink
         foreach (var (btn, view) in primaryViews)
             btn.Click += (_, _) => SwitchPrimary(btn, view, primaryViews.Keys.ToList());
 
+        // bottom feature strip — route to the real views where they exist,
+        // say so plainly where the upstream feature isn't ported yet
+        BtnAssetsLibrary.Click += (_, _) => SwitchPrimary(NavAssets, ViewAssets, primaryViews.Keys.ToList());
+        BtnScheduler.Click     += (_, _) => SwitchPrimary(NavPresets, ViewPresets, primaryViews.Keys.ToList());
+        BtnSessionHistory.Click += (_, _) => Chip("📋 session history lands with the timeline port");
+        BtnInputsSensors.Click  += (_, _) => Chip("📡 voice/gaze sensors not ported (Windows-only upstream)");
+
         // ── Secondary nav (row 2) ──────────────────────────────────────
         var secondaryViews = new Dictionary<Button, Control>
         {

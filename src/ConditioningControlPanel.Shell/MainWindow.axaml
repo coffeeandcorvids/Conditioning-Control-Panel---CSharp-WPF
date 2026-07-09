@@ -282,15 +282,15 @@
                 <Grid ColumnDefinitions="*,*" MinHeight="150">
                   <Border Grid.Column="0" Classes="panel" Margin="0,0,5,0">
                     <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="70,*">
-                      <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Classes="head" Text="📊 Audio"/>
+                      <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Classes="head" Text="📊 Audio (wiring lands with the audio engine)"/>
                       <TextBlock Grid.Row="1" Grid.Column="0" Text="Master" FontSize="11"/>
-                      <Slider Grid.Row="1" Grid.Column="1" Value="100" Minimum="0" Maximum="100"/>
+                      <Slider Grid.Row="1" Grid.Column="1" Value="100" Minimum="0" Maximum="100" IsEnabled="False"/>
                       <TextBlock Grid.Row="2" Grid.Column="0" Text="Video" FontSize="11"/>
-                      <Slider Grid.Row="2" Grid.Column="1" Value="78" Minimum="0" Maximum="100"/>
+                      <Slider Grid.Row="2" Grid.Column="1" Value="78" Minimum="0" Maximum="100" IsEnabled="False"/>
                       <TextBlock Grid.Row="3" Grid.Column="0" Text="Duck" FontSize="11"/>
-                      <Slider Grid.Row="3" Grid.Column="1" Value="70" Minimum="0" Maximum="100"/>
+                      <Slider Grid.Row="3" Grid.Column="1" Value="70" Minimum="0" Maximum="100" IsEnabled="False"/>
                       <TextBlock Grid.Row="4" Grid.Column="0" Text="Output" FontSize="11"/>
-                      <TextBox Grid.Row="4" Grid.Column="1" Text="System default"/>
+                      <TextBox Grid.Row="4" Grid.Column="1" Text="System default" IsEnabled="False"/>
                     </Grid>
                   </Border>
                   <Border Grid.Column="1" Classes="panel" Margin="5,0,0,0">
