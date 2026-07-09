@@ -51,8 +51,9 @@ internal sealed class OverlayEffectWindow : Window
         _spiralImage.RenderTransformOrigin = RelativePoint.Center;
         _root.Children.Add(_spiralImage);
 
-        // rotation is independent of frame animation: static (single-frame) spirals
-        // still spin, multi-frame GIFs additionally advance frames
+        // animated files (nested-spiral GIFs etc.) carry their own motion — play
+        // their frames untouched. Only static single-frame images get the rotation
+        // transform, overscaled √2 so the square's corners never sweep into view.
         _gifTimer.Tick += (_, _) =>
         {
             if (_spiralFrames.Count > 1)
@@ -60,8 +61,14 @@ internal sealed class OverlayEffectWindow : Window
                 _frameIndex = (_frameIndex + 1) % _spiralFrames.Count;
                 _spiralImage.Source = _spiralFrames[_frameIndex];
             }
-            _angle = (_angle + 1.25) % 360;
-            _spiralImage.RenderTransform = new RotateTransform(_angle);
+            else
+            {
+                _angle = (_angle + 1.25) % 360;
+                _spiralImage.RenderTransform = new TransformGroup
+                {
+                    Children = { new ScaleTransform(1.45, 1.45), new RotateTransform(_angle) }
+                };
+            }
         };
     }
 
@@ -108,6 +115,8 @@ internal sealed class OverlayEffectWindow : Window
         _spiralFrames.AddRange(anim.Frames);
 
         _spiralImage.Source = _spiralFrames[0];
+        _spiralImage.RenderTransform = null;   // clear stale rotation when swapping static → animated
+        _angle = 0;
         _loadedPath = resolved;
     }
 
