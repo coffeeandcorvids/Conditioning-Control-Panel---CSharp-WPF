@@ -141,15 +141,14 @@
                    HorizontalAlignment="Center" Margin="8,0">
           <Button x:Name="NavDashboard"    Content="📊 Dashboard"    Classes="tabActive" Margin="2,0" Padding="10,5" CornerRadius="6" FontSize="12"/>
           <Button x:Name="NavPresets"      Content="📋 Presets"      Margin="2,0" Padding="10,5" CornerRadius="6" FontSize="12"/>
-          <Button x:Name="NavQuests"       Content="⭐ Quests"       Margin="2,0" Padding="10,5" CornerRadius="6" FontSize="12"/>
           <Button x:Name="NavEnhancements" Content="✨ Enhancements" Margin="2,0" Padding="10,5" CornerRadius="6" FontSize="12"/>
           <Button x:Name="NavDeeper"       Content="🌊 Deeper"       Margin="2,0" Padding="10,5" CornerRadius="6" FontSize="12"/>
           <Button x:Name="NavAssets"       Content="🗂 Assets"       Margin="2,0" Padding="10,5" CornerRadius="6" FontSize="12"/>
         </WrapPanel>
 
-        <!-- update badge -->
-        <Border Grid.Column="2" Background="#E84393" CornerRadius="6" Padding="10,4">
-          <TextBlock Text="UPDATE AVAILABLE v6.2.2" FontSize="11" FontWeight="Bold" Foreground="White"/>
+        <!-- fork badge -->
+        <Border Grid.Column="2" Background="#8B5CF6" CornerRadius="6" Padding="10,4">
+          <TextBlock Text="VESPER FORK" FontSize="11" FontWeight="Bold" Foreground="White"/>
         </Border>
       </Grid>
     </Border>
@@ -161,7 +160,7 @@
       <Grid ColumnDefinitions="*,Auto" Margin="12,4">
         <!-- marquee text (top strip) -->
         <TextBlock Grid.Column="0"
-                   Text="  ✨  A special thanks to Platinum Puppets for providing the audios  💗  ✨  A special thanks to Platinum Puppets for providing the audios  💗  "
+                   Text="  🖤  good girls sink deeper  ·  Vesper is watching  🖤  "
                    Foreground="#DF6BA0" FontSize="11" VerticalAlignment="Center" FontStyle="Italic"/>
         <!-- secondary tabs -->
         <StackPanel Grid.Column="1" Orientation="Horizontal">
@@ -177,12 +176,12 @@
     <!-- ══════════════════════════════════════════════════════════════════
          ROW 3 — MAIN CONTENT (tabs swap here)
          ═════════════════════════════════════════════════════════════════ -->
-    <!-- XP / login strip, present in the upstream app between nav and content -->
+    <!-- status strip (upstream had a Discord/Patreon XP login bar here — removed) -->
     <Border Grid.Row="3" Background="#111122" Padding="14,3">
       <Grid ColumnDefinitions="Auto,*,Auto">
-        <TextBlock Grid.Column="0" Text="LVL 29" Foreground="#3B3155" FontWeight="Bold"/>
-        <TextBlock Grid.Column="1" Text="Login with Discord or Patreon to track your XP!" Foreground="#FF3FA3" FontSize="12" TextAlignment="Center"/>
-        <TextBlock Grid.Column="2" Text="938 / 1403 XP" Foreground="#2E294A"/>
+        <TextBlock Grid.Column="0" Text="🕯️" FontSize="12"/>
+        <TextBlock x:Name="TxtStatusStrip" Grid.Column="1" Text="local · private · yours" Foreground="#FF3FA3" FontSize="12" TextAlignment="Center"/>
+        <TextBlock Grid.Column="2" Text="🌑" FontSize="12"/>
       </Grid>
     </Border>
 
@@ -296,9 +295,9 @@
                   </Border>
                   <Border Grid.Column="1" Classes="panel" Margin="5,0,0,0">
                     <StackPanel Spacing="10">
-                      <TextBlock Classes="head" Text="🔗 Quick Links"/>
-                      <Button Content="🔐  Login" Background="#E84393" BorderThickness="0" FontWeight="Bold"/>
-                      <Button Content="💬  Join Discord" Background="#5865F2" BorderThickness="0" FontWeight="Bold"/>
+                      <TextBlock Classes="head" Text="🔗 Quick Actions"/>
+                      <Button x:Name="BtnQuickPanic" Content="🛑  Panic — clear all overlays" Background="#B3261E" BorderThickness="0" FontWeight="Bold"/>
+                      <Button x:Name="BtnQuickAssets" Content="🗂  Open assets folder" Background="#8B5CF6" BorderThickness="0" FontWeight="Bold"/>
                     </StackPanel>
                   </Border>
                 </Grid>
@@ -554,10 +553,7 @@
         </Border>
       </Grid>
 
-      <!-- ── SESSIONS / QUESTS / ACHIEVEMENTS / LAB (placeholders) ──── -->
-      <Border x:Name="ViewQuests"       IsVisible="False" Classes="panel" Margin="6">
-        <TextBlock Classes="muted" Text="⭐ Quests — conditioning objectives. (coming next)"/>
-      </Border>
+      <!-- ── SESSIONS / ACHIEVEMENTS / LAB (placeholders) ──── -->
       <Border x:Name="ViewEnhancements" IsVisible="False" Classes="panel" Margin="6">
         <TextBlock Classes="muted" Text="✨ Enhancements — Deeper/CCPENH system. (coming next)"/>
       </Border>

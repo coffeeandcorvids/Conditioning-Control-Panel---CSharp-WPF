@@ -119,7 +119,6 @@ public partial class MainWindow : Window, ICommandSink
         {
             [NavDashboard]    = ViewDashboard,
             [NavPresets]      = ViewPresets,
-            [NavQuests]       = ViewQuests,
             [NavEnhancements] = ViewEnhancements,
             [NavDeeper]       = ViewDeeper,
             [NavAssets]       = ViewAssets,
@@ -199,6 +198,27 @@ public partial class MainWindow : Window, ICommandSink
                 _settings.Save();
             }
         };
+        BtnQuickPanic.Click += (_, _) =>
+        {
+            if (_effects.SpiralOn)     SetSpiral(false);
+            if (_effects.PinkFilterOn) SetPinkFilter(false);
+            if (_effects.BubblePopRunning)     _effects.SetBubblePop(false);
+            if (_effects.BouncingTextRunning)  _effects.SetBouncingText(false);
+            CardSpiral.IsEnabledFeature  = false;
+            CardPinkFog.IsEnabledFeature = false;
+            Chip("🛑 all overlays cleared");
+        };
+        BtnQuickAssets.Click += (_, _) =>
+        {
+            var root = _settings.AssetsRoot.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+            try
+            {
+                System.IO.Directory.CreateDirectory(root);
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(root) { UseShellExecute = true });
+            }
+            catch (Exception ex) { Chip($"🗂 {ex.Message}"); }
+        };
+
         SldSpiralOpacity.Value = _settings.SpiralOpacity;
         TxtSpiralOpacity.Text  = $"{_settings.SpiralOpacity}%";
         SldSpiralOpacity.PropertyChanged += (_, e) =>
@@ -438,7 +458,7 @@ public partial class MainWindow : Window, ICommandSink
 
     private void HideAllViews()
     {
-        foreach (var v in new Control[]{ ViewDashboard, ViewPresets, ViewQuests, ViewEnhancements,
+        foreach (var v in new Control[]{ ViewDashboard, ViewPresets, ViewEnhancements,
                                           ViewDeeper, ViewAssets, ViewAchievements, ViewCompanion,
                                           ViewLab, ViewLive })
             v.IsVisible = false;
