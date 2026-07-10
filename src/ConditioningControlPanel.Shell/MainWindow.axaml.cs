@@ -419,6 +419,49 @@ public partial class MainWindow : Window, ICommandSink
             SaveAll(); Chip("💾 companion settings saved");
         };
 
+        BtnPhraseExport.Click += async (_, _) =>
+        {
+            var file = await StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
+            {
+                Title = "Export phrase backup",
+                SuggestedFileName = ConditioningControlPanel.Core.Services.PhraseBackupService.GetExportFileName(),
+                FileTypeChoices = new[] { new Avalonia.Platform.Storage.FilePickerFileType("CCP phrase backup")
+                    { Patterns = new[] { "*.ccpphrases.json" } } }
+            });
+            var path = file?.Path is { IsAbsoluteUri: true, Scheme: "file" } u ? u.LocalPath : null;
+            if (path is null) return;
+            try
+            {
+                var n = new ConditioningControlPanel.Core.Services.PhraseBackupService().Export(_settings, path);
+                Chip($"📦 exported {n} phrases → {System.IO.Path.GetFileName(path)}");
+            }
+            catch (Exception ex) { Chip($"📦 export failed: {ex.Message}"); }
+        };
+        BtnPhraseImport.Click += async (_, _) =>
+        {
+            var files = await StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
+            {
+                Title = "Import phrase backup",
+                AllowMultiple = false,
+                FileTypeFilter = new[] { new Avalonia.Platform.Storage.FilePickerFileType("CCP phrase backup")
+                    { Patterns = new[] { "*.ccpphrases.json", "*.json" } } }
+            });
+            var path = files.Count > 0 && files[0].Path.IsAbsoluteUri && files[0].Path.Scheme == "file"
+                ? files[0].Path.LocalPath : null;
+            if (path is null) return;
+            var svc = new ConditioningControlPanel.Core.Services.PhraseBackupService();
+            if (!svc.Validate(path, out var error)) { Chip($"📦 {error}"); return; }
+            try
+            {
+                var n = svc.Import(_settings, path);
+                _settings.Save();
+                LoadUiFromSettings();
+                _sub.UpdateSettings(BuildSubConfig());
+                Chip($"📦 restored {n} phrases");
+            }
+            catch (Exception ex) { Chip($"📦 import failed: {ex.Message}"); }
+        };
+
         // ── Live tab ──────────────────────────────────────────────────
         BtnSpiral.Click   += async (_, _) => await Fire(new KeywordTriggered("spiral"));
         BtnLock.Click     += async (_, _) => await Fire(new LockScreenResult("good girls don't think", 1, 3));

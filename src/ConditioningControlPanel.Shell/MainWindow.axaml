@@ -517,6 +517,12 @@
                     <TextBox x:Name="TxtAgentId" PlaceholderText="agent-xxxxxxxx"/>
                     <Button x:Name="BtnSaveCompanion" Content="💾 Save"/>
                     <TextBlock x:Name="TxtAgentStatus" Classes="muted" Text="ScriptedReactiveAgent (Letta pending)"/>
+                    <TextBlock Classes="head" Text="📦 Phrase Backup" Margin="0,10,0,0"/>
+                    <TextBlock Classes="muted" Text="Your phrase pools (subliminals, lock cards, bouncing text, keywords) in one portable file."/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Button x:Name="BtnPhraseExport" Content="⬆ Export phrases…"/>
+                      <Button x:Name="BtnPhraseImport" Content="⬇ Import phrases…"/>
+                    </StackPanel>
                   </StackPanel>
                 </Border>
 
