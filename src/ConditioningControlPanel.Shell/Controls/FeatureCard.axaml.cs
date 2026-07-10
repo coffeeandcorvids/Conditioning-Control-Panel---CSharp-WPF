@@ -23,6 +23,8 @@ public partial class FeatureCard : UserControl
         AvaloniaProperty.Register<FeatureCard, bool>(nameof(IsEnabledFeature), false);
     public static readonly StyledProperty<string> ImagePathProperty =
         AvaloniaProperty.Register<FeatureCard, string>(nameof(ImagePath), "");
+    public static readonly StyledProperty<bool> HasToggleProperty =
+        AvaloniaProperty.Register<FeatureCard, bool>(nameof(HasToggle), true);
 
     public string Icon
     {
@@ -39,6 +41,13 @@ public partial class FeatureCard : UserControl
         get => GetValue(ImagePathProperty);
         set { SetValue(ImagePathProperty, value); SetImage(value); }
     }
+    /// <summary>False for info-only cards (no instant on/off) — hides the quick toggle.</summary>
+    public bool HasToggle
+    {
+        get => GetValue(HasToggleProperty);
+        set { SetValue(HasToggleProperty, value); ToggleBtn.IsVisible = value; }
+    }
+
     public bool IsEnabledFeature
     {
         get => GetValue(IsEnabledFeatureProperty);

@@ -40,8 +40,12 @@
                  HorizontalAlignment="Center" VerticalAlignment="Bottom"
                  Margin="8,0,8,17"/>
 
-      <!-- hidden but still present: code-behind uses this for quick toggle state -->
-      <Button x:Name="ToggleBtn" IsVisible="False"/>
+      <!-- quick toggle, bottom-right; hidden via HasToggle for info-only cards -->
+      <Button x:Name="ToggleBtn" Content="○ OFF"
+              HorizontalAlignment="Right" VerticalAlignment="Bottom"
+              Margin="0,0,6,6" Padding="6,2" CornerRadius="8"
+              FontSize="10" FontWeight="Bold"
+              Background="#2E2E4A" Foreground="#FFFFFF" BorderThickness="0"/>
     </Grid>
   </Border>
 </UserControl>

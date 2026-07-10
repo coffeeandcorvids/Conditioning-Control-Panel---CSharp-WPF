@@ -207,8 +207,8 @@
 
           <!-- Row 0 -->
           <ctrl:FeatureCard Grid.Row="0" Grid.Column="0" x:Name="CardFlash"    Icon="⚡" Label="Flash Images" ImagePath="ConditioningControlPanel/Resources/features/flash.png" Margin="3"/>
-          <ctrl:FeatureCard Grid.Row="0" Grid.Column="1" x:Name="CardVisuals"  Icon="👁" Label="Visuals"      ImagePath="ConditioningControlPanel/Resources/features/corner_gif.png" Margin="3"/>
-          <ctrl:FeatureCard Grid.Row="0" Grid.Column="2" x:Name="CardVideo"    Icon="🎬" Label="Mandatory Video" ImagePath="ConditioningControlPanel/Resources/features/mandatory_videos.png" Margin="3"/>
+          <ctrl:FeatureCard Grid.Row="0" Grid.Column="1" x:Name="CardVisuals"  Icon="👁" Label="Visuals" HasToggle="False"      ImagePath="ConditioningControlPanel/Resources/features/corner_gif.png" Margin="3"/>
+          <ctrl:FeatureCard Grid.Row="0" Grid.Column="2" x:Name="CardVideo"    Icon="🎬" Label="Mandatory Video" HasToggle="False" ImagePath="ConditioningControlPanel/Resources/features/mandatory_videos.png" Margin="3"/>
           <ctrl:FeatureCard Grid.Row="0" Grid.Column="3" x:Name="CardSubliminal" Icon="💬" Label="Subliminals" ImagePath="ConditioningControlPanel/Resources/features/subliminal.png" Margin="3"/>
 
           <!-- Row 1: edge + 2×2 center logo -->
@@ -241,8 +241,8 @@
           <!-- Row 3 -->
           <ctrl:FeatureCard Grid.Row="3" Grid.Column="0" x:Name="CardBubblePop"     Icon="🫧" Label="Bubble Pop" ImagePath="ConditioningControlPanel/Resources/features/Bubble_pop.png" Margin="3"/>
           <ctrl:FeatureCard Grid.Row="3" Grid.Column="1" x:Name="CardBouncingText"  Icon="✨" Label="Bouncing Text" ImagePath="ConditioningControlPanel/Resources/features/bouncing_text.png" Margin="3"/>
-          <ctrl:FeatureCard Grid.Row="3" Grid.Column="2" x:Name="CardSystem"        Icon="⚙" Label="System" ImagePath="ConditioningControlPanel/Resources/features/4new.png" Margin="3"/>
-          <ctrl:FeatureCard Grid.Row="3" Grid.Column="3" x:Name="CardHaptics"       Icon="💗" Label="Bubble Count" ImagePath="ConditioningControlPanel/Resources/features/Bubble_count.png" Margin="3"/>
+          <ctrl:FeatureCard Grid.Row="3" Grid.Column="2" x:Name="CardSystem"        Icon="⚙" Label="System" HasToggle="False" ImagePath="ConditioningControlPanel/Resources/features/4new.png" Margin="3"/>
+          <ctrl:FeatureCard Grid.Row="3" Grid.Column="3" x:Name="CardHaptics"       Icon="💗" Label="Haptics" HasToggle="False" ImagePath="ConditioningControlPanel/Resources/features/vibe.png" Margin="3"/>
         </Grid>
 
         <!-- RIGHT: detail / settings panel -->

@@ -97,17 +97,10 @@ public partial class MainWindow : Window, ICommandSink
         BtnMinimize.Click += (_, _) => WindowState = WindowState.Minimized;
         BtnClose.Click    += (_, _) => Close();
 
-        // ESC dismisses active overlays (spiral, pink filter) — panic-key behaviour
+        // ESC = panic key: same full clear as the dashboard panic button
         this.KeyDown += (_, e) =>
         {
-            if (e.Key == Avalonia.Input.Key.Escape)
-            {
-                if (_effects.SpiralOn)   SetSpiral(false);
-                if (_effects.PinkFilterOn) SetPinkFilter(false);
-                CardSpiral.IsEnabledFeature  = false;
-                CardPinkFog.IsEnabledFeature = false;
-                Chip("⬛ overlays off");
-            }
+            if (e.Key == Avalonia.Input.Key.Escape) PanicClearAll();
         };
 
         // drag to move (title bar)
@@ -177,11 +170,34 @@ public partial class MainWindow : Window, ICommandSink
         CardSystem.CardClicked       += (_, _) => ShowFeaturePanel(FeaturePanel.System);
         CardHaptics.CardClicked      += (_, _) => ShowFeaturePanel(FeaturePanel.Haptics);
 
-        // mosaic card toggles
-        CardFlash.ToggleChanged     += (_, on) => { _settings.FlashEnabled = on; _flash.UpdateSettings(BuildFlashConfig()); };
-        CardSubliminal.ToggleChanged += (_, on) => { _settings.SubliminalEnabled = on; _sub.UpdateSettings(BuildSubConfig()); };
-        CardSpiral.ToggleChanged    += (_, on) => SetSpiral(on);
-        CardPinkFog.ToggleChanged   += (_, on) => SetPinkFilter(on);
+        // mosaic card toggles — every visible toggle does exactly what the card says
+        CardFlash.ToggleChanged     += (_, on) => { _settings.FlashEnabled = on; _flash.UpdateSettings(BuildFlashConfig()); ChkFlashEnabled.IsChecked = on; Chip(on ? "⚡ flash ON" : "⚡ flash OFF"); };
+        CardSubliminal.ToggleChanged += (_, on) => { _settings.SubliminalEnabled = on; _sub.UpdateSettings(BuildSubConfig()); ChkSubEnabled.IsChecked = on; Chip(on ? "💬 subliminals ON" : "💬 subliminals OFF"); };
+        CardSpiral.ToggleChanged    += (_, on) => { SetSpiral(on); Chip(on ? "🌀 spiral ON" : "🌀 spiral OFF"); };
+        CardPinkFog.ToggleChanged   += (_, on) => { SetPinkFilter(on); Chip(on ? "🌸 pink filter ON" : "🌸 pink filter OFF"); };
+        CardBubblePop.ToggleChanged += (_, on) =>
+        {
+            _effects.SetBubblePop(on);
+            _settings.BubblePopEnabled = on; _settings.Save();
+            Chip(on ? "🫧 bubble pop ON" : "🫧 bubble pop OFF");
+        };
+        CardBouncingText.ToggleChanged += (_, on) =>
+        {
+            if (on) ApplyBouncingPhrases();
+            _effects.SetBouncingText(on);
+            _settings.BouncingTextEnabled = on; _settings.Save();
+            Chip(on ? "✨ bouncing text ON" : "✨ bouncing text OFF");
+        };
+        CardLockCard.ToggleChanged += (_, on) =>
+        {
+            _effects.SetLockCardScheduler(on);
+            Chip(on ? "🔒 lock card scheduler ON" : "🔒 lock card scheduler OFF");
+        };
+        CardMindWipe.ToggleChanged += (_, on) =>
+        {
+            _effects.SetMindWipeScheduler(on);
+            Chip(on ? "🧠 mind wipe scheduler ON" : "🧠 mind wipe scheduler OFF");
+        };
 
         // ── Right-panel detail controls ───────────────────────────────
         ChkFlashEnabled.IsCheckedChanged += (_, _) => ApplyFlash();
@@ -207,16 +223,7 @@ public partial class MainWindow : Window, ICommandSink
                 _settings.Save();
             }
         };
-        BtnQuickPanic.Click += (_, _) =>
-        {
-            if (_effects.SpiralOn)     SetSpiral(false);
-            if (_effects.PinkFilterOn) SetPinkFilter(false);
-            if (_effects.BubblePopRunning)     _effects.SetBubblePop(false);
-            if (_effects.BouncingTextRunning)  _effects.SetBouncingText(false);
-            CardSpiral.IsEnabledFeature  = false;
-            CardPinkFog.IsEnabledFeature = false;
-            Chip("🛑 all overlays cleared");
-        };
+        BtnQuickPanic.Click += (_, _) => PanicClearAll();
         BtnQuickAssets.Click += (_, _) =>
         {
             var root = _settings.AssetsRoot.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
@@ -499,13 +506,11 @@ public partial class MainWindow : Window, ICommandSink
                 break;
             case FeaturePanel.Visuals:
                 PanelVisuals.IsVisible = true;
-                ShowDetail("👁 Visuals", "Visual overlays and enhancement effects. Local unlocked clone panel — wiring continues here.");
-                DoFlashText("VISUALS");
+                ShowDetail("👁 Visuals", "Flash size, opacity, fade, and duration.");
                 break;
             case FeaturePanel.Video:
                 PanelVideo.IsVisible = true;
                 ShowDetail("🎬 Mandatory Video", "Fullscreen video player, attention checks, strict playback. VLC/Avalonia player port next.");
-                DoFlashText("WATCH");
                 break;
             case FeaturePanel.Subliminals:
                 PanelSubliminals.IsVisible = true;
@@ -513,40 +518,27 @@ public partial class MainWindow : Window, ICommandSink
                 break;
             case FeaturePanel.Spiral:
                 PanelOverlay.IsVisible = true;
-                ShowDetail("🌀 Spiral Overlay", "Original parity: animated fullscreen overlay. Click toggles the live overlay.");
-                SetSpiral(!_effects.SpiralOn);
-                Chip(_effects.SpiralOn ? "🌀 spiral overlay ON" : "🌀 spiral overlay OFF");
+                ShowDetail("🌀 Spiral Overlay", "Fullscreen animated overlay — toggle, opacity, and asset picker. The card's switch turns it on/off.");
                 break;
             case FeaturePanel.LockCard:
                 PanelLockCard.IsVisible = true;
-                ShowDetail("🔒 Lock Card", "Original parity: fullscreen phrase card. Click/card test fires it now.");
-                _effects.ShowLockCard(TxtLockPhrase.Text);
+                ShowDetail("🔒 Lock Card", "Fullscreen phrase card — phrase, duration, scheduler. 'Trigger now' fires one.");
                 break;
             case FeaturePanel.PinkFilter:
                 PanelOverlay.IsVisible = true;
-                ShowDetail("🌸 Pink Filter", "Original parity: fullscreen semi-transparent pink tint overlay. Click toggles it now.");
-                SetPinkFilter(!_effects.PinkFilterOn);
-                Chip(_effects.PinkFilterOn ? "🌸 pink filter ON" : "🌸 pink filter OFF");
+                ShowDetail("🌸 Pink Filter", "Fullscreen pink tint — toggle and opacity. The card's switch turns it on/off.");
                 break;
             case FeaturePanel.MindWipe:
                 PanelMindWipe.IsVisible = true;
-                ShowDetail("🧠 Mind Wipe", "Original parity: audio mind-wipe trigger. Click/test plays a configured/bundled clip.");
-                _effects.TriggerMindWipe();
-                DoFlashText("MIND WIPE");
+                ShowDetail("🧠 Mind Wipe", "Audio mind-wipe — volume, scheduler, loop. 'Trigger now' plays one.");
                 break;
             case FeaturePanel.BubblePop:
                 PanelBubblePop.IsVisible = true;
-                ShowDetail("🫧 Bubble Pop", "Original parity: floating clickable bubbles. Click toggles ambient bubble spawning.");
-                _effects.SetBubblePop(!_effects.BubblePopRunning);
-                CardBubblePop.IsEnabledFeature = _effects.BubblePopRunning;
-                Chip(_effects.BubblePopRunning ? "🫧 bubble pop ON" : "🫧 bubble pop OFF");
+                ShowDetail("🫧 Bubble Pop", "Floating clickable bubbles — frequency, volume, speed. 'Toggle bubbles' starts/stops.");
                 break;
             case FeaturePanel.BouncingText:
                 PanelBouncingText.IsVisible = true;
-                ShowDetail("✨ Bouncing Text", "Original parity: DVD-screensaver text overlay. Click toggles it now.");
-                _effects.SetBouncingText(!_effects.BouncingTextRunning);
-                CardBouncingText.IsEnabledFeature = _effects.BouncingTextRunning;
-                Chip(_effects.BouncingTextRunning ? "✨ bouncing text ON" : "✨ bouncing text OFF");
+                ShowDetail("✨ Bouncing Text", "DVD-screensaver text overlay — phrases, speed, size. 'Toggle bouncing text' starts/stops.");
                 break;
             case FeaturePanel.System:
                 PanelSystem.IsVisible = true;
@@ -1056,6 +1048,22 @@ public partial class MainWindow : Window, ICommandSink
         }
     }
 
+    /// <summary>Panic: every overlay and ambient effect off, schedulers included.
+    /// Reachable from ESC anywhere and the dashboard panic button — identical behaviour.</summary>
+    private void PanicClearAll()
+    {
+        if (_effects.SpiralOn)     SetSpiral(false);
+        if (_effects.PinkFilterOn) SetPinkFilter(false);
+        if (_effects.BubblePopRunning)          _effects.SetBubblePop(false);
+        if (_effects.BouncingTextRunning)       _effects.SetBouncingText(false);
+        if (_effects.LockCardSchedulerRunning)  _effects.SetLockCardScheduler(false);
+        if (_effects.MindWipeSchedulerRunning)  _effects.SetMindWipeScheduler(false);
+        if (_effects.MindWipeLoopRunning)       _effects.SetMindWipeLoop(false);
+        foreach (var card in new[] { CardSpiral, CardPinkFog, CardBubblePop, CardBouncingText, CardLockCard, CardMindWipe })
+            card.IsEnabledFeature = false;
+        Chip("🛑 all overlays cleared");
+    }
+
     private void SetSpiral(bool on)
     {
         Spiral.IsVisible            = on;
@@ -1156,6 +1164,7 @@ public partial class MainWindow : Window, ICommandSink
 
     protected override void OnClosed(EventArgs e)
     {
+        SaveAll();   // sliders/checkboxes mutate _settings live; persist them on exit
         _session.Dispose();
         _flash.Dispose();
         _sub.Dispose();
