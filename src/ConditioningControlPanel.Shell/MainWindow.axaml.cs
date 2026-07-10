@@ -37,6 +37,9 @@ public partial class MainWindow : Window, ICommandSink
     private readonly EffectManager        _effects;
     private readonly HapticService        _haptics;
     private readonly PlaylistEngine       _playlist = new();
+    private readonly VlcAudioPlayer       _audio = new();
+    private readonly ConditioningControlPanel.Core.Services.Audio.AudioHapticSync _hapticSync;
+    private static readonly System.Net.Http.HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(20) };
 
     // ── Overlay pool ─────────────────────────────────────────────────────
     private const int FlashPoolSize = 6;
@@ -76,6 +79,21 @@ public partial class MainWindow : Window, ICommandSink
         _executor = new ReactionExecutor(this);
         _effects = new EffectManager(this, _settings);
         _haptics = new HapticService(new HapticSettings { Provider = HapticProviderType.Buttplug });
+
+        // ── Audio + trigger-word haptic sync ───────────────────────────
+        // playlist track changes → play the audio; its BambiCloud cue track
+        // (if any) fires the toy exactly when the trigger words land.
+        _hapticSync = new ConditioningControlPanel.Core.Services.Audio.AudioHapticSync(_audio);
+        _hapticSync.CueDue += (_, cue) => _ = FireHapticCueAsync(cue);
+        _playlist.TrackChanged += (_, track) => Dispatcher.UIThread.Post(() => OnAudioTrackChanged(track));
+        _playlist.PlaylistEnded += (_, _) => Dispatcher.UIThread.Post(() =>
+        {
+            _hapticSync.Stop();
+            _audio.Stop();
+            Chip("🎵 playlist finished");
+        });
+        _audio.Ended += (_, _) => Dispatcher.UIThread.Post(() => _playlist.Next());
+        _audio.Error += (_, msg) => Dispatcher.UIThread.Post(() => Chip($"🎵 audio: {msg}"));
 
         _flashPool = Enumerable.Range(0, FlashPoolSize)
             .Select(_ => new FlashOverlayWindow()).ToArray();
@@ -224,6 +242,10 @@ public partial class MainWindow : Window, ICommandSink
             }
         };
         BtnQuickPanic.Click += (_, _) => PanicClearAll();
+        SldMasterVolume.PropertyChanged += (_, e) =>
+        {
+            if (e.Property.Name == "Value") _audio.Volume = (int)SldMasterVolume.Value;
+        };
         BtnQuickAssets.Click += (_, _) =>
         {
             var root = _settings.AssetsRoot.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
@@ -976,9 +998,9 @@ public partial class MainWindow : Window, ICommandSink
     }
 
     /// <summary>
-    /// DJ playlist control. The engine owns selection state; actual audio playback
-    /// hooks in when the Shell's media layer lands (LibVLC) — until then the chip +
-    /// TrackChanged event are the observable surface.
+    /// DJ playlist + transport control. The engine owns selection state; TrackChanged
+    /// drives real audio out through LibVLC, with the track's BambiCloud cue track
+    /// arming trigger-word haptic sync automatically.
     /// </summary>
     private void ExecutePlaylistOp(PlaylistOp pl)
     {
@@ -988,6 +1010,12 @@ public partial class MainWindow : Window, ICommandSink
             {
                 case "next":      _playlist.Next(); break;
                 case "prev":      _playlist.Prev(); break;
+                case "pause":     _audio.Pause();  Chip("🎵 paused"); return;
+                case "resume":    _audio.Resume(); Chip("🎵 resumed"); return;
+                case "stop":      _hapticSync.Stop(); _audio.Stop(); Chip("🎵 stopped"); return;
+                case "volume" when pl.Arg != null && int.TryParse(pl.Arg, out var vol):
+                    _audio.Volume = vol; SldMasterVolume.Value = _audio.Volume;
+                    Chip($"🎵 volume {_audio.Volume}%"); return;
                 case "shuffle":   _playlist.SetShuffle(true);  Chip("🎵 shuffle on"); return;
                 case "noshuffle": _playlist.SetShuffle(false); Chip("🎵 shuffle off"); return;
                 case "jump" when pl.Arg != null: _playlist.JumpTo(pl.Arg); break;
@@ -1014,6 +1042,70 @@ public partial class MainWindow : Window, ICommandSink
     private string PlaylistsDir() => System.IO.Path.Combine(
         Environment.ExpandEnvironmentVariables(_settings.AssetsRoot.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile))),
         "playlists");
+
+    // ── Audio playback + cue-track sync ───────────────────────────────────
+
+    private void OnAudioTrackChanged(PlaylistTrack track)
+    {
+        _hapticSync.Stop();
+        _audio.Play(track.Path);
+        Chip($"🎵 ▶ {track.Title}");
+        if (!string.IsNullOrWhiteSpace(track.HapticsPath))
+            _ = LoadCueTrackAsync(track.HapticsPath!);
+    }
+
+    /// <summary>Fetch a haptics cue track (URL or local path), cache URL fetches
+    /// under &lt;assets&gt;/haptics-cache/, and arm the sync. Missing/broken cue
+    /// files just mean no toy sync for that track — audio keeps playing.</summary>
+    private async Task LoadCueTrackAsync(string hapticsPath)
+    {
+        try
+        {
+            string json;
+            if (Uri.TryCreate(hapticsPath, UriKind.Absolute, out var uri) && !uri.IsFile)
+            {
+                var cacheDir = System.IO.Path.Combine(
+                    _settings.AssetsRoot.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)),
+                    "haptics-cache");
+                System.IO.Directory.CreateDirectory(cacheDir);
+                var cacheFile = System.IO.Path.Combine(cacheDir, System.IO.Path.GetFileName(uri.LocalPath));
+                if (System.IO.File.Exists(cacheFile))
+                    json = await System.IO.File.ReadAllTextAsync(cacheFile);
+                else
+                {
+                    json = await _http.GetStringAsync(uri);
+                    await System.IO.File.WriteAllTextAsync(cacheFile, json);
+                }
+            }
+            else
+            {
+                json = await System.IO.File.ReadAllTextAsync(hapticsPath);
+            }
+
+            var track = ConditioningControlPanel.Core.Services.Haptics.HapticCueTrack.Parse(json);
+            _hapticSync.Start(track);
+            Dispatcher.UIThread.Post(() =>
+                Chip($"💗 cue track armed — {track.Cues.Count} cues ({string.Join(", ", track.Triggers.Take(4))}…)"));
+        }
+        catch (Exception ex)
+        {
+            Dispatcher.UIThread.Post(() => Chip($"💗 no cue sync: {ex.Message}"));
+        }
+    }
+
+    /// <summary>A trigger word landed in the audio — hit the toy for the cue's window.
+    /// Snap cues (emphasized in the source data) hit harder.</summary>
+    private async Task FireHapticCueAsync(ConditioningControlPanel.Core.Services.Haptics.HapticCue cue)
+    {
+        try
+        {
+            if (!_haptics.IsConnected && !await _haptics.ConnectAsync()) return;
+            var intensity = cue.Snap ? 0.9 : 0.6;
+            await _haptics.ApplyVibrationModeAsync(intensity, cue.DurationMs,
+                cue.Snap ? VibrationMode.Pulse : VibrationMode.Constant);
+        }
+        catch { /* cue misses must never interrupt audio */ }
+    }
 
     /// <summary>
     /// playlist(import:&lt;name-or-id&gt;) — pull a public BambiCloud playlist through the
@@ -1102,9 +1194,12 @@ public partial class MainWindow : Window, ICommandSink
         if (_effects.LockCardSchedulerRunning)  _effects.SetLockCardScheduler(false);
         if (_effects.MindWipeSchedulerRunning)  _effects.SetMindWipeScheduler(false);
         if (_effects.MindWipeLoopRunning)       _effects.SetMindWipeLoop(false);
+        _hapticSync.Stop();
+        _audio.Stop();
+        _ = _haptics.StopAsync();
         foreach (var card in new[] { CardSpiral, CardPinkFog, CardBubblePop, CardBouncingText, CardLockCard, CardMindWipe })
             card.IsEnabledFeature = false;
-        Chip("🛑 all overlays cleared");
+        Chip("🛑 everything stopped");
     }
 
     private void SetSpiral(bool on)
@@ -1208,6 +1303,8 @@ public partial class MainWindow : Window, ICommandSink
     protected override void OnClosed(EventArgs e)
     {
         SaveAll();   // sliders/checkboxes mutate _settings live; persist them on exit
+        _hapticSync.Dispose();
+        _audio.Dispose();
         _session.Dispose();
         _flash.Dispose();
         _sub.Dispose();
