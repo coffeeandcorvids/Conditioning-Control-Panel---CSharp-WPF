@@ -16,3 +16,9 @@ public sealed record PlaylistOp(string Do, string? Arg = null) : PanelCommand;
 
 /// <summary>Fullscreen mandatory-video control. Do: play|stop. Arg: video name (resolved under &lt;assets&gt;/videos/) or a full path/URL for play.</summary>
 public sealed record VideoOp(string Do, string? Arg = null) : PanelCommand;
+
+/// <summary>DJ control of the AI-driven chaos surface ("Down the Rabbit Hole"). Generic
+/// verb+arg plumbing (this record); the verb vocabulary + semantics (start|stop|spawn|
+/// escalate|defuse-tie|…) are owned by the hypno/mechanics layer and interpreted by the
+/// chaos run-loop engine. Arg is op-specific (bubble type, trigger word, amount).</summary>
+public sealed record ChaosOp(string Do, string? Arg = null) : PanelCommand;

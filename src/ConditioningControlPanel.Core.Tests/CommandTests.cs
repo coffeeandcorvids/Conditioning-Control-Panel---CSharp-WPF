@@ -50,6 +50,20 @@ public class CommandTests
     }
 
     [Fact]
+    public void Parses_chaos_op_with_verb_and_arg()
+    {
+        var spawn = ReactionParser.Parse("""{ "commands": [ {"op":"chaos","do":"spawn","arg":"good girl"} ] }""");
+        Assert.Equal(new ChaosOp("spawn", "good girl"), Assert.Single(spawn.Commands));
+
+        var escalate = ReactionParser.Parse("""{ "commands": [ {"op":"chaos","do":"escalate"} ] }""");
+        Assert.Equal(new ChaosOp("escalate", null), Assert.Single(escalate.Commands));
+
+        // omitted "do" defaults to spawn (the primary in-run action)
+        var bare = ReactionParser.Parse("""{ "commands": [ {"op":"chaos","arg":"treat"} ] }""");
+        Assert.Equal(new ChaosOp("spawn", "treat"), Assert.Single(bare.Commands));
+    }
+
+    [Fact]
     public async Task Executor_speaks_then_runs_commands_in_order()
     {
         var sink = new RecordingSink();
