@@ -23,6 +23,7 @@ internal sealed class EffectManager : IDisposable
     private readonly Dictionary<string, OverlayEffectWindow> _overlays = new();
     private readonly Dictionary<string, BouncingTextWindow> _bouncing = new();
     private readonly List<LockCardWindow> _lockCards = new();
+    private VlcVideoWindow? _video;
 
     public bool BubblePopRunning { get; private set; }
     public bool BouncingTextRunning { get; private set; }
@@ -31,6 +32,10 @@ internal sealed class EffectManager : IDisposable
     public bool LockCardSchedulerRunning { get; private set; }
     public bool MindWipeSchedulerRunning { get; private set; }
     public bool MindWipeLoopRunning { get; private set; }
+    public bool VideoPlaying => _video?.IsPlaying ?? false;
+
+    /// <summary>Raised when a mandatory video finishes/stops (drives the VideoCompleted reaction + panel state).</summary>
+    public event EventHandler? VideoFinished;
 
     public EffectManager(Window owner, PanelSettings settings)
     {
@@ -70,6 +75,36 @@ internal sealed class EffectManager : IDisposable
             w.SetPink(false);
             w.SetSpiral(false, _settings.SpiralPath, _settings.SpiralOpacity);
         }
+    }
+
+    /// <summary>
+    /// Start a fullscreen mandatory video on the primary screen (multi-monitor
+    /// aware: placed on the primary display, not smeared across the virtual
+    /// desktop). Reuses one window across plays. Z-order above the passive
+    /// effect overlays is guaranteed by VlcVideoWindow's focus-based tier
+    /// policy — the mandatory video is Tier 2 and Activates; spiral/pink are
+    /// Tier 1 and never do.
+    /// </summary>
+    public void PlayVideo(string pathOrUrl)
+    {
+        _video ??= CreateVideoWindow();
+        _video.Play(PrimaryScreen(), pathOrUrl);
+    }
+
+    public void StopVideo() => _video?.StopAndClose();
+
+    private VlcVideoWindow CreateVideoWindow()
+    {
+        var w = new VlcVideoWindow();
+        w.Finished += (_, _) => VideoFinished?.Invoke(this, EventArgs.Empty);
+        return w;
+    }
+
+    private PixelRect PrimaryScreen()
+    {
+        var screens = _owner.Screens;
+        return (screens.Primary ?? screens.All.FirstOrDefault())?.Bounds
+               ?? new PixelRect(0, 0, 1920, 1080);
     }
 
     public void SetBubblePop(bool on)
@@ -295,5 +330,6 @@ internal sealed class EffectManager : IDisposable
         foreach (var w in _bouncing.Values) SafeClose(w);
         foreach (var w in _bubbles.ToList()) SafeClose(w);
         foreach (var w in _lockCards.ToList()) SafeClose(w);
+        if (_video is not null) SafeClose(_video);
     }
 }

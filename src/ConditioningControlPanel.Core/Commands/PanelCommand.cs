@@ -13,3 +13,6 @@ public sealed record Haptics(double? Intensity = null, string? Pattern = null) :
 
 /// <summary>DJ control of the native playlist engine. Do: next|prev|shuffle|noshuffle|load|jump. Arg: playlist name (load) or title/path query (jump).</summary>
 public sealed record PlaylistOp(string Do, string? Arg = null) : PanelCommand;
+
+/// <summary>Fullscreen mandatory-video control. Do: play|stop. Arg: video name (resolved under &lt;assets&gt;/videos/) or a full path/URL for play.</summary>
+public sealed record VideoOp(string Do, string? Arg = null) : PanelCommand;

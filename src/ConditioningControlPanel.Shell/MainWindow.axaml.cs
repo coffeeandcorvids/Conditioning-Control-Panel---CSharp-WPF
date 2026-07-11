@@ -35,6 +35,7 @@ public partial class MainWindow : Window, ICommandSink
     private readonly IReactiveAgent       _agent = new ScriptedReactiveAgent();
     private readonly ReactionExecutor     _executor;
     private readonly EffectManager        _effects;
+    private string? _lastVideoName;
     private readonly HapticService        _haptics;
     private readonly PlaylistEngine       _playlist = new();
     private readonly VlcAudioPlayer       _audio = new();
@@ -79,6 +80,14 @@ public partial class MainWindow : Window, ICommandSink
 
         _executor = new ReactionExecutor(this);
         _effects = new EffectManager(this, _settings);
+        // A mandatory video finishing on its own fires the VideoCompleted
+        // reaction (so LV can chain a beat off "she watched it"), and clears
+        // the panel's video-active chip.
+        _effects.VideoFinished += (_, _) => Dispatcher.UIThread.Post(() =>
+        {
+            Chip("🎬 video ended");
+            _ = Fire(new VideoCompleted(_lastVideoName ?? "video"));
+        });
         _haptics = new HapticService(new HapticSettings { Provider = HapticProviderType.Buttplug });
 
         // ── Audio + voice-haptics mixer ────────────────────────────────
@@ -293,6 +302,33 @@ public partial class MainWindow : Window, ICommandSink
             ApplySpiralAssetPath(path);
             RescanSpiralAssets(selectPath: path);
         };
+        // ── Mandatory video panel ─────────────────────────────────────
+        RescanVideoAssets();
+        BtnVideoRescan.Click += (_, _) => RescanVideoAssets();
+        BtnVideoPlay.Click += (_, _) =>
+        {
+            if (CmbVideoAsset.SelectedItem is VideoAssetItem { Path: { } p })
+                ExecuteVideoOp(new VideoOp("play", p));
+            else
+                Chip("🎬 pick a video first");
+        };
+        BtnVideoStop.Click += (_, _) => ExecuteVideoOp(new VideoOp("stop"));
+        BtnVideoBrowse.Click += async (_, _) =>
+        {
+            var files = await StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
+            {
+                Title = "Choose video",
+                AllowMultiple = false,
+                FileTypeFilter = new[] { new Avalonia.Platform.Storage.FilePickerFileType("Video files")
+                    { Patterns = new[] { "*.mp4", "*.webm", "*.mkv", "*.mov", "*.avi" } } }
+            });
+            var path = files.Count > 0 && files[0].Path.IsAbsoluteUri && files[0].Path.Scheme == "file"
+                ? files[0].Path.LocalPath : null;
+            if (path is null) return;
+            ExecuteVideoOp(new VideoOp("play", path));
+            RescanVideoAssets(selectPath: path);
+        };
+
         BtnBubbleToggle.Click += (_, _) => ToggleBubblePop();
         BtnBubbleBurst.Click  += (_, _) => _effects.SpawnBubbleBurst(8);
         SldBubbleInterval.PropertyChanged += (_, e) =>
@@ -577,7 +613,7 @@ public partial class MainWindow : Window, ICommandSink
                 break;
             case FeaturePanel.Video:
                 PanelVideo.IsVisible = true;
-                ShowDetail("🎬 Mandatory Video", "Fullscreen video player, attention checks, strict playback. VLC/Avalonia player port next.");
+                ShowDetail("🎬 Mandatory Video", "Fullscreen LibVLC video, rendered above the spiral/pink overlays. Pick or browse a file, ▶ plays it fullscreen, ESC or ■ dismisses.");
                 break;
             case FeaturePanel.Subliminals:
                 PanelSubliminals.IsVisible = true;
@@ -1003,6 +1039,7 @@ public partial class MainWindow : Window, ICommandSink
             case LockCard l: _effects.ShowLockCard(l.Sentence); Chip($"🔒 {l.Sentence}"); break;
             case Haptics h:  _ = ExecuteHapticsAsync(h); break;
             case PlaylistOp pl: ExecutePlaylistOp(pl); break;
+            case VideoOp v:  ExecuteVideoOp(v); break;
         }
         return Task.CompletedTask;
     }
@@ -1052,6 +1089,89 @@ public partial class MainWindow : Window, ICommandSink
     private string PlaylistsDir() => System.IO.Path.Combine(
         Environment.ExpandEnvironmentVariables(_settings.AssetsRoot.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile))),
         "playlists");
+
+    private string VideosDir() => System.IO.Path.Combine(
+        Environment.ExpandEnvironmentVariables(_settings.AssetsRoot.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile))),
+        "videos");
+
+    // ── Mandatory video ───────────────────────────────────────────────────
+
+    /// <summary>
+    /// video(play:name-or-path) / video(stop). A bare name resolves against
+    /// &lt;assets&gt;/videos/ across common container extensions; an explicit
+    /// path or URL is used as-is. Fullscreen, above the effect overlays.
+    /// </summary>
+    private void ExecuteVideoOp(VideoOp v)
+    {
+        try
+        {
+            switch (v.Do.ToLowerInvariant())
+            {
+                case "stop":
+                    _effects.StopVideo();
+                    Chip("🎬 video stopped");
+                    return;
+                case "play" when !string.IsNullOrWhiteSpace(v.Arg):
+                    var resolved = ResolveVideoPath(v.Arg!);
+                    if (resolved is null) { Chip($"🎬 no video: {v.Arg}"); return; }
+                    _lastVideoName = System.IO.Path.GetFileName(resolved);
+                    _effects.PlayVideo(resolved);
+                    Chip($"🎬 ▶ {_lastVideoName}");
+                    return;
+                default:
+                    Chip($"🎬 video? {v.Do}");
+                    return;
+            }
+        }
+        catch (Exception ex)
+        {
+            Chip($"🎬 video error: {ex.Message}");
+        }
+    }
+
+    private sealed record VideoAssetItem(string Name, string? Path)
+    {
+        public override string ToString() => Name;
+    }
+
+    private void RescanVideoAssets(string? selectPath = null)
+    {
+        var items = new List<VideoAssetItem>();
+        var dir = VideosDir();
+        if (System.IO.Directory.Exists(dir))
+        {
+            foreach (var f in System.IO.Directory.EnumerateFiles(dir).OrderBy(f => f))
+            {
+                var ext = System.IO.Path.GetExtension(f).ToLowerInvariant();
+                if (ext is ".mp4" or ".webm" or ".mkv" or ".mov" or ".avi")
+                    items.Add(new(System.IO.Path.GetFileName(f), f));
+            }
+        }
+        if (selectPath != null && System.IO.File.Exists(selectPath) && items.All(i => i.Path != selectPath))
+            items.Add(new(System.IO.Path.GetFileName(selectPath) + " (custom)", selectPath));
+        if (items.Count == 0)
+            items.Add(new("(drop files in assets/videos)", null));
+
+        CmbVideoAsset.ItemsSource  = items;
+        CmbVideoAsset.SelectedItem = items.FirstOrDefault(i => i.Path == selectPath) ?? items[0];
+    }
+
+    /// <summary>Resolve a video arg to a playable path: explicit local file / URL as-is, else by bare name under the videos dir.</summary>
+    private string? ResolveVideoPath(string arg)
+    {
+        if (Uri.TryCreate(arg, UriKind.Absolute, out var uri) && !uri.IsFile) return arg;   // URL
+        if (System.IO.File.Exists(arg)) return arg;                                          // explicit path
+
+        var dir = VideosDir();
+        if (System.IO.Path.HasExtension(arg))
+        {
+            var direct = System.IO.Path.Combine(dir, arg);
+            return System.IO.File.Exists(direct) ? direct : null;
+        }
+        return new[] { ".mp4", ".webm", ".mkv", ".mov", ".avi" }
+            .Select(ext => System.IO.Path.Combine(dir, arg + ext))
+            .FirstOrDefault(System.IO.File.Exists);
+    }
 
     // ── Audio playback + cue-track sync ───────────────────────────────────
 
@@ -1232,6 +1352,7 @@ public partial class MainWindow : Window, ICommandSink
         if (_effects.LockCardSchedulerRunning)  _effects.SetLockCardScheduler(false);
         if (_effects.MindWipeSchedulerRunning)  _effects.SetMindWipeScheduler(false);
         if (_effects.MindWipeLoopRunning)       _effects.SetMindWipeLoop(false);
+        if (_effects.VideoPlaying)              _effects.StopVideo();
         _hapticSync.Stop();
         _voiceHaptics.Quiet();
         _audio.Stop();

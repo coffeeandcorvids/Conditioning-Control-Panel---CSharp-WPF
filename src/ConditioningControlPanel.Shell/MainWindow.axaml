@@ -476,7 +476,17 @@
                 <Border x:Name="PanelVideo" Classes="panel">
                   <StackPanel Spacing="6">
                     <TextBlock Classes="head" Text="🎬 Mandatory Video"/>
-                    <TextBlock Classes="muted" Text="Original CCP opens strict fullscreen video. VLC/Avalonia player parity is next."/>
+                    <TextBlock Classes="muted" Text="Fullscreen video via LibVLC, rendered above the spiral/pink overlays. ESC dismisses. Drop files in &lt;assets&gt;/videos/."/>
+                    <TextBlock Classes="label" Text="Video:"/>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <ComboBox x:Name="CmbVideoAsset" Width="200" VerticalAlignment="Center"/>
+                      <Button x:Name="BtnVideoBrowse" Content="Browse…"/>
+                      <Button x:Name="BtnVideoRescan" Content="↻" ToolTip.Tip="Rescan videos folder"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Button x:Name="BtnVideoPlay" Content="▶ Play fullscreen"/>
+                      <Button x:Name="BtnVideoStop" Content="■ Stop"/>
+                    </StackPanel>
                   </StackPanel>
                 </Border>
 

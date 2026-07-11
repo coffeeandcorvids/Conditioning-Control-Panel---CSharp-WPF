@@ -31,6 +31,7 @@ public static class ReactionParser
                         "lockcard"=> new LockCard(Str(e, "sentence")),
                         "haptics" => new Haptics(Dbl(e, "intensity"), Str(e, "pattern")),
                         "playlist"=> new PlaylistOp(Str(e, "do") ?? "next", Str(e, "arg")),
+                        "video"   => new VideoOp(Str(e, "do") ?? "play", Str(e, "arg")),
                         _ => null, // unknown op: skip, stay forward-compatible
                     };
                     if (c != null) cmds.Add(c);

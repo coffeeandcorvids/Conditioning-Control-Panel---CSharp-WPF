@@ -36,6 +36,20 @@ public class CommandTests
         => Assert.Same(AgentReaction.Silent, ReactionParser.Parse("}{not json"));
 
     [Fact]
+    public void Parses_video_op_play_and_stop()
+    {
+        var play = ReactionParser.Parse("""{ "commands": [ {"op":"video","do":"play","arg":"trance_01"} ] }""");
+        Assert.Equal(new VideoOp("play", "trance_01"), Assert.Single(play.Commands));
+
+        var stop = ReactionParser.Parse("""{ "commands": [ {"op":"video","do":"stop"} ] }""");
+        Assert.Equal(new VideoOp("stop", null), Assert.Single(stop.Commands));
+
+        // omitted "do" defaults to play (a bare video command means "play it")
+        var bare = ReactionParser.Parse("""{ "commands": [ {"op":"video","arg":"x.mp4"} ] }""");
+        Assert.Equal(new VideoOp("play", "x.mp4"), Assert.Single(bare.Commands));
+    }
+
+    [Fact]
     public async Task Executor_speaks_then_runs_commands_in_order()
     {
         var sink = new RecordingSink();
