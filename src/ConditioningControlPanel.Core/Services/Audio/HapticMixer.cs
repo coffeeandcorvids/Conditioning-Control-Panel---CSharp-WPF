@@ -1,14 +1,17 @@
 using System;
 using System.Collections.Generic;
+using ConditioningControlPanel.Core.Models;
 using ConditioningControlPanel.Core.Services.Haptics;
 
 namespace ConditioningControlPanel.Core.Services.Audio;
 
 /// <summary>How a trigger word lands on the body — its accent personality.</summary>
 public sealed record AccentProfile(
-    double Peak,          // 0..1 intensity ceiling for this trigger
-    bool Spike,           // true = sharp attack/release (snap), false = swell + linger
-    double LingerFraction // extra duration after the word, as a fraction of the cue window
+    double Peak,           // 0..1 intensity ceiling for this trigger
+    bool Spike,            // true = sharp attack/release (snap), false = swell + linger
+    double LingerFraction, // extra duration after the word, as a fraction of the cue window
+    string? PatternName = null // when set, the accent renders this stock pattern's curve
+                               // (an authored DAW personality) instead of the synthetic shape
 )
 {
     public static readonly AccentProfile Snap  = new(0.95, Spike: true,  LingerFraction: 0.0);
@@ -29,6 +32,7 @@ public sealed class HapticMixer
 {
     private readonly Dictionary<string, AccentProfile> _profiles = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, int> _fireCounts = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, (double Step, double Cap)> _escalationOverrides = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Live scene intensity multiplier, 0..1 (from SessionEngine ramps; 1.0 = no session).</summary>
     public double SceneRamp { get; set; } = 1.0;
@@ -41,6 +45,14 @@ public sealed class HapticMixer
     public double BaseLevel { get; set; } = 0.45;
 
     public void SetProfile(string trigger, AccentProfile profile) => _profiles[trigger] = profile;
+
+    /// <summary>
+    /// Override the global repetition escalation for one trigger (additive step
+    /// per firing, capped). Lets an authored DAW project give each trigger its
+    /// own escalation curve; triggers without an override use the global rate.
+    /// </summary>
+    public void SetEscalation(string trigger, double step, double cap) =>
+        _escalationOverrides[trigger] = (step, cap);
 
     /// <summary>Reset repetition memory (new scene / new piece).</summary>
     public void ResetCounts() => _fireCounts.Clear();
@@ -62,11 +74,14 @@ public sealed class HapticMixer
         var count = _fireCounts.TryGetValue(cue.Trigger, out var c) ? c + 1 : 1;
         _fireCounts[cue.Trigger] = count;
 
-        var escalation = Math.Min((count - 1) * RepetitionStep, RepetitionCap);
+        var (step, cap) = _escalationOverrides.TryGetValue(cue.Trigger, out var ov)
+            ? ov
+            : (RepetitionStep, RepetitionCap);
+        var escalation = Math.Min((count - 1) * step, cap);
         var peak = Math.Clamp((profile.Peak + escalation) * SceneRamp, 0.0, 1.0);
         var durationMs = (int)(cue.DurationMs * (1.0 + profile.LingerFraction));
 
-        return new AccentPlan(peak, durationMs, profile.Spike, count);
+        return new AccentPlan(peak, durationMs, profile.Spike, count, profile.PatternName);
     }
 
     /// <summary>
@@ -79,11 +94,21 @@ public sealed class HapticMixer
         var hops = Math.Max(2, plan.DurationMs / hopMs);
         var curve = new float[hops];
 
+        // An authored personality (DAW stock pattern) renders its own keyframe
+        // curve; otherwise fall back to the synthetic spike/swell shapes.
+        double[][]? pattern = null;
+        if (plan.PatternName is not null)
+            StockHapticPatterns.TryGet(plan.PatternName, out pattern);
+
         for (var i = 0; i < hops; i++)
         {
             var t = i / (double)(hops - 1);
             double shape;
-            if (plan.Spike)
+            if (pattern is not null)
+            {
+                shape = StockHapticPatterns.ValueAt(pattern, t);      // authored personality curve
+            }
+            else if (plan.Spike)
             {
                 shape = Math.Pow(1.0 - t, 2.2);                       // hard hit, fast falloff
             }
@@ -108,4 +133,5 @@ public sealed class HapticMixer
 }
 
 /// <summary>What the toy should do for one fired accent.</summary>
-public readonly record struct AccentPlan(double Peak, int DurationMs, bool Spike, int Repetition);
+public readonly record struct AccentPlan(
+    double Peak, int DurationMs, bool Spike, int Repetition, string? PatternName = null);

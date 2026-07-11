@@ -57,6 +57,10 @@ namespace ConditioningControlPanel.Core.Models
             return result;
         }
 
+        /// <summary>Keyframe interpolation at t in [0,1] — used by the mixer to shape
+        /// an accent from an authored personality pattern.</summary>
+        public static double ValueAt(IList<double[]> keyframes, double t) => InterpAt(keyframes, t);
+
         private static double InterpAt(IList<double[]> kf, double t)
         {
             if (kf.Count == 0) return 0;
