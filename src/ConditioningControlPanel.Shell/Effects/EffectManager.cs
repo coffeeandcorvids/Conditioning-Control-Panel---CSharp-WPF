@@ -45,13 +45,12 @@ internal sealed class EffectManager : IDisposable
         _lockCardTimer.Tick += (_, _) => { ShowLockCardRepeat(); ScheduleNextLockCard(); };
         _mindWipeTimer.Tick += (_, _) => { TriggerMindWipe(); ScheduleNextMindWipe(); };
         _mindWipeLoopTimer.Tick += (_, _) => TriggerMindWipe();
-        _owner.KeyDown += (_, e) =>
-        {
-            if (e.Key != Key.Escape) return;
-            if (!PinkFilterOn && !SpiralOn) return;
-            e.Handled = true;
-            ClearFullscreenOverlays();
-        };
+        // NOTE: ESC handling lives entirely in MainWindow now
+        // (EscapeDismissOverlays), so it can dismiss the overlays AND sync
+        // the dashboard toggle cards in one place. This class used to own a
+        // second ESC handler here that set e.Handled=true and cleared
+        // overlays without touching the UI -- which suppressed MainWindow's
+        // handler and left toggles stuck "on" after ESC.
     }
 
     public void SetPinkFilter(bool on)
@@ -66,16 +65,6 @@ internal sealed class EffectManager : IDisposable
         foreach (var w in OverlayWindows()) w.SetSpiral(on, _settings.SpiralPath, _settings.SpiralOpacity);
     }
 
-    public void ClearFullscreenOverlays()
-    {
-        PinkFilterOn = false;
-        SpiralOn = false;
-        foreach (var w in OverlayWindows())
-        {
-            w.SetPink(false);
-            w.SetSpiral(false, _settings.SpiralPath, _settings.SpiralOpacity);
-        }
-    }
 
     /// <summary>
     /// Start a fullscreen mandatory video on the primary screen (multi-monitor

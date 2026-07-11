@@ -130,7 +130,7 @@ internal sealed class AnimatedImageSource : IDisposable
                 }
 
                 File.WriteAllLines(manifestPath, new[] { durationMs.ToString() }
-                    .Concat(frameFiles.Select(Path.GetFileName)!));
+                    .Concat(frameFiles.Select(f => Path.GetFileName(f))));
             }
 
             var lines = File.ReadAllLines(manifestPath);

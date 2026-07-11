@@ -126,10 +126,15 @@ public partial class MainWindow : Window, ICommandSink
         BtnMinimize.Click += (_, _) => WindowState = WindowState.Minimized;
         BtnClose.Click    += (_, _) => Close();
 
-        // ESC = panic key: same full clear as the dashboard panic button
+        // ESC = dismiss the active overlays AND flip their dashboard toggles
+        // back to off (leaving scene audio/haptics running — that's what the
+        // panic button is for). Sole ESC authority now: EffectManager's old
+        // ESC handler was removed because it set e.Handled=true and cleared
+        // overlays WITHOUT syncing the UI cards, which suppressed this
+        // handler and left toggles stuck "on" after ESC.
         this.KeyDown += (_, e) =>
         {
-            if (e.Key == Avalonia.Input.Key.Escape) PanicClearAll();
+            if (e.Key == Avalonia.Input.Key.Escape) EscapeDismissOverlays();
         };
 
         // drag to move (title bar)
@@ -1343,22 +1348,50 @@ public partial class MainWindow : Window, ICommandSink
 
     /// <summary>Panic: every overlay and ambient effect off, schedulers included.
     /// Reachable from ESC anywhere and the dashboard panic button — identical behaviour.</summary>
-    private void PanicClearAll()
+    /// <summary>
+    /// Dismiss every active fullscreen/ambient overlay effect AND flip its
+    /// corresponding dashboard card back to OFF, so the UI never shows an
+    /// overlay as "on" after it's been closed. Leaves scene audio / voice /
+    /// haptics alone (those aren't overlays). This is what ESC does — "exit
+    /// out of the overlays" and keep the toggles honest.
+    /// </summary>
+    private void DismissVisualOverlays()
     {
-        if (_effects.SpiralOn)     SetSpiral(false);
-        if (_effects.PinkFilterOn) SetPinkFilter(false);
+        if (_effects.SpiralOn)     SetSpiral(false);        // SetSpiral/SetPinkFilter
+        if (_effects.PinkFilterOn) SetPinkFilter(false);   // already flip their own cards
         if (_effects.BubblePopRunning)          _effects.SetBubblePop(false);
         if (_effects.BouncingTextRunning)       _effects.SetBouncingText(false);
         if (_effects.LockCardSchedulerRunning)  _effects.SetLockCardScheduler(false);
         if (_effects.MindWipeSchedulerRunning)  _effects.SetMindWipeScheduler(false);
         if (_effects.MindWipeLoopRunning)       _effects.SetMindWipeLoop(false);
         if (_effects.VideoPlaying)              _effects.StopVideo();
+        // Belt-and-suspenders card sync: flip every overlay card off. Cards
+        // for effects that weren't running are already off, so this only
+        // visibly changes the ones that were on -> "corresponding overlays
+        // flipped back to off."
+        foreach (var card in new[] { CardSpiral, CardPinkFog, CardBubblePop, CardBouncingText, CardLockCard, CardMindWipe })
+            card.IsEnabledFeature = false;
+    }
+
+    /// <summary>ESC: dismiss the visual overlays and sync their toggles; leave scene audio/haptics running.</summary>
+    private void EscapeDismissOverlays()
+    {
+        var hadAny = _effects.SpiralOn || _effects.PinkFilterOn || _effects.BubblePopRunning
+                     || _effects.BouncingTextRunning || _effects.LockCardSchedulerRunning
+                     || _effects.MindWipeSchedulerRunning || _effects.MindWipeLoopRunning
+                     || _effects.VideoPlaying;
+        DismissVisualOverlays();
+        if (hadAny) Chip("⎋ overlays cleared");
+    }
+
+    /// <summary>Panic button: everything off — overlays (with card sync) AND scene audio/voice/haptics.</summary>
+    private void PanicClearAll()
+    {
+        DismissVisualOverlays();
         _hapticSync.Stop();
         _voiceHaptics.Quiet();
         _audio.Stop();
         _ = _haptics.StopAsync();
-        foreach (var card in new[] { CardSpiral, CardPinkFog, CardBubblePop, CardBouncingText, CardLockCard, CardMindWipe })
-            card.IsEnabledFeature = false;
         Chip("🛑 everything stopped");
     }
 
