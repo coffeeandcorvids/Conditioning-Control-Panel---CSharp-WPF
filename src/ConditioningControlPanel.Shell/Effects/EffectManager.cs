@@ -246,7 +246,10 @@ internal sealed class EffectManager : IDisposable
             if (!_overlays.TryGetValue(key, out var w))
             {
                 w = new OverlayEffectWindow();
-                w.EscapePressed += (_, _) => ClearFullscreenOverlays();
+                // No longer wires its own ESC handler: the overlay is
+                // Focusable=false (part of the click-through fix) so it can
+                // never receive key events anyway. MainWindow's global ESC
+                // -> PanicClearAll already clears these overlays.
                 w.SetBounds(screen);
                 _overlays[key] = w;
             }

@@ -21,8 +21,6 @@ internal sealed class OverlayEffectWindow : Window
     private double _angle;
     private string? _loadedPath;
 
-    public event EventHandler? EscapePressed;
-
     public OverlayEffectWindow()
     {
         WindowDecorations = global::Avalonia.Controls.WindowDecorations.None;
@@ -33,12 +31,13 @@ internal sealed class OverlayEffectWindow : Window
         Background = Brushes.Transparent;
         TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent };
         Content = _root;
-        KeyDown += (_, e) =>
-        {
-            if (e.Key != Key.Escape) return;
-            e.Handled = true;
-            EscapePressed?.Invoke(this, EventArgs.Empty);
-        };
+        // Passive filter overlay: never wants keyboard focus (it has no ESC
+        // handler that needs it either -- panic/dismiss is driven from the
+        // main window, not this one) and Avalonia itself shouldn't route
+        // pointer events into it even before the OS-level click-through
+        // (X11InputTransparency) engages.
+        Focusable = false;
+        IsHitTestVisible = false;
 
         _pink.Background = new SolidColorBrush(Color.FromArgb(95, 255, 105, 180));
         _pink.IsVisible = false;
@@ -120,13 +119,33 @@ internal sealed class OverlayEffectWindow : Window
         _loadedPath = resolved;
     }
 
+    private bool _clickThroughApplied;
+
     private void EnsureVisibility()
     {
         if (HasAny)
         {
-            if (!IsVisible) Show();
-            Activate();
+            if (!IsVisible)
+            {
+                Show();
+                // Never steal focus/keyboard input from whatever the user is
+                // doing on the desktop -- this window is a passive filter
+                // (pink tint / spiral), not something to interact with.
+                // The old Activate() call here was almost certainly the
+                // dominant cause of "the overlay blocks me from interacting
+                // with everything": raising+focusing a fullscreen topmost
+                // window steals subsequent clicks/keys until something else
+                // reclaims focus.
+            }
             Topmost = true;
+
+            // Real OS-level click-through (X11 input-shape), applied once
+            // the native window handle exists. Best-effort: if it fails
+            // (non-X11 backend, missing SHAPE extension), the overlay still
+            // works, it just won't be click-through -- never blocks showing
+            // the effect over a failed P/Invoke.
+            if (!_clickThroughApplied)
+                _clickThroughApplied = X11InputTransparency.TryMakeClickThrough(this);
         }
         else if (IsVisible) Hide();
     }

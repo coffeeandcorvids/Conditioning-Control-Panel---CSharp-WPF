@@ -75,6 +75,11 @@ internal sealed class BubbleWindow : Window
     public void Start()
     {
         Show();
+        // ShowInTaskbar=false alone isn't honored by every window manager
+        // under XWayland (labwc included) -- each spawned bubble was
+        // showing its own taskbar entry. The EWMH "Utility" window-type
+        // hint is the stronger, more portable fix real WMs respect.
+        X11InputTransparency.TryHideFromTaskbar(this);
         _move.Start();
         _life.Start();
     }
