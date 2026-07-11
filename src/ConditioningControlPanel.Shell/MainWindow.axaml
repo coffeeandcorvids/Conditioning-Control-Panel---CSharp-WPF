@@ -286,9 +286,9 @@
                       <TextBlock Grid.Row="1" Grid.Column="0" Text="Master" FontSize="11"/>
                       <Slider Grid.Row="1" Grid.Column="1" x:Name="SldMasterVolume" Value="80" Minimum="0" Maximum="100"/>
                       <TextBlock Grid.Row="2" Grid.Column="0" Text="Video" FontSize="11"/>
-                      <Slider Grid.Row="2" Grid.Column="1" Value="78" Minimum="0" Maximum="100" IsEnabled="False" ToolTip.Tip="Video volume lands with the video player"/>
+                      <Slider Grid.Row="2" Grid.Column="1" x:Name="SldVideoVolume" Value="78" Minimum="0" Maximum="100" ToolTip.Tip="Mandatory-video playback volume"/>
                       <TextBlock Grid.Row="3" Grid.Column="0" Text="Duck" FontSize="11"/>
-                      <Slider Grid.Row="3" Grid.Column="1" Value="70" Minimum="0" Maximum="100" IsEnabled="False" ToolTip.Tip="Audio ducking lands with the video player"/>
+                      <Slider Grid.Row="3" Grid.Column="1" x:Name="SldDuck" Value="70" Minimum="0" Maximum="100" ToolTip.Tip="Background audio volume while a video plays (100 = no ducking)"/>
                       <TextBlock Grid.Row="4" Grid.Column="0" Text="Output" FontSize="11"/>
                       <TextBox Grid.Row="4" Grid.Column="1" Text="System default" IsEnabled="False"/>
                     </Grid>

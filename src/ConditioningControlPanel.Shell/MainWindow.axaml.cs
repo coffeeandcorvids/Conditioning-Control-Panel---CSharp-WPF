@@ -86,6 +86,7 @@ public partial class MainWindow : Window, ICommandSink
         _effects.VideoFinished += (_, _) => Dispatcher.UIThread.Post(() =>
         {
             Chip("🎬 video ended");
+            ApplyAudioVolume();                 // un-duck the audio layer now the video is gone
             _ = Fire(new VideoCompleted(_lastVideoName ?? "video"));
         });
         _haptics = new HapticService(new HapticSettings { Provider = HapticProviderType.Buttplug });
@@ -260,7 +261,15 @@ public partial class MainWindow : Window, ICommandSink
         BtnQuickPanic.Click += (_, _) => PanicClearAll();
         SldMasterVolume.PropertyChanged += (_, e) =>
         {
-            if (e.Property.Name == "Value") _audio.Volume = (int)SldMasterVolume.Value;
+            if (e.Property.Name == "Value") ApplyAudioVolume();
+        };
+        SldDuck.PropertyChanged += (_, e) =>
+        {
+            if (e.Property.Name == "Value") ApplyAudioVolume();   // only bites while a video plays
+        };
+        SldVideoVolume.PropertyChanged += (_, e) =>
+        {
+            if (e.Property.Name == "Value") _effects.SetVideoVolume((int)SldVideoVolume.Value);
         };
         BtnQuickAssets.Click += (_, _) =>
         {
@@ -1106,6 +1115,19 @@ public partial class MainWindow : Window, ICommandSink
     /// &lt;assets&gt;/videos/ across common container extensions; an explicit
     /// path or URL is used as-is. Fullscreen, above the effect overlays.
     /// </summary>
+    /// <summary>
+    /// Set the audio-layer volume from the Master slider, dropping to the Duck
+    /// level while a mandatory video is playing (Duck=100 → no ducking, 0 → mute).
+    /// Called whenever Master/Duck change or a video starts/stops.
+    /// </summary>
+    private void ApplyAudioVolume()
+    {
+        var master = (int)SldMasterVolume.Value;
+        _audio.Volume = _effects.VideoPlaying
+            ? master * (int)SldDuck.Value / 100
+            : master;
+    }
+
     private void ExecuteVideoOp(VideoOp v)
     {
         try
@@ -1114,6 +1136,7 @@ public partial class MainWindow : Window, ICommandSink
             {
                 case "stop":
                     _effects.StopVideo();
+                    ApplyAudioVolume();          // restore the ducked audio layer
                     Chip("🎬 video stopped");
                     return;
                 case "play" when !string.IsNullOrWhiteSpace(v.Arg):
@@ -1121,6 +1144,8 @@ public partial class MainWindow : Window, ICommandSink
                     if (resolved is null) { Chip($"🎬 no video: {v.Arg}"); return; }
                     _lastVideoName = System.IO.Path.GetFileName(resolved);
                     _effects.PlayVideo(resolved);
+                    _effects.SetVideoVolume((int)SldVideoVolume.Value);
+                    ApplyAudioVolume();          // duck the audio layer under the video
                     Chip($"🎬 ▶ {_lastVideoName}");
                     return;
                 default:

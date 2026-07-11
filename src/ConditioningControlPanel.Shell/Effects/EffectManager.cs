@@ -24,6 +24,7 @@ internal sealed class EffectManager : IDisposable
     private readonly Dictionary<string, BouncingTextWindow> _bouncing = new();
     private readonly List<LockCardWindow> _lockCards = new();
     private VlcVideoWindow? _video;
+    private int _videoVolume = 78;   // applied to the video window on play + live
 
     public bool BubblePopRunning { get; private set; }
     public bool BouncingTextRunning { get; private set; }
@@ -78,9 +79,17 @@ internal sealed class EffectManager : IDisposable
     {
         _video ??= CreateVideoWindow();
         _video.Play(PrimaryScreen(), pathOrUrl);
+        _video.Volume = _videoVolume;
     }
 
     public void StopVideo() => _video?.StopAndClose();
+
+    /// <summary>Set the mandatory-video playback volume (0–100). Persists for future plays.</summary>
+    public void SetVideoVolume(int volume)
+    {
+        _videoVolume = Math.Clamp(volume, 0, 100);
+        if (_video is not null) _video.Volume = _videoVolume;
+    }
 
     private VlcVideoWindow CreateVideoWindow()
     {

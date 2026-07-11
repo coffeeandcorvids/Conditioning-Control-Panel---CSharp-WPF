@@ -38,6 +38,7 @@ internal sealed class VlcVideoWindow : Window
     private readonly LibVLC.LibVLC _vlc;
     private readonly LibVLC.MediaPlayer _mp;
     private bool _handleBound;
+    private int _volume = 78;   // 0–100; re-applied on each Play (LibVLC resets per-media)
 
     /// <summary>Raised (on the UI thread) when playback ends on its own or is stopped.</summary>
     public event EventHandler? Finished;
@@ -91,6 +92,7 @@ internal sealed class VlcVideoWindow : Window
                 : LibVLC.FromType.FromPath;
             using var media = new LibVLC.Media(_vlc, pathOrUrl, kind);
             _mp.Play(media);
+            try { _mp.Volume = _volume; } catch { }   // re-assert; LibVLC resets volume per media
         }
         catch
         {
@@ -99,6 +101,13 @@ internal sealed class VlcVideoWindow : Window
     }
 
     public bool IsPlaying => _mp.IsPlaying;
+
+    /// <summary>Playback volume, 0–100. Persists across Play() calls.</summary>
+    public int Volume
+    {
+        get => _volume;
+        set { _volume = Math.Clamp(value, 0, 100); try { _mp.Volume = _volume; } catch { } }
+    }
 
     public void StopAndClose()
     {
