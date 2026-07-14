@@ -675,6 +675,19 @@
         <Border Grid.Column="1" Classes="panel" Margin="6,0,0,0">
           <ScrollViewer>
             <StackPanel Spacing="8">
+              <TextBlock Classes="head" Text="🔌 Toy"/>
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0" x:Name="DawToyStatus" Text="● disconnected"
+                           Foreground="#FF6B6B" VerticalAlignment="Center"/>
+                <Button Grid.Column="1" x:Name="DawToyConnect" Content="Connect"/>
+              </Grid>
+              <TextBlock x:Name="DawToyDevices" Classes="muted" Text="(no device)" TextWrapping="Wrap"/>
+              <TextBlock Classes="label" Text="Sync offset — + delays the toy, − advances it" Margin="0,4,0,0"/>
+              <Slider x:Name="DawSyncOffset" Minimum="-500" Maximum="500" Value="0" TickFrequency="25"
+                      ToolTip.Tip="Shift the haptics vs the audio to line them up (ms)"/>
+              <TextBlock x:Name="DawSyncOffsetLabel" Classes="muted" Text="0 ms"/>
+
+              <Border Height="1" Background="#2E2E50" Margin="0,4"/>
               <TextBlock Classes="head" Text="🎚 Project"/>
               <TextBlock x:Name="DawAudioRef" Classes="muted" Text="audio: (none)" TextWrapping="Wrap"/>
               <TextBlock x:Name="DawDuration" Classes="muted" Text="length: —"/>

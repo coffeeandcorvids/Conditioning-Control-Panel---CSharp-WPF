@@ -47,6 +47,7 @@ public partial class MainWindow : Window, ICommandSink
     private readonly ConditioningControlPanel.Core.Services.Haptics.HapticProjectService _dawService = new();
     private ConditioningControlPanel.Core.Models.Authoring.HapticProject? _dawProject;
     private Controls.HapticTimeline? _dawTimeline;
+    private long _dawSyncOffsetMs;
 
     // ── Overlay pool ─────────────────────────────────────────────────────
     private const int FlashPoolSize = 6;
@@ -671,6 +672,38 @@ public partial class MainWindow : Window, ICommandSink
         DawCueStop.LostFocus               += (_, _) => ApplyDawCueEdits();
         DawCueSnap.IsCheckedChanged        += (_, _) => ApplyDawCueEdits();
         DawCuePersonality.SelectionChanged += (_, _) => ApplyDawCueEdits();
+
+        // toy connection + live status + sync offset
+        UpdateDawToyStatus();
+        _haptics.ConnectionChanged += (_, _) => Dispatcher.UIThread.Post(UpdateDawToyStatus);
+        DawToyConnect.Click += async (_, _) =>
+        {
+            try
+            {
+                if (_haptics.IsConnected) await _haptics.DisconnectAsync();
+                else { DawToyStatus.Text = "● connecting…"; await _haptics.ConnectAsync(); }
+            }
+            catch (Exception ex) { DawStatus.Text = "toy: " + ex.Message; }
+            UpdateDawToyStatus();
+        };
+        DawSyncOffset.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == Avalonia.Controls.Primitives.RangeBase.ValueProperty)
+            {
+                _dawSyncOffsetMs = (long)DawSyncOffset.Value;
+                DawSyncOffsetLabel.Text = $"{_dawSyncOffsetMs:+#;-#;0} ms";
+            }
+        };
+    }
+
+    private void UpdateDawToyStatus()
+    {
+        bool c = _haptics.IsConnected;
+        DawToyStatus.Text = c ? "● connected" : "● disconnected";
+        DawToyStatus.Foreground = new SolidColorBrush(Color.Parse(c ? "#4ADE80" : "#FF6B6B"));
+        DawToyConnect.Content = c ? "Disconnect" : "Connect";
+        var devs = _haptics.ConnectedDevices;   // provider embeds "name (battery%)" in each entry
+        DawToyDevices.Text = devs.Count > 0 ? string.Join("\n", devs) : "(no device)";
     }
 
     private ConditioningControlPanel.Core.Models.Authoring.HapticProject DemoDawProject()
@@ -748,7 +781,8 @@ public partial class MainWindow : Window, ICommandSink
         for (int i = 0; i < hops; i++)
         {
             long ms = start + (long)((double)i / hops * (end - start));
-            curve[i] = (float)Math.Clamp(_dawProject.EffectiveBaseAt(ms), 0, 1);
+            long src = Math.Clamp(ms + _dawSyncOffsetMs, 0, _dawProject.DurationMs);  // apply sync offset
+            curve[i] = (float)Math.Clamp(_dawProject.EffectiveBaseAt(src), 0, 1);
         }
         try
         {

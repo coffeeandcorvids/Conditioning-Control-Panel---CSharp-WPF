@@ -6,5 +6,33 @@
 
     <Application.Styles>
         <FluentTheme />
+
+        <!-- Cute pink scrollbars — thin, rounded, glowy on hover (matches the panel's neon) -->
+        <Style Selector="ScrollBar">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="AllowAutoHide" Value="True"/>
+        </Style>
+        <Style Selector="ScrollBar:vertical">
+            <Setter Property="Width" Value="10"/>
+        </Style>
+        <Style Selector="ScrollBar:horizontal">
+            <Setter Property="Height" Value="10"/>
+        </Style>
+        <Style Selector="ScrollBar /template/ Thumb">
+            <Setter Property="Background" Value="#FF5CA8"/>
+            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="MinWidth" Value="6"/>
+            <Setter Property="MinHeight" Value="6"/>
+        </Style>
+        <Style Selector="ScrollBar /template/ Thumb:pointerover">
+            <Setter Property="Background" Value="#FF8FD0"/>
+        </Style>
+        <Style Selector="ScrollBar /template/ Thumb:pressed">
+            <Setter Property="Background" Value="#FFB3E6"/>
+        </Style>
+        <!-- hide the little up/down/left/right repeat buttons for a clean track -->
+        <Style Selector="ScrollBar /template/ RepeatButton">
+            <Setter Property="Opacity" Value="0"/>
+        </Style>
     </Application.Styles>
 </Application>
