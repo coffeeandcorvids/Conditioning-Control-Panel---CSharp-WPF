@@ -650,7 +650,7 @@ public partial class MainWindow : Window, ICommandSink
         DawNew.Click += (_, _) =>
         {
             _dawProject = new ConditioningControlPanel.Core.Models.Authoring.HapticProject { DurationMs = 60000 };
-            if (_dawTimeline != null) _dawTimeline.Selected = null;
+            if (_dawTimeline != null) { _dawTimeline.Selected = null; _dawTimeline.Waveform = null; }
             RefreshDaw(); ShowDawCue(null);
             DawStatus.Text = "new empty project (60s) — Load Audio will set the real clip length";
         };
@@ -934,6 +934,13 @@ public partial class MainWindow : Window, ICommandSink
                     : "driving 1 toy",
             _ => $"driving {devices.Count} toys in parallel",
         };
+
+        // STUB (task #7 — deferred to the new box): deeper per-toy control reshaping goes here.
+        // When multiple toys are connected, build a control block per device (intensity snapped
+        // to each toy's VibeSteps grid, plus feature-specific controls — rotation/oscillation/
+        // constriction — as HapticDeviceInfo grows to carry those actuators). Needs Star's
+        // design call on layout before wiring. Foundation (structured HapticDeviceInfo) is ready.
+
         DawTransportUpdate();
     }
 
@@ -1261,8 +1268,21 @@ public partial class MainWindow : Window, ICommandSink
             RefreshDaw();
             DawTransportUpdate();
             DawStatus.Text = $"🎵 loaded {System.IO.Path.GetFileName(path)} · {FormatDawMs(_dawProject.DurationMs)}";
+            _ = LoadDawWaveformAsync(path);
         }
         catch (Exception ex) { DawStatus.Text = "load audio failed: " + ex.Message; }
+    }
+
+    /// <summary>Decode the clip to peaks (ffmpeg) off the UI thread and paint the waveform lane.</summary>
+    private async System.Threading.Tasks.Task LoadDawWaveformAsync(string path)
+    {
+        if (_dawTimeline != null) _dawTimeline.Waveform = null;   // clear stale while we decode
+        var peaks = await WaveformExtractor.ExtractAsync(path, 1500);
+        if (_dawProject?.AudioRef == path)                        // still the current clip?
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (_dawTimeline != null) _dawTimeline.Waveform = peaks.Length > 0 ? peaks : null;
+            });
     }
 
     private async System.Threading.Tasks.Task OpenDawProjectAsync()
@@ -1284,8 +1304,9 @@ public partial class MainWindow : Window, ICommandSink
             var path = file.Path.LocalPath;
             var json = await System.IO.File.ReadAllTextAsync(path);
             _dawProject = ConditioningControlPanel.Core.Models.Authoring.HapticProject.FromJson(json);
-            if (_dawTimeline != null) _dawTimeline.Selected = null;
+            if (_dawTimeline != null) { _dawTimeline.Selected = null; _dawTimeline.Waveform = null; }
             RefreshDaw(); ShowDawCue(null); DawTransportUpdate();
+            if (DawHasAudio()) _ = LoadDawWaveformAsync(_dawProject.AudioRef);
             DawStatus.Text = $"📂 opened {System.IO.Path.GetFileName(path)} · {_dawProject.Cues.Count} cues";
         }
         catch (Exception ex) { DawStatus.Text = "open failed: " + ex.Message; }

@@ -20,10 +20,14 @@ public sealed class HapticTimeline : Control
     private HapticProject? _project;
     private long _playheadMs;
     private AuthoredCue? _selected;
+    private float[]? _waveform;
 
     public HapticProject? Project { get => _project; set { _project = value; InvalidateVisual(); } }
     public long PlayheadMs { get => _playheadMs; set { _playheadMs = value; InvalidateVisual(); } }
     public AuthoredCue? Selected { get => _selected; set { _selected = value; InvalidateVisual(); } }
+
+    /// <summary>Normalized audio peaks (0..1) across the clip; null hides the waveform lane.</summary>
+    public float[]? Waveform { get => _waveform; set { _waveform = value; InvalidateVisual(); } }
 
     /// <summary>Raised when a cue is clicked (arg is the cue, or null when the click hit empty cue-lane space).</summary>
     public event EventHandler<AuthoredCue?>? CueSelected;
@@ -70,7 +74,23 @@ public sealed class HapticTimeline : Control
 
         // ── envelope automation lane (effective base = base × envelope) ──
         ctx.DrawRectangle(Brush("#12121F"), null, new Rect(0, envTop, w, EnvH));
-        DrawText(ctx, "envelope × base", new Point(Pad + 2, envTop + 2), "#4A4A6C", 10);
+
+        // audio waveform behind the automation, mirrored around the lane centre
+        if (_waveform is { Length: > 0 } wf)
+        {
+            double midY = envTop + EnvH / 2.0;
+            double wamp = EnvH / 2.0 - 3;
+            var wfPen = new Pen(new SolidColorBrush(Color.Parse("#3A4A7A"), 0.6), 1);
+            for (double px = Pad; px <= w - Pad; px += 1)
+            {
+                double frac = (px - Pad) / (w - 2 * Pad);
+                int idx = (int)Math.Clamp(frac * wf.Length, 0, wf.Length - 1);
+                double hh = wf[idx] * wamp;
+                ctx.DrawLine(wfPen, new Point(px, midY - hh), new Point(px, midY + hh));
+            }
+        }
+
+        DrawText(ctx, "waveform · envelope × base", new Point(Pad + 2, envTop + 2), "#4A4A6C", 10);
         double AmtToY(double amt) => envBot - Math.Clamp(amt / 2.0, 0, 1) * (EnvH - 6) - 3;
         var envPen = new Pen(Brush("#5CC8FF"), 2);
         Point? prev = null;
