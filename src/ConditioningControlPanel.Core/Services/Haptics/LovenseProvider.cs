@@ -50,6 +50,10 @@ namespace ConditioningControlPanel.Core.Services.Haptics
                 }
             };
             _client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(5) };
+            // Lovense Standard API requires an X-platform header on EVERY request.
+            // Its absence was half of the LAN Game Mode failure cracked 2026-07-12
+            // (the other half was the missing toy id in Vibrate, fixed below).
+            _client.DefaultRequestHeaders.Add("X-platform", "CCP");
         }
 
         public void SetUrl(string url)
@@ -230,7 +234,9 @@ namespace ConditioningControlPanel.Core.Services.Haptics
                 {
                     // Lovense Remote API requires timeSec parameter
                     var sec = Math.Max(1, durationMs / 1000);
-                    var cmdJson = $"{{\"command\":\"Function\",\"action\":\"Vibrate:{i}\",\"timeSec\":{sec},\"apiVer\":1}}";
+                    // The "toy" id is REQUIRED — omitting it returns 402 no-toy (the other
+                    // half of the 2026-07-12 crack). _toyId is captured in ParseToys.
+                    var cmdJson = $"{{\"command\":\"Function\",\"action\":\"Vibrate:{i}\",\"timeSec\":{sec},\"toy\":\"{_toyId}\",\"apiVer\":1}}";
                     Log.Information("Lovense sending: {Json}", cmdJson);
                     var json = new StringContent(cmdJson, Encoding.UTF8, "application/json");
                     var response = await _client.PostAsync($"{_baseUrl}/command", json);

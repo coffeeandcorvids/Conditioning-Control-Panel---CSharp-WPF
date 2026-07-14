@@ -680,8 +680,20 @@ public partial class MainWindow : Window, ICommandSink
         {
             try
             {
-                if (_haptics.IsConnected) await _haptics.DisconnectAsync();
-                else { DawToyStatus.Text = "● connecting…"; await _haptics.ConnectAsync(); }
+                if (_haptics.IsConnected) { await _haptics.DisconnectAsync(); }
+                else
+                {
+                    // Use the Lovense Remote LAN Game Mode path (the one cracked 2026-07-12):
+                    // point the provider at the phone via the dashed-domain SSL endpoint.
+                    var ip = (DawToyIp.Text ?? "").Trim();
+                    if (ip.Length > 0)
+                    {
+                        _haptics.Settings.Provider = ConditioningControlPanel.Core.Services.Haptics.HapticProviderType.Lovense;
+                        _haptics.Settings.LovenseUrl = $"https://{ip.Replace('.', '-')}.lovense.club:30010";
+                    }
+                    DawToyStatus.Text = "● connecting…";
+                    await _haptics.ConnectAsync();
+                }
             }
             catch (Exception ex) { DawStatus.Text = "toy: " + ex.Message; }
             UpdateDawToyStatus();
