@@ -676,7 +676,9 @@
           <ScrollViewer>
             <StackPanel Spacing="8">
               <TextBlock Classes="head" Text="🔌 Toy"/>
-              <TextBlock Classes="label" Text="Phone IP — Lovense Remote → Game Mode → LAN"/>
+              <TextBlock Classes="label" Text="Path"/>
+              <ComboBox x:Name="DawToyPath" HorizontalAlignment="Stretch" SelectedIndex="0"/>
+              <TextBlock Classes="label" Text="Phone IP — Lovense Remote → Game Mode → LAN" Margin="0,4,0,0"/>
               <TextBox x:Name="DawToyIp" Text="192.168.100.125" Watermark="192.168.x.x"/>
               <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Grid.Column="0" x:Name="DawToyStatus" Text="● disconnected"

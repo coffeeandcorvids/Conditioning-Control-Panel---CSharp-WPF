@@ -630,6 +630,8 @@ public partial class MainWindow : Window, ICommandSink
         _dawTimeline.Scrubbed    += (_, ms) => DawStatus.Text = $"playhead @ {FormatDawMs(ms)}";
 
         DawCuePersonality.ItemsSource = ConditioningControlPanel.Core.Models.StockHapticPatterns.Names;
+        DawToyPath.ItemsSource = new[] { "Lovense LAN (phone)", "Intiface (Bluetooth)" };
+        DawToyPath.SelectedIndex = 0;
 
         _dawProject = DemoDawProject();
         RefreshDaw();
@@ -683,13 +685,23 @@ public partial class MainWindow : Window, ICommandSink
                 if (_haptics.IsConnected) { await _haptics.DisconnectAsync(); }
                 else
                 {
-                    // Use the Lovense Remote LAN Game Mode path (the one cracked 2026-07-12):
-                    // point the provider at the phone via the dashed-domain SSL endpoint.
-                    var ip = (DawToyIp.Text ?? "").Trim();
-                    if (ip.Length > 0)
+                    if (DawToyPath.SelectedIndex == 1)
                     {
-                        _haptics.Settings.Provider = ConditioningControlPanel.Core.Services.Haptics.HapticProviderType.Lovense;
-                        _haptics.Settings.LovenseUrl = $"https://{ip.Replace('.', '-')}.lovense.club:30010";
+                        // Intiface / Buttplug — the path the toy ecosystem uses to sidestep the
+                        // flaky Lovense Game Mode LAN. Needs Intiface Central running on this machine
+                        // with the toy connected to it over Bluetooth.
+                        _haptics.Settings.Provider = ConditioningControlPanel.Core.Services.Haptics.HapticProviderType.Buttplug;
+                        _haptics.Settings.ButtplugUrl = "ws://localhost:12345";
+                    }
+                    else
+                    {
+                        // Lovense Remote LAN Game Mode (dashed-domain SSL endpoint) — the cracked path.
+                        var ip = (DawToyIp.Text ?? "").Trim();
+                        if (ip.Length > 0)
+                        {
+                            _haptics.Settings.Provider = ConditioningControlPanel.Core.Services.Haptics.HapticProviderType.Lovense;
+                            _haptics.Settings.LovenseUrl = $"https://{ip.Replace('.', '-')}.lovense.club:30010";
+                        }
                     }
                     DawToyStatus.Text = "● connecting…";
                     await _haptics.ConnectAsync();
