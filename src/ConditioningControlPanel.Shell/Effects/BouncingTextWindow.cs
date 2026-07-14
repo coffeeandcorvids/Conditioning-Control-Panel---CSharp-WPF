@@ -16,6 +16,7 @@ internal sealed class BouncingTextWindow : Window
     private IReadOnlyList<string> _phrases = Array.Empty<string>();
     private double _x, _y, _dx = 3.5, _dy = 2.8;
     private int _ticks;
+    private bool _clickThroughApplied;
 
     public BouncingTextWindow()
     {
@@ -26,6 +27,11 @@ internal sealed class BouncingTextWindow : Window
         CanResize = false;
         Background = Brushes.Transparent;
         TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent };
+        // Visual-only overlay: never take focus or hit-tests, so it can't steal
+        // clicks. Matches OverlayEffectWindow; the OS-level click-through is
+        // applied after Show() (native handle must exist first).
+        Focusable = false;
+        IsHitTestVisible = false;
         Content = _canvas;
         _text.Foreground = new SolidColorBrush(Color.Parse("#FF69B4"));
         _text.FontSize = 56;
@@ -46,6 +52,10 @@ internal sealed class BouncingTextWindow : Window
         _x = bounds.Width * .25;
         _y = bounds.Height * .25;
         Show();
+        // Real OS-level click-through, once the native handle exists (best-effort;
+        // no-op on backends without it — the overlay still shows either way).
+        if (!_clickThroughApplied)
+            _clickThroughApplied = X11InputTransparency.TryMakeClickThrough(this);
         _timer.Start();
     }
 

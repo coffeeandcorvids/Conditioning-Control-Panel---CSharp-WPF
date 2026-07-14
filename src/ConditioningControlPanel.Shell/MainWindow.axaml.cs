@@ -1159,7 +1159,10 @@ public partial class MainWindow : Window, ICommandSink
         CardSubliminal.IsEnabledFeature = _settings.SubliminalEnabled;
         CardPinkFog.IsEnabledFeature    = false;
         CardBubblePop.IsEnabledFeature  = _settings.BubblePopEnabled;
-        CardBouncingText.IsEnabledFeature = _settings.BouncingTextEnabled;
+        // Overlays don't auto-fire on launch (same intent as PinkFog above) — the
+        // toggle must reflect the real off state, not a phantom ON from a saved
+        // setting while nothing's actually bouncing. Turn it on deliberately.
+        CardBouncingText.IsEnabledFeature = false;
     }
 
     private void LoadCenterLogo()
