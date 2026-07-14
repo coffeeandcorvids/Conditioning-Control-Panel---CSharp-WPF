@@ -59,6 +59,8 @@ public partial class MainWindow : Window, ICommandSink
     private long _dawLastHapticTicks;          // throttle: min interval between haptic sends
     private bool _dawPreviewMode;              // true while a bounded Preview window is running
     private long _dawPreviewEndMs;             // auto-stop point for a Preview window
+    private bool _dawLoop;                     // loop playback when the window ends
+    private bool _dawScrollSyncing;            // guards the scrollbar <-> view feedback loop
 
     // ── Overlay pool ─────────────────────────────────────────────────────
     private const int FlashPoolSize = 6;
@@ -660,6 +662,8 @@ public partial class MainWindow : Window, ICommandSink
             if (_dawTimeline?.Selected is { } c && _dawProject != null)
             { _dawProject.RemoveCue(c); _dawTimeline.Selected = null; RefreshDaw(); ShowDawCue(null); }
         };
+        DawCueBack.Click    += (_, _) => { if (_dawTimeline != null) _dawTimeline.Selected = null; ShowDawCue(null); };
+        DawCuePreview.Click += (_, _) => DawPreviewCue();
         DawPreview.Click   += async (_, _) => await DawPreviewAsync();
         DawExport.Click    += (_, _) => DoDawExport();
         DawSave.Click      += (_, _) => DoDawSave();
@@ -668,13 +672,32 @@ public partial class MainWindow : Window, ICommandSink
 
         // transport: dedicated player + a timer that moves the playhead and follows haptics live
         _dawAudio = new VlcAudioPlayer();
-        _dawAudio.Ended += (_, _) => Dispatcher.UIThread.Post(DawStopTransport);
+        _dawAudio.Ended += (_, _) => Dispatcher.UIThread.Post(() =>
+        {
+            if (_dawLoop && _dawPlaying) DawLoopRestart(); else DawStopTransport();
+        });
         _dawPlayTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(80) };
         _dawPlayTimer.Tick += (_, _) => DawTransportTick();
         DawPlay.Click  += (_, _) => DawPlayTransport();
         DawPause.Click += (_, _) => DawPauseTransport();
         DawStop.Click  += (_, _) => DawStopTransport();
         DawTransportUpdate();
+
+        // navigation: skip / zoom / fit / loop / scroll
+        DawToStart.Click += (_, _) => DawSeekTo(0);
+        DawToEnd.Click   += (_, _) => DawSeekTo(_dawProject?.DurationMs ?? 0);
+        DawZoomIn.Click  += (_, _) => _dawTimeline?.Zoom(0.6, _dawTimeline.PlayheadMs);
+        DawZoomOut.Click += (_, _) => _dawTimeline?.Zoom(1.6, _dawTimeline.PlayheadMs);
+        DawZoomFit.Click += (_, _) => _dawTimeline?.ZoomToFit();
+        DawLoop.IsCheckedChanged += (_, _) => _dawLoop = DawLoop.IsChecked == true;
+        if (_dawTimeline != null) _dawTimeline.ViewChanged += (_, _) => SyncDawScrollbar();
+        DawScroll.Scroll += (_, _) =>
+        {
+            if (_dawScrollSyncing || _dawTimeline == null) return;
+            long start = (long)DawScroll.Value;
+            _dawTimeline.SetView(start, start + _dawTimeline.ViewSpan);
+        };
+        SyncDawScrollbar();
 
         DawBaseAmount.PropertyChanged += (_, e) =>
         {
@@ -1072,13 +1095,19 @@ public partial class MainWindow : Window, ICommandSink
         DawBaseAmount.Value = _dawProject.BaseAmount;
         DawBaseLabel.Text = $"{_dawProject.BaseAmount:0.00}×";
         DawCueList.ItemsSource = _dawProject.Cues.Select(c => new CueRow(c)).ToList();
+        SyncDawScrollbar();
     }
 
     private void ShowDawCue(ConditioningControlPanel.Core.Models.Authoring.AuthoredCue? cue)
     {
-        if (cue == null) { DawCueEditor.IsVisible = false; DawCueHint.IsVisible = true; return; }
-        DawCueHint.IsVisible = false;
-        DawCueEditor.IsVisible = true;
+        if (cue == null)
+        {
+            DawCuePane.IsVisible = false;
+            DawGeneralPane.IsVisible = true;
+            return;
+        }
+        DawGeneralPane.IsVisible = false;
+        DawCuePane.IsVisible = true;
         DawCueTrigger.Text = cue.Trigger;
         DawCueStart.Text = cue.StartMs.ToString();
         DawCueStop.Text  = cue.StopMs.ToString();
@@ -1137,6 +1166,30 @@ public partial class MainWindow : Window, ICommandSink
         return System.Threading.Tasks.Task.CompletedTask;
     }
 
+    /// <summary>Preview only the selected cue — a short window around it, with a lead-in.</summary>
+    private void DawPreviewCue()
+    {
+        if (_dawProject == null || _dawTimeline?.Selected is not { } cue) return;
+        _dawPreviewMode = true;
+        const long lead = 150;
+        long start = Math.Max(0, cue.StartMs - lead);
+        long end = cue.StopMs + lead;
+        if (_dawProject.DurationMs > 0) end = Math.Min(end, _dawProject.DurationMs);
+        _dawTimeline.PlayheadMs = start;
+        DawStartTransport(start, end);
+    }
+
+    /// <summary>Combined haptic intensity at time t: the envelope baseline, lifted by any cue
+    /// window the playhead is inside (snap = full) — so what you feel matches the cue blocks.</summary>
+    private double DawIntensityAt(long t)
+    {
+        if (_dawProject == null) return 0;
+        double v = _dawProject.EffectiveBaseAt(t);
+        foreach (var c in _dawProject.Cues)
+            if (t >= c.StartMs && t <= c.StopMs) { v = Math.Max(v, c.Snap ? 1.0 : 0.72); break; }
+        return Math.Clamp(v, 0, 1);
+    }
+
     private void DawStartTransport(long fromMs, long? untilMs)
     {
         if (_dawProject == null || _dawTimeline == null) return;
@@ -1185,14 +1238,19 @@ public partial class MainWindow : Window, ICommandSink
 
         long end = _dawPreviewMode ? _dawPreviewEndMs
                  : (_dawProject.DurationMs > 0 ? _dawProject.DurationMs : long.MaxValue);
-        if (pos >= end) { DawStopTransport(); return; }
+        if (pos >= end)
+        {
+            if (_dawLoop && _dawPlaying) { DawLoopRestart(); return; }
+            DawStopTransport(); return;
+        }
 
         _dawTimeline.PlayheadMs = pos;
 
-        // live haptic follow from the authored envelope, via the ungated ApplyVibrationMode path
+        // live haptic follow — envelope baseline lifted by cue accents so the toy fires
+        // when the playhead crosses a cue block (what you feel matches what you see)
         if (_haptics.IsConnected)
         {
-            double val = Math.Clamp(_dawProject.EffectiveBaseAt(pos + _dawSyncOffsetMs), 0, 1);
+            double val = DawIntensityAt(pos + _dawSyncOffsetMs);
             long now = Environment.TickCount64;
             if (Math.Abs(val - _dawLastHapticVal) > 0.02 && now - _dawLastHapticTicks > 120)
             {
@@ -1237,6 +1295,37 @@ public partial class MainWindow : Window, ICommandSink
         DawStop.IsEnabled    = _dawPlaying;
         DawPreview.IsEnabled = !_dawPlaying;
         DawPlay.Content      = _dawPlaying ? "⏵ Playing…" : "⏵ Play";
+    }
+
+    /// <summary>Move the playhead (and live playback) to a time.</summary>
+    private void DawSeekTo(long ms)
+    {
+        if (_dawTimeline == null) return;
+        ms = Math.Clamp(ms, 0, _dawProject?.DurationMs ?? ms);
+        _dawTimeline.PlayheadMs = ms;
+        _dawSeekTargetMs = ms;
+        if (_dawPlaying && DawHasAudio()) DawAudio().SeekMs(ms);
+    }
+
+    /// <summary>Reflect the timeline's visible window onto the horizontal scrollbar (both ways).</summary>
+    private void SyncDawScrollbar()
+    {
+        if (_dawTimeline == null) return;
+        long total = _dawTimeline.TotalMs;
+        long span = _dawTimeline.ViewSpan;
+        _dawScrollSyncing = true;
+        DawScroll.Minimum = 0;
+        DawScroll.Maximum = Math.Max(0, total - span);
+        DawScroll.ViewportSize = span;
+        DawScroll.Value = _dawTimeline.ViewStart;
+        DawScroll.IsEnabled = total > span;
+        _dawScrollSyncing = false;
+    }
+
+    private void DawLoopRestart()
+    {
+        long? until = _dawPreviewMode ? _dawPreviewEndMs : (long?)null;
+        DawStartTransport(_dawSeekTargetMs, until);
     }
 
     // ── Load Audio / Open project (real file pickers) ─────────────────────────

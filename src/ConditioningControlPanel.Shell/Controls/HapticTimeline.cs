@@ -29,6 +29,56 @@ public sealed class HapticTimeline : Control
     /// <summary>Normalized audio peaks (0..1) across the clip; null hides the waveform lane.</summary>
     public float[]? Waveform { get => _waveform; set { _waveform = value; InvalidateVisual(); } }
 
+    // ── view window (zoom/scroll) ─────────────────────────────────────────
+    private long _viewStartMs;
+    private long _viewEndMs;   // <= 0 ⇒ unset ⇒ full duration
+
+    /// <summary>Raised when the visible window changes (so the host can sync a scrollbar).</summary>
+    public event EventHandler? ViewChanged;
+
+    public long TotalMs => _project is { DurationMs: > 0 } p ? p.DurationMs : 0;
+    public long ViewStart => Math.Clamp(_viewStartMs, 0, Math.Max(0, TotalMs));
+    public long ViewEnd
+    {
+        get
+        {
+            long end = _viewEndMs <= 0 ? TotalMs : _viewEndMs;
+            return Math.Clamp(end, ViewStart + 1, Math.Max(ViewStart + 1, TotalMs));
+        }
+    }
+    public long ViewSpan => Math.Max(1, ViewEnd - ViewStart);
+
+    /// <summary>Set the visible window (ms), clamped to the clip with a 200ms minimum span.</summary>
+    public void SetView(long startMs, long endMs)
+    {
+        long total = TotalMs;
+        if (total <= 0) return;
+        long span = Math.Clamp(endMs - startMs, 200, total);
+        startMs = Math.Clamp(startMs, 0, Math.Max(0, total - span));
+        _viewStartMs = startMs;
+        _viewEndMs = startMs + span;
+        InvalidateVisual();
+        ViewChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void ZoomToFit()
+    {
+        _viewStartMs = 0; _viewEndMs = 0;
+        InvalidateVisual();
+        ViewChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Zoom by a factor (&lt;1 zooms in) around a pivot time.</summary>
+    public void Zoom(double factor, long pivotMs)
+    {
+        if (TotalMs <= 0) return;
+        long span = ViewSpan;
+        long newSpan = (long)Math.Clamp(span * factor, 200, TotalMs);
+        double rel = (double)(pivotMs - ViewStart) / span;
+        long newStart = pivotMs - (long)(rel * newSpan);
+        SetView(newStart, newStart + newSpan);
+    }
+
     /// <summary>Raised when a cue is clicked (arg is the cue, or null when the click hit empty cue-lane space).</summary>
     public event EventHandler<AuthoredCue?>? CueSelected;
     /// <summary>Raised when the ruler/envelope lane is clicked to scrub (arg is the position in ms).</summary>
@@ -40,12 +90,27 @@ public sealed class HapticTimeline : Control
     private const double CueLabelH = 14;
 
     private double MsToX(long ms, double w)
-        => _project is { DurationMs: > 0 } p ? Pad + (double)ms / p.DurationMs * (w - 2 * Pad) : Pad;
+    {
+        long vs = ViewStart, span = ViewSpan;
+        return TotalMs > 0 ? Pad + (double)(ms - vs) / span * (w - 2 * Pad) : Pad;
+    }
 
     private long XToMs(double x, double w)
-        => _project is { DurationMs: > 0 } p
-            ? (long)Math.Clamp((x - Pad) / (w - 2 * Pad) * p.DurationMs, 0, p.DurationMs)
+    {
+        long vs = ViewStart, span = ViewSpan;
+        return TotalMs > 0
+            ? (long)Math.Clamp(vs + (x - Pad) / (w - 2 * Pad) * span, 0, TotalMs)
             : 0;
+    }
+
+    protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
+    {
+        base.OnPointerWheelChanged(e);
+        if (TotalMs <= 0) return;
+        long pivot = XToMs(e.GetPosition(this).X, Bounds.Width);
+        Zoom(e.Delta.Y > 0 ? 0.8 : 1.25, pivot);   // wheel up = zoom in around the cursor
+        e.Handled = true;
+    }
 
     public override void Render(DrawingContext ctx)
     {
@@ -62,11 +127,13 @@ public sealed class HapticTimeline : Control
         double envTop = RulerH, envBot = RulerH + EnvH;
         double cueTop = envBot + 6, cueBot = h - Pad;
 
-        // ── time ruler + vertical gridlines ──
+        // ── time ruler + vertical gridlines (over the visible window) ──
         var gridPen = new Pen(Brush("#22223A"), 1);
-        long stepMs = ChooseStep(_project.DurationMs);
-        for (long t = 0; t <= _project.DurationMs; t += stepMs)
+        long vs = ViewStart, ve = ViewEnd;
+        long stepMs = ChooseStep(ve - vs);
+        for (long t = (vs / stepMs) * stepMs; t <= ve; t += stepMs)
         {
+            if (t < vs) continue;
             double x = MsToX(t, w);
             ctx.DrawLine(gridPen, new Point(x, RulerH), new Point(x, cueBot));
             DrawText(ctx, FormatMs(t), new Point(x + 2, 3), "#6A6A8C", 10);
@@ -75,24 +142,25 @@ public sealed class HapticTimeline : Control
         // ── envelope automation lane (effective base = base × envelope) ──
         ctx.DrawRectangle(Brush("#12121F"), null, new Rect(0, envTop, w, EnvH));
 
-        // audio waveform behind the automation, mirrored around the lane centre
+        // audio waveform (the blue line) — mirrored around the lane centre, sharing the
+        // exact x-axis as the ruler and cues below (both map time→x identically)
         if (_waveform is { Length: > 0 } wf)
         {
             double midY = envTop + EnvH / 2.0;
             double wamp = EnvH / 2.0 - 3;
-            var wfPen = new Pen(new SolidColorBrush(Color.Parse("#3A4A7A"), 0.6), 1);
+            var wfPen = new Pen(new SolidColorBrush(Color.Parse("#4FC3F7"), 0.85), 1);
             for (double px = Pad; px <= w - Pad; px += 1)
             {
-                double frac = (px - Pad) / (w - 2 * Pad);
-                int idx = (int)Math.Clamp(frac * wf.Length, 0, wf.Length - 1);
+                long t = XToMs(px, w);
+                int idx = TotalMs > 0 ? (int)Math.Clamp((double)t / TotalMs * wf.Length, 0, wf.Length - 1) : 0;
                 double hh = wf[idx] * wamp;
                 ctx.DrawLine(wfPen, new Point(px, midY - hh), new Point(px, midY + hh));
             }
         }
 
-        DrawText(ctx, "waveform · envelope × base", new Point(Pad + 2, envTop + 2), "#4A4A6C", 10);
+        DrawText(ctx, "waveform (blue) · envelope × base (amber)", new Point(Pad + 2, envTop + 2), "#4A4A6C", 10);
         double AmtToY(double amt) => envBot - Math.Clamp(amt / 2.0, 0, 1) * (EnvH - 6) - 3;
-        var envPen = new Pen(Brush("#5CC8FF"), 2);
+        var envPen = new Pen(Brush("#F5B942"), 2);
         Point? prev = null;
         for (double px = Pad; px <= w - Pad; px += 3)
         {

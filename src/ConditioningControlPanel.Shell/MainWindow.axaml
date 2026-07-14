@@ -661,15 +661,29 @@
             <Button x:Name="DawLoadAudio" Content="🎵 Load Audio" Margin="0,0,4,0"/>
             <Button x:Name="DawLoadProj"  Content="📂 Open"       Margin="0,0,4,0"/>
             <Button x:Name="DawSave"      Content="💾 Save"       Margin="0,0,4,0"/>
-            <Button x:Name="DawAddCue"    Content="➕ Cue @▮"     Margin="8,0,4,0"/>
+            <Button x:Name="DawAddCue"    Content="➕ Add Cue"     Margin="8,0,4,0"
+                    ToolTip.Tip="Add a cue at the playhead"/>
             <Button x:Name="DawPlay"      Content="⏵ Play"        Margin="8,0,4,0"/>
             <Button x:Name="DawPause"     Content="⏸"             Margin="0,0,4,0"/>
             <Button x:Name="DawStop"      Content="⏹"             Margin="0,0,4,0"/>
             <Button x:Name="DawPreview"   Content="▶ Preview"     Margin="8,0,4,0"/>
             <Button x:Name="DawExport"    Content="⬇ Export Cue-Map" Margin="8,0,0,0"/>
           </WrapPanel>
+          <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+            <Button x:Name="DawToStart" Content="⏮"      Margin="0,0,4,0" ToolTip.Tip="Jump to start"/>
+            <Button x:Name="DawToEnd"   Content="⏭"      Margin="0,0,8,0" ToolTip.Tip="Jump to end"/>
+            <Button x:Name="DawZoomOut" Content="🔍 −"   Margin="0,0,4,0" ToolTip.Tip="Zoom out"/>
+            <Button x:Name="DawZoomIn"  Content="🔍 +"   Margin="0,0,4,0" ToolTip.Tip="Zoom in"/>
+            <Button x:Name="DawZoomFit" Content="⤢ Fit"  Margin="0,0,8,0" ToolTip.Tip="Fit the whole clip"/>
+            <ToggleButton x:Name="DawLoop" Content="🔁 Loop" Margin="0,0,8,0" ToolTip.Tip="Loop playback"/>
+            <TextBlock Text="wheel = zoom · drag the bar below to scroll" Classes="muted"
+                       VerticalAlignment="Center"/>
+          </WrapPanel>
           <TextBlock x:Name="DawStatus" DockPanel.Dock="Bottom" Classes="muted"
                      Margin="2,6,0,0" Text="click the ruler to scrub · click a cue to edit it"/>
+          <ScrollBar x:Name="DawScroll" DockPanel.Dock="Bottom" Orientation="Horizontal"
+                     Minimum="0" Maximum="0" Value="0" ViewportSize="1"
+                     AllowAutoHide="False" Margin="0,4,0,2"/>
           <Border Classes="panel" Padding="0">
             <Border x:Name="DawTimelineHost" ClipToBounds="True"/>
           </Border>
@@ -678,6 +692,8 @@
         <Border Grid.Column="1" Classes="panel" Margin="6,0,0,0">
           <ScrollViewer>
             <StackPanel Spacing="8" Margin="0,0,12,0">
+             <!-- GENERAL PANE — toy / sync / presets / project / cue list -->
+             <StackPanel x:Name="DawGeneralPane" Spacing="8">
               <TextBlock Classes="head" Text="🔌 Toy"/>
               <TextBlock Classes="label" Text="Path"/>
               <ComboBox x:Name="DawToyPath" HorizontalAlignment="Stretch" SelectedIndex="0"/>
@@ -736,9 +752,17 @@
               <TextBlock x:Name="DawBaseLabel" Classes="muted" Text="1.00×"/>
 
               <Border Height="1" Background="#2E2E50" Margin="0,4"/>
-              <TextBlock Classes="head" Text="Selected cue"/>
-              <TextBlock x:Name="DawCueHint" Classes="muted" Text="(click a cue on the timeline)"/>
-              <StackPanel x:Name="DawCueEditor" IsVisible="False" Spacing="6">
+              <TextBlock Classes="head" Text="Cues"/>
+              <TextBlock x:Name="DawCueHint" Classes="muted"
+                         Text="click a cue (timeline or list) to edit &amp; preview it"/>
+              <ListBox x:Name="DawCueList" Height="150" Background="Transparent"/>
+             </StackPanel><!-- end DawGeneralPane -->
+
+             <!-- CUE PANE — swaps in when a cue is selected -->
+             <StackPanel x:Name="DawCuePane" Spacing="8" IsVisible="False">
+              <Button x:Name="DawCueBack" Content="‹ Back to project" HorizontalAlignment="Left"/>
+              <TextBlock Classes="head" Text="✎ Selected cue"/>
+              <StackPanel x:Name="DawCueEditor" Spacing="6">
                 <TextBlock Classes="label" Text="Trigger word"/>
                 <TextBox x:Name="DawCueTrigger"/>
                 <TextBlock Classes="label" Text="Personality"/>
@@ -754,12 +778,10 @@
                   </StackPanel>
                 </Grid>
                 <CheckBox x:Name="DawCueSnap" Content="Snap (hard hit)"/>
+                <Button x:Name="DawCuePreview" Content="▶ Preview this cue" HorizontalAlignment="Stretch"/>
                 <Button x:Name="DawCueDelete" Content="🗑 Delete cue" HorizontalAlignment="Stretch"/>
               </StackPanel>
-
-              <Border Height="1" Background="#2E2E50" Margin="0,4"/>
-              <TextBlock Classes="head" Text="Cues"/>
-              <ListBox x:Name="DawCueList" Height="150" Background="Transparent"/>
+             </StackPanel><!-- end DawCuePane -->
             </StackPanel>
           </ScrollViewer>
         </Border>
