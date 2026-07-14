@@ -48,6 +48,8 @@ public partial class MainWindow : Window, ICommandSink
     private ConditioningControlPanel.Core.Models.Authoring.HapticProject? _dawProject;
     private Controls.HapticTimeline? _dawTimeline;
     private long _dawSyncOffsetMs;
+    private VlcAudioPlayer? _dawCueAudio;      // dedicated channel for the gg test cue — never fights session audio
+    private bool _dawOffsetSyncing;            // guards the slider <-> textbox feedback loop
 
     // ── Overlay pool ─────────────────────────────────────────────────────
     private const int FlashPoolSize = 6;
@@ -716,8 +718,170 @@ public partial class MainWindow : Window, ICommandSink
             {
                 _dawSyncOffsetMs = (long)DawSyncOffset.Value;
                 DawSyncOffsetLabel.Text = $"{_dawSyncOffsetMs:+#;-#;0} ms";
+                if (!_dawOffsetSyncing)
+                {
+                    _dawOffsetSyncing = true;
+                    DawSyncOffsetBox.Text = _dawSyncOffsetMs.ToString();
+                    _dawOffsetSyncing = false;
+                }
             }
         };
+        void ApplyOffsetFromBox()
+        {
+            if (long.TryParse(DawSyncOffsetBox.Text?.Trim(), out var ms))
+            {
+                ms = Math.Clamp(ms, (long)DawSyncOffset.Minimum, (long)DawSyncOffset.Maximum);
+                _dawOffsetSyncing = true;
+                DawSyncOffset.Value = ms;                 // fires PropertyChanged → updates field + label
+                _dawOffsetSyncing = false;
+                _dawSyncOffsetMs = ms;
+                DawSyncOffsetLabel.Text = $"{ms:+#;-#;0} ms";
+            }
+            DawSyncOffsetBox.Text = _dawSyncOffsetMs.ToString();
+        }
+        DawSyncOffsetBox.LostFocus += (_, _) => ApplyOffsetFromBox();
+        DawSyncOffsetBox.KeyDown  += (_, e) => { if (e.Key == Avalonia.Input.Key.Enter) ApplyOffsetFromBox(); };
+        DawSyncTest.Click         += async (_, _) => await DawTestSyncAsync();
+
+        // named sync-offset presets
+        DawPresetSave.Click   += (_, _) => SaveSyncPreset();
+        DawPresetDelete.Click += (_, _) => DeleteSyncPreset();
+        DawPresetList.SelectionChanged += (_, _) => ApplySelectedPreset();
+        DawPresetName.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Enter) SaveSyncPreset(); };
+        LoadSyncPresets();
+    }
+
+    /// <summary>
+    /// The offset-tuning feedback loop: plays the "good girl" cue and fires a test buzz
+    /// separated by the current sync offset, so Star can *feel* where the toy lands vs the
+    /// word and dial the number in by ear + body instead of guessing at a dead slider.
+    /// + offset delays the toy (buzz after the word); − advances it (buzz before the word).
+    /// </summary>
+    private async System.Threading.Tasks.Task DawTestSyncAsync()
+    {
+        long off = _dawSyncOffsetMs;
+        string? gg = GgCuePath();
+        _dawCueAudio ??= new VlcAudioPlayer();
+        _dawCueAudio.Volume = (int)SldMasterVolume.Value;
+
+        long audioAt = off < 0 ? -off : 0;   // − advances the toy → hold the audio back
+        long vibeAt  = off > 0 ?  off : 0;   // + delays the toy → hold the buzz back
+
+        DawStatus.Text = _haptics.IsConnected
+            ? $"🔊 test @ {off:+#;-#;0} ms — feel where the buzz lands against “good girl”"
+            : $"🔊 cue @ {off:+#;-#;0} ms — connect a toy to feel the buzz too";
+
+        var audioTask = System.Threading.Tasks.Task.Run(async () =>
+        {
+            if (audioAt > 0) await System.Threading.Tasks.Task.Delay((int)audioAt);
+            if (gg != null) Dispatcher.UIThread.Post(() => _dawCueAudio!.Play(gg!));
+            else Dispatcher.UIThread.Post(() => DawStatus.Text = "gg cue file not found in <assets>/cues/good-girl.mp3");
+        });
+        var vibeTask = System.Threading.Tasks.Task.Run(async () =>
+        {
+            if (vibeAt > 0) await System.Threading.Tasks.Task.Delay((int)vibeAt);
+            if (_haptics.IsConnected)
+                await _haptics.ApplyVibrationModeAsync(0.85, 350, VibrationMode.Constant);
+        });
+        try { await System.Threading.Tasks.Task.WhenAll(audioTask, vibeTask); }
+        catch (Exception ex) { DawStatus.Text = "sync test failed: " + ex.Message; }
+    }
+
+    /// <summary>First existing good-girl cue file, searched under the assets root then the DAW dir.</summary>
+    private string? GgCuePath()
+    {
+        var root = _settings.AssetsRoot.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+        string[] candidates =
+        {
+            System.IO.Path.Combine(root, "cues", "good-girl.mp3"),
+            System.IO.Path.Combine(DawDir(), "cues", "good-girl.mp3"),
+        };
+        foreach (var c in candidates) if (System.IO.File.Exists(c)) return c;
+        return null;
+    }
+
+    // ── named sync-offset presets ──────────────────────────────────────────
+    private sealed record SyncPreset(string Name, long OffsetMs, string Toy);
+    private System.Collections.Generic.List<SyncPreset> _syncPresets = new();
+    private bool _presetSelecting;   // guards combo-selection re-entrancy
+
+    /// <summary>Where the presets live on disk — shown in the UI so it's never a mystery.</summary>
+    private string SyncPresetsPath() => System.IO.Path.Combine(DawDir(), "sync-presets.json");
+
+    /// <summary>Current toy's name, used to auto-name a preset when Star leaves the name blank.</summary>
+    private string CurrentToyKey()
+    {
+        var devs = _haptics.ConnectedDevices;
+        return devs.Count > 0 ? devs[0] : "(no toy)";
+    }
+
+    private void LoadSyncPresets()
+    {
+        try
+        {
+            var p = SyncPresetsPath();
+            _syncPresets = System.IO.File.Exists(p)
+                ? System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.List<SyncPreset>>(
+                      System.IO.File.ReadAllText(p)) ?? new()
+                : new();
+        }
+        catch { _syncPresets = new(); }
+        RefreshPresetCombo();
+        DawPresetPath.Text = "saved to " + SyncPresetsPath();
+    }
+
+    private void RefreshPresetCombo()
+    {
+        _presetSelecting = true;
+        DawPresetList.ItemsSource = _syncPresets
+            .Select(x => $"{x.Name}  ({x.OffsetMs:+#;-#;0} ms · {x.Toy})").ToList();
+        DawPresetList.SelectedIndex = -1;
+        _presetSelecting = false;
+    }
+
+    private void PersistSyncPresets()
+    {
+        try
+        {
+            System.IO.File.WriteAllText(SyncPresetsPath(), System.Text.Json.JsonSerializer.Serialize(
+                _syncPresets, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+        }
+        catch (Exception ex) { DawStatus.Text = "preset write failed: " + ex.Message; }
+    }
+
+    private void SaveSyncPreset()
+    {
+        var toy = CurrentToyKey();
+        var name = (DawPresetName.Text ?? "").Trim();
+        if (name.Length == 0) name = $"{toy} {_dawSyncOffsetMs:+#;-#;0}ms";
+        _syncPresets.RemoveAll(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        _syncPresets.Add(new SyncPreset(name, _dawSyncOffsetMs, toy));
+        PersistSyncPresets();
+        RefreshPresetCombo();
+        DawPresetName.Text = "";
+        DawStatus.Text = $"💾 saved “{name}” = {_dawSyncOffsetMs:+#;-#;0} ms";
+    }
+
+    private void ApplySelectedPreset()
+    {
+        if (_presetSelecting) return;
+        int i = DawPresetList.SelectedIndex;
+        if (i < 0 || i >= _syncPresets.Count) return;
+        var preset = _syncPresets[i];
+        var ms = Math.Clamp(preset.OffsetMs, (long)DawSyncOffset.Minimum, (long)DawSyncOffset.Maximum);
+        DawSyncOffset.Value = ms;
+        DawStatus.Text = $"↺ loaded “{preset.Name}” = {ms:+#;-#;0} ms";
+    }
+
+    private void DeleteSyncPreset()
+    {
+        int i = DawPresetList.SelectedIndex;
+        if (i < 0 || i >= _syncPresets.Count) return;
+        var name = _syncPresets[i].Name;
+        _syncPresets.RemoveAt(i);
+        PersistSyncPresets();
+        RefreshPresetCombo();
+        DawStatus.Text = $"🗑 deleted “{name}”";
     }
 
     private void UpdateDawToyStatus()
@@ -726,7 +890,7 @@ public partial class MainWindow : Window, ICommandSink
         DawToyStatus.Text = c ? "● connected" : "● disconnected";
         DawToyStatus.Foreground = new SolidColorBrush(Color.Parse(c ? "#4ADE80" : "#FF6B6B"));
         DawToyConnect.Content = c ? "Disconnect" : "Connect";
-        var devs = _haptics.ConnectedDevices;   // provider embeds "name (battery%)" in each entry
+        var devs = _haptics.ConnectedDevices;
         DawToyDevices.Text = devs.Count > 0 ? string.Join("\n", devs) : "(no device)";
     }
 
@@ -1788,6 +1952,7 @@ public partial class MainWindow : Window, ICommandSink
         _hapticSync.Dispose();
         _voiceHaptics.Dispose();
         _audio.Dispose();
+        _dawCueAudio?.Dispose();
         _session.Dispose();
         _flash.Dispose();
         _sub.Dispose();

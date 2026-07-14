@@ -674,22 +674,52 @@
 
         <Border Grid.Column="1" Classes="panel" Margin="6,0,0,0">
           <ScrollViewer>
-            <StackPanel Spacing="8">
+            <StackPanel Spacing="8" Margin="0,0,12,0">
               <TextBlock Classes="head" Text="🔌 Toy"/>
               <TextBlock Classes="label" Text="Path"/>
               <ComboBox x:Name="DawToyPath" HorizontalAlignment="Stretch" SelectedIndex="0"/>
-              <TextBlock Classes="label" Text="Phone IP — Lovense Remote → Game Mode → LAN" Margin="0,4,0,0"/>
-              <TextBox x:Name="DawToyIp" Text="192.168.100.125" Watermark="192.168.x.x"/>
+              <TextBlock Classes="label" Text="Phone IP — Lovense Remote → Game Mode → LAN"
+                         TextWrapping="Wrap" Margin="0,4,0,0"/>
+              <TextBox x:Name="DawToyIp" Text="192.168.100.125" PlaceholderText="192.168.x.x"/>
               <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Grid.Column="0" x:Name="DawToyStatus" Text="● disconnected"
                            Foreground="#FF6B6B" VerticalAlignment="Center"/>
                 <Button Grid.Column="1" x:Name="DawToyConnect" Content="Connect"/>
               </Grid>
               <TextBlock x:Name="DawToyDevices" Classes="muted" Text="(no device)" TextWrapping="Wrap"/>
-              <TextBlock Classes="label" Text="Sync offset — + delays the toy, − advances it" Margin="0,4,0,0"/>
-              <Slider x:Name="DawSyncOffset" Minimum="-500" Maximum="500" Value="0" TickFrequency="25"
+              <TextBlock Classes="label" Text="Sync offset — + delays the toy, − advances it"
+                         TextWrapping="Wrap" Margin="0,4,0,0"/>
+              <Slider x:Name="DawSyncOffset" Minimum="-1000" Maximum="1000" Value="0" TickFrequency="50"
                       ToolTip.Tip="Shift the haptics vs the audio to line them up (ms)"/>
-              <TextBlock x:Name="DawSyncOffsetLabel" Classes="muted" Text="0 ms"/>
+              <!-- numeric entry (type an exact value) + live readout -->
+              <Grid ColumnDefinitions="Auto,Auto,*" Margin="0,2,0,0">
+                <TextBox   Grid.Column="0" x:Name="DawSyncOffsetBox" Text="0" Width="76"
+                           ToolTip.Tip="Type an exact offset in ms — Enter to apply"/>
+                <TextBlock Grid.Column="1" Text="ms" Classes="muted"
+                           VerticalAlignment="Center" Margin="6,0,0,0"/>
+                <TextBlock Grid.Column="2" x:Name="DawSyncOffsetLabel" Classes="muted" Text="0 ms"
+                           HorizontalAlignment="Right" VerticalAlignment="Center"/>
+              </Grid>
+              <Button x:Name="DawSyncTest" Content="🔊 Test sync — cue + buzz"
+                      HorizontalAlignment="Stretch" Margin="0,4,0,0"
+                      ToolTip.Tip="Plays the good-girl cue + a test buzz at this offset so you can feel the sync"/>
+
+              <!-- named presets -->
+              <TextBlock Classes="label" Text="Saved offsets" Margin="0,6,0,0"/>
+              <Grid ColumnDefinitions="*,Auto">
+                <ComboBox Grid.Column="0" x:Name="DawPresetList" HorizontalAlignment="Stretch"
+                          PlaceholderText="(pick a saved offset)"/>
+                <Button   Grid.Column="1" x:Name="DawPresetDelete" Content="🗑" Margin="4,0,0,0"
+                          ToolTip.Tip="Delete the selected preset"/>
+              </Grid>
+              <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                <TextBox Grid.Column="0" x:Name="DawPresetName" PlaceholderText="name this offset…"
+                         ToolTip.Tip="Leave blank to auto-name it after the toy + offset"/>
+                <Button  Grid.Column="1" x:Name="DawPresetSave" Content="💾 Save" Margin="4,0,0,0"
+                         ToolTip.Tip="Save the current offset under this name"/>
+              </Grid>
+              <TextBlock x:Name="DawPresetPath" Classes="muted" FontSize="10"
+                         TextWrapping="Wrap" Margin="0,2,0,0"/>
 
               <Border Height="1" Background="#2E2E50" Margin="0,4"/>
               <TextBlock Classes="head" Text="🎚 Project"/>
