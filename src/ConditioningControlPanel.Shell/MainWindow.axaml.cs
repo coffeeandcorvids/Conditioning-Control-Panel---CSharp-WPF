@@ -43,6 +43,11 @@ public partial class MainWindow : Window, ICommandSink
     private readonly VoiceHapticsDirector _voiceHaptics;
     private static readonly System.Net.Http.HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(60) };
 
+    // ── Haptics DAW tab (task #18) ───────────────────────────────────────
+    private readonly ConditioningControlPanel.Core.Services.Haptics.HapticProjectService _dawService = new();
+    private ConditioningControlPanel.Core.Models.Authoring.HapticProject? _dawProject;
+    private Controls.HapticTimeline? _dawTimeline;
+
     // ── Overlay pool ─────────────────────────────────────────────────────
     private const int FlashPoolSize = 6;
     private readonly FlashOverlayWindow[]    _flashPool;
@@ -152,9 +157,11 @@ public partial class MainWindow : Window, ICommandSink
             [NavEnhancements] = ViewEnhancements,
             [NavDeeper]       = ViewDeeper,
             [NavAssets]       = ViewAssets,
+            [NavDaw]          = ViewDaw,
         };
         foreach (var (btn, view) in primaryViews)
             btn.Click += (_, _) => SwitchPrimary(btn, view, primaryViews.Keys.ToList());
+        SetupDawTab();
 
         // bottom feature strip — route to the real views where they exist,
         // say so plainly where the upstream feature isn't ported yet
@@ -593,8 +600,204 @@ public partial class MainWindow : Window, ICommandSink
     {
         foreach (var v in new Control[]{ ViewDashboard, ViewPresets, ViewEnhancements,
                                           ViewDeeper, ViewAssets, ViewAchievements, ViewCompanion,
-                                          ViewLab, ViewLive })
+                                          ViewLab, ViewLive, ViewDaw })
             v.IsVisible = false;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  Haptics DAW tab (task #18) — lane-based voice-haptics authoring surface.
+    //  Code-behind (no MVVM): the timeline is a custom-drawn control; edits
+    //  write straight onto the HapticProject and re-render. File pickers are a
+    //  next pass — Save/Export land in ~/ccp-daw for now.
+    // ═══════════════════════════════════════════════════════════════════════
+    private sealed record CueRow(ConditioningControlPanel.Core.Models.Authoring.AuthoredCue Cue)
+    {
+        public override string ToString()
+        {
+            var t = TimeSpan.FromMilliseconds(Cue.StartMs);
+            return $"{(int)t.TotalMinutes}:{t.Seconds:00}  {Cue.Trigger}"
+                 + (string.IsNullOrEmpty(Cue.Personality) ? "" : " · " + Cue.Personality)
+                 + (Cue.Snap ? " ⚡" : "");
+        }
+    }
+
+    private void SetupDawTab()
+    {
+        _dawTimeline = new Controls.HapticTimeline();
+        DawTimelineHost.Child = _dawTimeline;
+        _dawTimeline.CueSelected += (_, cue) => ShowDawCue(cue);
+        _dawTimeline.Scrubbed    += (_, ms) => DawStatus.Text = $"playhead @ {FormatDawMs(ms)}";
+
+        DawCuePersonality.ItemsSource = ConditioningControlPanel.Core.Models.StockHapticPatterns.Names;
+
+        _dawProject = DemoDawProject();
+        RefreshDaw();
+
+        DawNew.Click += (_, _) =>
+        {
+            _dawProject = new ConditioningControlPanel.Core.Models.Authoring.HapticProject { DurationMs = 60000 };
+            if (_dawTimeline != null) _dawTimeline.Selected = null;
+            RefreshDaw(); ShowDawCue(null);
+            DawStatus.Text = "new empty project (60s) — Load Audio will set the real clip length";
+        };
+        DawAddCue.Click    += (_, _) => DawAddCueAtPlayhead();
+        DawCueDelete.Click += (_, _) =>
+        {
+            if (_dawTimeline?.Selected is { } c && _dawProject != null)
+            { _dawProject.RemoveCue(c); _dawTimeline.Selected = null; RefreshDaw(); ShowDawCue(null); }
+        };
+        DawPreview.Click   += async (_, _) => await DawPreviewAsync();
+        DawExport.Click    += (_, _) => DoDawExport();
+        DawSave.Click      += (_, _) => DoDawSave();
+        DawLoadProj.Click  += (_, _) => DawStatus.Text = "Open / Load-Audio file pickers land next pass — timeline + editing are live now";
+        DawLoadAudio.Click += (_, _) => DawStatus.Text = "Open / Load-Audio file pickers land next pass — timeline + editing are live now";
+
+        DawBaseAmount.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == Avalonia.Controls.Primitives.RangeBase.ValueProperty && _dawProject != null)
+            {
+                _dawProject.BaseAmount = DawBaseAmount.Value;
+                DawBaseLabel.Text = $"{_dawProject.BaseAmount:0.00}×";
+                _dawTimeline?.InvalidateVisual();
+            }
+        };
+        DawCueList.SelectionChanged += (_, _) =>
+        {
+            if (DawCueList.SelectedItem is CueRow row)
+            { if (_dawTimeline != null) _dawTimeline.Selected = row.Cue; ShowDawCue(row.Cue); }
+        };
+        DawCueTrigger.LostFocus            += (_, _) => ApplyDawCueEdits();
+        DawCueStart.LostFocus              += (_, _) => ApplyDawCueEdits();
+        DawCueStop.LostFocus               += (_, _) => ApplyDawCueEdits();
+        DawCueSnap.IsCheckedChanged        += (_, _) => ApplyDawCueEdits();
+        DawCuePersonality.SelectionChanged += (_, _) => ApplyDawCueEdits();
+    }
+
+    private ConditioningControlPanel.Core.Models.Authoring.HapticProject DemoDawProject()
+    {
+        var p = new ConditioningControlPanel.Core.Models.Authoring.HapticProject
+        {
+            AudioRef = "(demo — no audio loaded)", DurationMs = 60000, BaseAmount = 1.0,
+        };
+        p.Envelope.Add(new ConditioningControlPanel.Core.Models.Authoring.EnvelopePoint { TimeMs = 0,     Amount = 0.4 });
+        p.Envelope.Add(new ConditioningControlPanel.Core.Models.Authoring.EnvelopePoint { TimeMs = 20000, Amount = 1.0 });
+        p.Envelope.Add(new ConditioningControlPanel.Core.Models.Authoring.EnvelopePoint { TimeMs = 40000, Amount = 0.7 });
+        p.Envelope.Add(new ConditioningControlPanel.Core.Models.Authoring.EnvelopePoint { TimeMs = 60000, Amount = 1.4 });
+        p.AddCue(5000, 6500, "butterfly", snap: false, personality: "Wave");
+        p.AddCue(15000, 16000, "dolly",   snap: true,  personality: "Pulse");
+        p.AddCue(30000, 34000, "surrender", snap: false, personality: "Throb");
+        p.AddCue(45000, 46000, "sleep",   snap: true,  personality: "Climax");
+        return p;
+    }
+
+    private void RefreshDaw()
+    {
+        if (_dawTimeline != null) _dawTimeline.Project = _dawProject;
+        if (_dawProject == null) return;
+        DawAudioRef.Text = "audio: " + (string.IsNullOrEmpty(_dawProject.AudioRef) ? "(none)" : _dawProject.AudioRef);
+        DawDuration.Text = "length: " + FormatDawMs(_dawProject.DurationMs);
+        DawBaseAmount.Value = _dawProject.BaseAmount;
+        DawBaseLabel.Text = $"{_dawProject.BaseAmount:0.00}×";
+        DawCueList.ItemsSource = _dawProject.Cues.Select(c => new CueRow(c)).ToList();
+    }
+
+    private void ShowDawCue(ConditioningControlPanel.Core.Models.Authoring.AuthoredCue? cue)
+    {
+        if (cue == null) { DawCueEditor.IsVisible = false; DawCueHint.IsVisible = true; return; }
+        DawCueHint.IsVisible = false;
+        DawCueEditor.IsVisible = true;
+        DawCueTrigger.Text = cue.Trigger;
+        DawCueStart.Text = cue.StartMs.ToString();
+        DawCueStop.Text  = cue.StopMs.ToString();
+        DawCueSnap.IsChecked = cue.Snap;
+        DawCuePersonality.SelectedItem = string.IsNullOrEmpty(cue.Personality) ? null : cue.Personality;
+    }
+
+    private void ApplyDawCueEdits()
+    {
+        if (_dawTimeline?.Selected is not { } cue || _dawProject == null) return;
+        if (!string.IsNullOrWhiteSpace(DawCueTrigger.Text)) cue.Trigger = DawCueTrigger.Text.Trim();
+        cue.Snap = DawCueSnap.IsChecked == true;
+        if (DawCuePersonality.SelectedItem is string per) cue.Personality = per;
+        if (long.TryParse(DawCueStart.Text, out var s)) cue.StartMs = Math.Clamp(s, 0, _dawProject.DurationMs);
+        if (long.TryParse(DawCueStop.Text, out var e) && e > cue.StartMs)
+            cue.StopMs = Math.Clamp(e, cue.StartMs + 50, _dawProject.DurationMs);
+        _dawProject.SortCues();
+        RefreshDaw();
+    }
+
+    private void DawAddCueAtPlayhead()
+    {
+        if (_dawProject == null || _dawTimeline == null) return;
+        long start = _dawTimeline.PlayheadMs;
+        long stop = _dawProject.DurationMs > 0 ? Math.Min(start + 1500, _dawProject.DurationMs) : start + 1500;
+        var cue = _dawProject.AddCue(start, stop, "new-trigger", snap: false, personality: "Pulse");
+        _dawTimeline.Selected = cue;
+        RefreshDaw(); ShowDawCue(cue);
+        DawStatus.Text = $"➕ added cue @ {FormatDawMs(start)} — set its trigger word";
+    }
+
+    private async System.Threading.Tasks.Task DawPreviewAsync()
+    {
+        if (_dawProject == null || _dawTimeline == null) return;
+        long start = _dawTimeline.PlayheadMs;
+        long end = _dawProject.DurationMs > 0 ? Math.Min(start + 4000, _dawProject.DurationMs) : start + 4000;
+        if (end <= start) end = start + 1000;
+        int hops = Math.Max(4, (int)((end - start) / 50));
+        var curve = new float[hops];
+        for (int i = 0; i < hops; i++)
+        {
+            long ms = start + (long)((double)i / hops * (end - start));
+            curve[i] = (float)Math.Clamp(_dawProject.EffectiveBaseAt(ms), 0, 1);
+        }
+        try
+        {
+            DawStatus.Text = $"▶ preview {FormatDawMs(start)}–{FormatDawMs(end)} on the toy…";
+            await _haptics.SetSyncPatternAsync(curve, (int)(end - start));
+            DawStatus.Text = $"preview done ({hops} steps over {(end - start) / 1000.0:0.0}s)";
+        }
+        catch (Exception ex) { DawStatus.Text = "preview needs a connected toy — " + ex.Message; }
+    }
+
+    private void DoDawExport()
+    {
+        if (_dawProject == null) return;
+        var problems = _dawProject.Validate();
+        if (problems.Count > 0) { DawStatus.Text = "⚠ " + problems[0]; return; }
+        try
+        {
+            var outPath = System.IO.Path.Combine(DawDir(), "project.haptics.json");
+            _dawService.ExportCueMap(_dawProject, outPath);
+            DawStatus.Text = "⬇ exported cue-map → " + outPath;
+        }
+        catch (Exception ex) { DawStatus.Text = "export failed: " + ex.Message; }
+    }
+
+    private void DoDawSave()
+    {
+        if (_dawProject == null) return;
+        try
+        {
+            var path = System.IO.Path.Combine(DawDir(),
+                "project" + ConditioningControlPanel.Core.Services.Haptics.HapticProjectService.ProjectExtension);
+            _dawService.Save(_dawProject, path);
+            DawStatus.Text = "💾 saved → " + path;
+        }
+        catch (Exception ex) { DawStatus.Text = "save failed: " + ex.Message; }
+    }
+
+    private static string DawDir()
+    {
+        var dir = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "ccp-daw");
+        System.IO.Directory.CreateDirectory(dir);
+        return dir;
+    }
+
+    private static string FormatDawMs(long ms)
+    {
+        var t = TimeSpan.FromMilliseconds(ms);
+        return $"{(int)t.TotalMinutes}:{t.Seconds:00}.{t.Milliseconds / 100}";
     }
 
     private void ShowDetail(string title, string hint)
