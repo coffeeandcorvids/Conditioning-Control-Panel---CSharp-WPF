@@ -50,6 +50,15 @@ public partial class MainWindow : Window, ICommandSink
     private long _dawSyncOffsetMs;
     private VlcAudioPlayer? _dawCueAudio;      // dedicated channel for the gg test cue — never fights session audio
     private bool _dawOffsetSyncing;            // guards the slider <-> textbox feedback loop
+    private VlcAudioPlayer? _dawAudio;         // dedicated player for DAW timeline playback (transport)
+    private DispatcherTimer? _dawPlayTimer;    // drives the moving playhead + live haptic follow
+    private bool _dawPlaying;
+    private long _dawSeekTargetMs;             // where playback should (re)start from
+    private bool _dawSeeked;                   // one-shot seek guard after Play kicks in
+    private double _dawLastHapticVal = -1;     // throttle: resend only on meaningful change
+    private long _dawLastHapticTicks;          // throttle: min interval between haptic sends
+    private bool _dawPreviewMode;              // true while a bounded Preview window is running
+    private long _dawPreviewEndMs;             // auto-stop point for a Preview window
 
     // ── Overlay pool ─────────────────────────────────────────────────────
     private const int FlashPoolSize = 6;
@@ -654,8 +663,18 @@ public partial class MainWindow : Window, ICommandSink
         DawPreview.Click   += async (_, _) => await DawPreviewAsync();
         DawExport.Click    += (_, _) => DoDawExport();
         DawSave.Click      += (_, _) => DoDawSave();
-        DawLoadProj.Click  += (_, _) => DawStatus.Text = "Open / Load-Audio file pickers land next pass — timeline + editing are live now";
-        DawLoadAudio.Click += (_, _) => DawStatus.Text = "Open / Load-Audio file pickers land next pass — timeline + editing are live now";
+        DawLoadProj.Click  += async (_, _) => await OpenDawProjectAsync();
+        DawLoadAudio.Click += async (_, _) => await LoadDawAudioAsync();
+
+        // transport: dedicated player + a timer that moves the playhead and follows haptics live
+        _dawAudio = new VlcAudioPlayer();
+        _dawAudio.Ended += (_, _) => Dispatcher.UIThread.Post(DawStopTransport);
+        _dawPlayTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(80) };
+        _dawPlayTimer.Tick += (_, _) => DawTransportTick();
+        DawPlay.Click  += (_, _) => DawPlayTransport();
+        DawPause.Click += (_, _) => DawPauseTransport();
+        DawStop.Click  += (_, _) => DawStopTransport();
+        DawTransportUpdate();
 
         DawBaseAmount.PropertyChanged += (_, e) =>
         {
@@ -905,6 +924,17 @@ public partial class MainWindow : Window, ICommandSink
             else
                 DawToyDevices.Children.Add(new TextBlock { Text = "(no device)", Classes = { "muted" } });
         }
+
+        // adaptive capability summary (task #6): the readout reshapes to what's connected
+        DawToyCapability.Text = devices.Count switch
+        {
+            0 => "",
+            1 => devices[0].VibeSteps > 0
+                    ? $"driving 1 toy at {devices[0].VibeSteps}-step resolution"
+                    : "driving 1 toy",
+            _ => $"driving {devices.Count} toys in parallel",
+        };
+        DawTransportUpdate();
     }
 
     private static IBrush Hex(string hex) => new SolidColorBrush(Color.Parse(hex));
@@ -1073,27 +1103,192 @@ public partial class MainWindow : Window, ICommandSink
         DawStatus.Text = $"➕ added cue @ {FormatDawMs(start)} — set its trigger word";
     }
 
-    private async System.Threading.Tasks.Task DawPreviewAsync()
+    // ── transport (Play / Pause / Stop) + bounded Preview ─────────────────────
+    private VlcAudioPlayer DawAudio() => _dawAudio ??= new VlcAudioPlayer();
+
+    /// <summary>True when the project points at a real, on-disk audio clip (not the demo).</summary>
+    private bool DawHasAudio()
+        => _dawProject != null && !string.IsNullOrEmpty(_dawProject.AudioRef)
+           && !_dawProject.AudioRef.StartsWith("(") && System.IO.File.Exists(_dawProject.AudioRef);
+
+    private void DawPlayTransport()
     {
         if (_dawProject == null || _dawTimeline == null) return;
+        _dawPreviewMode = false;
+        DawStartTransport(_dawTimeline.PlayheadMs, null);
+    }
+
+    /// <summary>Preview = play a bounded window from the playhead (audio + moving playhead + haptic follow).</summary>
+    private System.Threading.Tasks.Task DawPreviewAsync()
+    {
+        if (_dawProject == null || _dawTimeline == null) return System.Threading.Tasks.Task.CompletedTask;
+        _dawPreviewMode = true;
         long start = _dawTimeline.PlayheadMs;
         long end = _dawProject.DurationMs > 0 ? Math.Min(start + 4000, _dawProject.DurationMs) : start + 4000;
         if (end <= start) end = start + 1000;
-        int hops = Math.Max(4, (int)((end - start) / 50));
-        var curve = new float[hops];
-        for (int i = 0; i < hops; i++)
+        DawStartTransport(start, end);
+        return System.Threading.Tasks.Task.CompletedTask;
+    }
+
+    private void DawStartTransport(long fromMs, long? untilMs)
+    {
+        if (_dawProject == null || _dawTimeline == null) return;
+        _dawPreviewEndMs = untilMs ?? long.MaxValue;
+        _dawSeekTargetMs = Math.Max(0, fromMs);
+        _dawSeeked = false;
+        _dawLastHapticVal = -1;
+
+        if (DawHasAudio())
         {
-            long ms = start + (long)((double)i / hops * (end - start));
-            long src = Math.Clamp(ms + _dawSyncOffsetMs, 0, _dawProject.DurationMs);  // apply sync offset
-            curve[i] = (float)Math.Clamp(_dawProject.EffectiveBaseAt(src), 0, 1);
+            var a = DawAudio();
+            a.Volume = (int)SldMasterVolume.Value;
+            a.Play(_dawProject.AudioRef);
         }
+        else if (_dawPreviewMode)
+        {
+            // no clip loaded — give an audible reference with the gg cue so preview isn't silent
+            _dawCueAudio ??= new VlcAudioPlayer();
+            _dawCueAudio.Volume = (int)SldMasterVolume.Value;
+            var gg = GgCuePath();
+            if (gg != null) _dawCueAudio.Play(gg);
+        }
+
+        _dawPlaying = true;
+        _dawTimeline.PlayheadMs = _dawSeekTargetMs;
+        _dawPlayTimer?.Start();
+        DawTransportUpdate();
+    }
+
+    private void DawTransportTick()
+    {
+        if (_dawProject == null || _dawTimeline == null) { DawStopTransport(); return; }
+
+        long pos;
+        if (DawHasAudio())
+        {
+            var a = DawAudio();
+            if (!_dawSeeked && a.IsPlaying) { a.SeekMs(_dawSeekTargetMs); _dawSeeked = true; }
+            if (_dawProject.DurationMs <= 0 && a.DurationMs > 0) { _dawProject.DurationMs = a.DurationMs; RefreshDaw(); }
+            pos = _dawSeeked ? a.PositionMs : _dawSeekTargetMs;
+        }
+        else
+        {
+            pos = _dawTimeline.PlayheadMs + 80;   // clock off the timer when there's no audio
+        }
+
+        long end = _dawPreviewMode ? _dawPreviewEndMs
+                 : (_dawProject.DurationMs > 0 ? _dawProject.DurationMs : long.MaxValue);
+        if (pos >= end) { DawStopTransport(); return; }
+
+        _dawTimeline.PlayheadMs = pos;
+
+        // live haptic follow from the authored envelope, via the ungated ApplyVibrationMode path
+        if (_haptics.IsConnected)
+        {
+            double val = Math.Clamp(_dawProject.EffectiveBaseAt(pos + _dawSyncOffsetMs), 0, 1);
+            long now = Environment.TickCount64;
+            if (Math.Abs(val - _dawLastHapticVal) > 0.02 && now - _dawLastHapticTicks > 120)
+            {
+                _dawLastHapticVal = val;
+                _dawLastHapticTicks = now;
+                _ = _haptics.ApplyVibrationModeAsync(val, 300, VibrationMode.Constant);
+            }
+        }
+
+        DawStatus.Text = $"{(_dawPreviewMode ? "▶ preview" : "⏵ playing")}  {FormatDawMs(pos)} / {FormatDawMs(_dawProject.DurationMs)}";
+    }
+
+    private void DawPauseTransport()
+    {
+        if (!_dawPlaying) return;
+        if (DawHasAudio()) DawAudio().Pause();
+        _dawPlayTimer?.Stop();
+        _dawPlaying = false;
+        _ = _haptics.StopAsync();
+        DawTransportUpdate();
+        DawStatus.Text = $"⏸ paused @ {FormatDawMs(_dawTimeline?.PlayheadMs ?? 0)}";
+    }
+
+    private void DawStopTransport()
+    {
+        _dawPlayTimer?.Stop();
+        _dawPlaying = false;
+        _dawPreviewMode = false;
+        _dawAudio?.Stop();
+        _ = _haptics.StopAsync();
+        DawTransportUpdate();
+        DawStatus.Text = "⏹ stopped";
+    }
+
+    /// <summary>Enable/disable transport by what's actually available — the adaptive-UI seed (task #6).</summary>
+    private void DawTransportUpdate()
+    {
+        bool hasAudio = DawHasAudio();
+        bool toy = _haptics.IsConnected;
+        DawPlay.IsEnabled    = !_dawPlaying && (hasAudio || toy);
+        DawPause.IsEnabled   = _dawPlaying;
+        DawStop.IsEnabled    = _dawPlaying;
+        DawPreview.IsEnabled = !_dawPlaying;
+        DawPlay.Content      = _dawPlaying ? "⏵ Playing…" : "⏵ Play";
+    }
+
+    // ── Load Audio / Open project (real file pickers) ─────────────────────────
+    private async System.Threading.Tasks.Task LoadDawAudioAsync()
+    {
         try
         {
-            DawStatus.Text = $"▶ preview {FormatDawMs(start)}–{FormatDawMs(end)} on the toy…";
-            await _haptics.SetSyncPatternAsync(curve, (int)(end - start));
-            DawStatus.Text = $"preview done ({hops} steps over {(end - start) / 1000.0:0.0}s)";
+            var files = await StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
+            {
+                Title = "Load audio for the DAW",
+                AllowMultiple = false,
+                FileTypeFilter = new[]
+                {
+                    new Avalonia.Platform.Storage.FilePickerFileType("Audio")
+                    { Patterns = new[] { "*.mp3", "*.wav", "*.ogg", "*.m4a", "*.flac", "*.aac", "*.opus" } },
+                },
+            });
+            var file = files.Count > 0 ? files[0] : null;
+            if (file == null) return;
+            var path = file.Path.LocalPath;
+            if (string.IsNullOrEmpty(path) || !System.IO.File.Exists(path))
+            { DawStatus.Text = "couldn't read that file path"; return; }
+
+            DawStatus.Text = "probing clip length…";
+            long dur = await DawAudio().ProbeDurationMsAsync(path);
+            _dawProject ??= new ConditioningControlPanel.Core.Models.Authoring.HapticProject();
+            _dawProject.AudioRef = path;
+            if (dur > 0) _dawProject.DurationMs = dur;
+            RefreshDaw();
+            DawTransportUpdate();
+            DawStatus.Text = $"🎵 loaded {System.IO.Path.GetFileName(path)} · {FormatDawMs(_dawProject.DurationMs)}";
         }
-        catch (Exception ex) { DawStatus.Text = "preview needs a connected toy — " + ex.Message; }
+        catch (Exception ex) { DawStatus.Text = "load audio failed: " + ex.Message; }
+    }
+
+    private async System.Threading.Tasks.Task OpenDawProjectAsync()
+    {
+        try
+        {
+            var files = await StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
+            {
+                Title = "Open a .haptics project",
+                AllowMultiple = false,
+                FileTypeFilter = new[]
+                {
+                    new Avalonia.Platform.Storage.FilePickerFileType("Haptics project")
+                    { Patterns = new[] { "*.haptics.json", "*.json" } },
+                },
+            });
+            var file = files.Count > 0 ? files[0] : null;
+            if (file == null) return;
+            var path = file.Path.LocalPath;
+            var json = await System.IO.File.ReadAllTextAsync(path);
+            _dawProject = ConditioningControlPanel.Core.Models.Authoring.HapticProject.FromJson(json);
+            if (_dawTimeline != null) _dawTimeline.Selected = null;
+            RefreshDaw(); ShowDawCue(null); DawTransportUpdate();
+            DawStatus.Text = $"📂 opened {System.IO.Path.GetFileName(path)} · {_dawProject.Cues.Count} cues";
+        }
+        catch (Exception ex) { DawStatus.Text = "open failed: " + ex.Message; }
     }
 
     private void DoDawExport()
@@ -2067,7 +2262,9 @@ public partial class MainWindow : Window, ICommandSink
         _hapticSync.Dispose();
         _voiceHaptics.Dispose();
         _audio.Dispose();
+        _dawPlayTimer?.Stop();
         _dawCueAudio?.Dispose();
+        _dawAudio?.Dispose();
         _session.Dispose();
         _flash.Dispose();
         _sub.Dispose();

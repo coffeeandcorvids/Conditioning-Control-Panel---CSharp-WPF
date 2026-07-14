@@ -662,7 +662,10 @@
             <Button x:Name="DawLoadProj"  Content="📂 Open"       Margin="0,0,4,0"/>
             <Button x:Name="DawSave"      Content="💾 Save"       Margin="0,0,4,0"/>
             <Button x:Name="DawAddCue"    Content="➕ Cue @▮"     Margin="8,0,4,0"/>
-            <Button x:Name="DawPreview"   Content="▶ Preview"     Margin="0,0,4,0"/>
+            <Button x:Name="DawPlay"      Content="⏵ Play"        Margin="8,0,4,0"/>
+            <Button x:Name="DawPause"     Content="⏸"             Margin="0,0,4,0"/>
+            <Button x:Name="DawStop"      Content="⏹"             Margin="0,0,4,0"/>
+            <Button x:Name="DawPreview"   Content="▶ Preview"     Margin="8,0,4,0"/>
             <Button x:Name="DawExport"    Content="⬇ Export Cue-Map" Margin="8,0,0,0"/>
           </WrapPanel>
           <TextBlock x:Name="DawStatus" DockPanel.Dock="Bottom" Classes="muted"
@@ -687,6 +690,8 @@
                 <Button Grid.Column="1" x:Name="DawToyConnect" Content="Connect"/>
               </Grid>
               <StackPanel x:Name="DawToyDevices" Spacing="6"/>
+              <TextBlock x:Name="DawToyCapability" Classes="muted" FontSize="10"
+                         TextWrapping="Wrap" Margin="0,2,0,0"/>
               <TextBlock Classes="label" Text="Sync offset — + delays the toy, − advances it"
                          TextWrapping="Wrap" Margin="0,4,0,0"/>
               <Slider x:Name="DawSyncOffset" Minimum="-1000" Maximum="1000" Value="0" TickFrequency="50"

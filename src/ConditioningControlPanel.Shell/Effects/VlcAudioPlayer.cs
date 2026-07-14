@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using ConditioningControlPanel.Core.Services.Audio;
 using LibVLC = LibVLCSharp.Shared;
 
@@ -57,6 +58,23 @@ internal sealed class VlcAudioPlayer : IAudioPlayer, IDisposable
     public bool IsPlaying  => _mp.IsPlaying;
     public long PositionMs => Math.Max(0, _mp.Time);
     public long DurationMs => Math.Max(0, _mp.Length);
+
+    /// <summary>Jump the current item to a position (ms). No-op if nothing's loaded.</summary>
+    public void SeekMs(long ms) { try { _mp.Time = Math.Max(0, ms); } catch { } }
+
+    /// <summary>Parse a clip's length without playing it (for Load Audio → set project duration).</summary>
+    public async Task<long> ProbeDurationMsAsync(string pathOrUrl)
+    {
+        try
+        {
+            var isUrl = Uri.TryCreate(pathOrUrl, UriKind.Absolute, out var uri) && !uri.IsFile;
+            var kind = isUrl ? LibVLC.FromType.FromLocation : LibVLC.FromType.FromPath;
+            using var media = new LibVLC.Media(_vlc, pathOrUrl, kind);
+            await media.Parse(isUrl ? LibVLC.MediaParseOptions.ParseNetwork : LibVLC.MediaParseOptions.ParseLocal, 5000);
+            return Math.Max(0, media.Duration);
+        }
+        catch { return 0; }
+    }
 
     public void Dispose()
     {
