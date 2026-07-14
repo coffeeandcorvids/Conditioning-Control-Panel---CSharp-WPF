@@ -50,6 +50,10 @@ namespace ConditioningControlPanel.Core.Services
         public System.Collections.Generic.List<string> ConnectedDevices =>
             _activeProvider?.ConnectedDevices ?? new System.Collections.Generic.List<string>();
 
+        /// <summary>Structured per-device telemetry (name, steps, battery) from the active provider.</summary>
+        public System.Collections.Generic.IReadOnlyList<HapticDeviceInfo> Devices =>
+            _activeProvider?.Devices ?? System.Array.Empty<HapticDeviceInfo>();
+
         public HapticService(HapticSettings settings)
         {
             Settings = settings;

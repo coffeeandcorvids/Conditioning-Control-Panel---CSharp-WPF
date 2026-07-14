@@ -24,6 +24,9 @@ namespace ConditioningControlPanel.Core.Services.Haptics
         public bool IsConnected => _client?.Connected == true && _activeDevices.Count > 0;
         public List<string> ConnectedDevices { get; } = new();
 
+        private readonly List<HapticDeviceInfo> _devices = new();
+        public IReadOnlyList<HapticDeviceInfo> Devices => _devices;
+
         public event EventHandler<bool>? ConnectionChanged;
         public event EventHandler<string>? DeviceDiscovered;
         public event EventHandler<string>? Error;
@@ -90,6 +93,7 @@ namespace ConditioningControlPanel.Core.Services.Haptics
                     }
 
                     Log.Information("ButtplugProvider: {Count} device(s) ready", _activeDevices.Count);
+                    await RebuildDevicesAsync();
                     ConnectionChanged?.Invoke(this, true);
                     return true;
                 }
@@ -109,7 +113,7 @@ namespace ConditioningControlPanel.Core.Services.Haptics
             }
         }
 
-        private void OnDeviceAdded(object? sender, DeviceAddedEventArgs e)
+        private async void OnDeviceAdded(object? sender, DeviceAddedEventArgs e)
         {
             Log.Information("ButtplugProvider: Device added: {Name}", e.Device.Name);
             DeviceDiscovered?.Invoke(this, e.Device.Name);
@@ -120,6 +124,7 @@ namespace ConditioningControlPanel.Core.Services.Haptics
                 _activeDevices.Add(e.Device);
                 ConnectedDevices.Add($"{e.Device.Name} (Vibrate)");
                 Log.Information("ButtplugProvider: Now have {Count} active device(s)", _activeDevices.Count);
+                await RebuildDevicesAsync();
                 ConnectionChanged?.Invoke(this, true);
             }
         }
@@ -133,6 +138,7 @@ namespace ConditioningControlPanel.Core.Services.Haptics
             {
                 _activeDevices.Remove(deviceToRemove);
                 ConnectedDevices.Remove($"{e.Device.Name} (Vibrate)");
+                _devices.RemoveAll(d => d.Name == e.Device.Name);
                 Log.Information("ButtplugProvider: Now have {Count} active device(s)", _activeDevices.Count);
                 ConnectionChanged?.Invoke(this, _activeDevices.Count > 0);
             }
@@ -143,6 +149,7 @@ namespace ConditioningControlPanel.Core.Services.Haptics
             Log.Warning("ButtplugProvider: Server disconnected");
             _activeDevices.Clear();
             ConnectedDevices.Clear();
+            _devices.Clear();
             ConnectionChanged?.Invoke(this, false);
         }
 
@@ -177,6 +184,7 @@ namespace ConditioningControlPanel.Core.Services.Haptics
 
                 _activeDevices.Clear();
                 ConnectedDevices.Clear();
+                _devices.Clear();
                 ConnectionChanged?.Invoke(this, false);
                 Log.Information("ButtplugProvider: Disconnected");
             }
@@ -277,6 +285,34 @@ namespace ConditioningControlPanel.Core.Services.Haptics
             {
                 Log.Warning(ex, "ButtplugProvider: Stop failed");
             }
+        }
+
+        /// <summary>Probe one device for its name, vibrate step resolution, and battery.</summary>
+        private static async Task<HapticDeviceInfo> DescribeAsync(ButtplugClientDevice d)
+        {
+            int steps = (int)(d.VibrateAttributes.FirstOrDefault()?.StepCount ?? 0);
+            double? battery = null;
+            try
+            {
+                var bt = d.BatteryAsync();
+                if (await Task.WhenAny(bt, Task.Delay(1500)) == bt && bt.Status == TaskStatus.RanToCompletion)
+                    battery = bt.Result;
+            }
+            catch { /* device exposes no battery sensor — fine, leave it null */ }
+
+            return new HapticDeviceInfo(d.Name, steps, battery);
+        }
+
+        private async Task RebuildDevicesAsync()
+        {
+            var infos = new List<HapticDeviceInfo>();
+            foreach (var d in _activeDevices.ToList())
+            {
+                try { infos.Add(await DescribeAsync(d)); }
+                catch { infos.Add(new HapticDeviceInfo(d.Name, 0, null)); }
+            }
+            _devices.Clear();
+            _devices.AddRange(infos);
         }
     }
 }

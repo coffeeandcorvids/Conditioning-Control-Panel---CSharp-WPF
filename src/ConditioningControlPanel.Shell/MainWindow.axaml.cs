@@ -890,8 +890,123 @@ public partial class MainWindow : Window, ICommandSink
         DawToyStatus.Text = c ? "● connected" : "● disconnected";
         DawToyStatus.Foreground = new SolidColorBrush(Color.Parse(c ? "#4ADE80" : "#FF6B6B"));
         DawToyConnect.Content = c ? "Disconnect" : "Connect";
-        var devs = _haptics.ConnectedDevices;
-        DawToyDevices.Text = devs.Count > 0 ? string.Join("\n", devs) : "(no device)";
+        DawToyDevices.Children.Clear();
+        var devices = _haptics.Devices;
+        if (devices.Count > 0)
+        {
+            foreach (var d in devices) DawToyDevices.Children.Add(BuildDeviceCard(d));
+        }
+        else
+        {
+            var names = _haptics.ConnectedDevices;   // Lovense-LAN path reports a name but no structured telemetry
+            if (names.Count > 0)
+                foreach (var n in names)
+                    DawToyDevices.Children.Add(BuildDeviceCard(new HapticDeviceInfo(n, 0, null)));
+            else
+                DawToyDevices.Children.Add(new TextBlock { Text = "(no device)", Classes = { "muted" } });
+        }
+    }
+
+    private static IBrush Hex(string hex) => new SolidColorBrush(Color.Parse(hex));
+
+    /// <summary>A device readout card: name, a vibrate-resolution pill, and a drawn battery meter.</summary>
+    private Control BuildDeviceCard(HapticDeviceInfo d)
+    {
+        var stack = new StackPanel { Spacing = 4 };
+        stack.Children.Add(new TextBlock
+        {
+            Text = d.Name,
+            Foreground = Hex("#FF9ED2"),
+            FontWeight = FontWeight.SemiBold,
+            TextWrapping = TextWrapping.Wrap,
+        });
+
+        var row = new StackPanel
+        {
+            Orientation = Avalonia.Layout.Orientation.Horizontal,
+            Spacing = 8,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+        };
+        if (d.VibeSteps > 0)
+            row.Children.Add(new Border
+            {
+                Background = Hex("#2A1B45"),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(6, 1),
+                Child = new TextBlock { Text = $"{d.VibeSteps} steps", FontSize = 11, Foreground = Hex("#C9B8FF") },
+            });
+        if (d.Battery is double b)
+            row.Children.Add(BuildBatteryMeter(b));
+        if (row.Children.Count > 0)
+            stack.Children.Add(row);
+
+        return new Border
+        {
+            Background = Hex("#160C2A"),
+            BorderBrush = Hex("#2E2E50"),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(6),
+            Padding = new Thickness(8, 6),
+            Child = stack,
+        };
+    }
+
+    /// <summary>A tiny drawn battery (body + cap + colored fill) — no emoji, so no tofu box.</summary>
+    private Control BuildBatteryMeter(double level01)
+    {
+        double lvl = Math.Clamp(level01, 0, 1);
+        int pct = (int)Math.Round(lvl * 100);
+        string col = pct >= 50 ? "#4ADE80" : pct >= 20 ? "#FBBF24" : "#FF6B6B";
+        const double bodyW = 26, bodyH = 12;
+
+        var fill = new Border
+        {
+            Background = Hex(col),
+            CornerRadius = new CornerRadius(1),
+            Width = Math.Max(2, (bodyW - 4) * lvl),
+            Height = bodyH - 4,
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+            Margin = new Thickness(1, 0, 0, 0),
+        };
+        var body = new Border
+        {
+            BorderBrush = Hex("#8A8AB0"),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(2),
+            Width = bodyW, Height = bodyH,
+            Child = fill,
+        };
+        var cap = new Border
+        {
+            Background = Hex("#8A8AB0"),
+            Width = 2, Height = 5,
+            CornerRadius = new CornerRadius(0, 1, 1, 0),
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+        };
+        var meter = new StackPanel
+        {
+            Orientation = Avalonia.Layout.Orientation.Horizontal,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+        };
+        meter.Children.Add(body);
+        meter.Children.Add(cap);
+
+        var wrap = new StackPanel
+        {
+            Orientation = Avalonia.Layout.Orientation.Horizontal,
+            Spacing = 5,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+        };
+        wrap.Children.Add(meter);
+        wrap.Children.Add(new TextBlock
+        {
+            Text = $"{pct}%",
+            FontSize = 11,
+            Foreground = Hex(col),
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+        });
+        return wrap;
     }
 
     private ConditioningControlPanel.Core.Models.Authoring.HapticProject DemoDawProject()

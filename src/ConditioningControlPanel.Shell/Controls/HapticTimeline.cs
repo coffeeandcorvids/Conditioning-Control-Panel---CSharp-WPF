@@ -86,20 +86,38 @@ public sealed class HapticTimeline : Control
                      new Point(Pad, AmtToY(1.0)), new Point(w - Pad, AmtToY(1.0)));
 
         // ── cue-window lane ──
+        // The colored block spans exactly [start, stop] — its width IS the duration. Labels
+        // are drawn in the strip above and CLIPPED to end before the next cue, so a long
+        // label on a short cue can never spill across and fake a wider block.
         DrawText(ctx, "cues", new Point(Pad + 2, cueTop + 2), "#4A4A6C", 10);
-        foreach (var cue in _project.Cues)
+        var cues = _project.Cues;
+        double blockTop = cueTop + CueLabelH;
+        double blockH = Math.Max(6, cueBot - blockTop - 2);
+        for (int i = 0; i < cues.Count; i++)
         {
+            var cue = cues[i];
             double x0 = MsToX(cue.StartMs, w), x1 = MsToX(cue.StopMs, w);
-            var rect = new Rect(x0, cueTop + CueLabelH, Math.Max(3, x1 - x0),
-                                Math.Max(6, cueBot - (cueTop + CueLabelH) - 2));
+            double bw = Math.Max(2, x1 - x0);
+            var rect = new Rect(x0, blockTop, bw, blockH);
             bool sel = ReferenceEquals(cue, _selected);
             var fill = new SolidColorBrush(Color.Parse(sel ? "#FF5CA8" : "#8B5CF6"), sel ? 0.85 : 0.5);
-            var pen = sel ? new Pen(Brush("#FFB3E6"), 2) : null;
-            ctx.DrawRectangle(fill, pen, new RoundedRect(rect, 4));
+            var pen = sel ? new Pen(Brush("#FFB3E6"), 2) : new Pen(Brush("#A98BE0"), 1);
+            ctx.DrawRectangle(fill, pen, new RoundedRect(rect, 3));
+
+            // duration stamp inside the block when it's wide enough to hold it
+            if (bw > 34)
+                using (ctx.PushClip(rect))
+                    DrawText(ctx, FormatDur(cue.StopMs - cue.StartMs), new Point(x0 + 3, blockTop + 2), "#FFFFFF", 10);
+
+            // label above, clipped to its horizontal slot (up to the next cue's start)
             string lbl = cue.Trigger
                 + (string.IsNullOrEmpty(cue.Personality) ? "" : " · " + cue.Personality)
                 + (cue.Snap ? " ⚡" : "");
-            DrawText(ctx, lbl, new Point(x0 + 4, cueTop + 15), "#FFFFFF", 11);
+            double labelRight = (i + 1 < cues.Count ? MsToX(cues[i + 1].StartMs, w) : (w - Pad)) - 2;
+            double labelW = labelRight - x0;
+            if (labelW > 6)
+                using (ctx.PushClip(new Rect(x0, cueTop, labelW, CueLabelH + 2)))
+                    DrawText(ctx, lbl, new Point(x0 + 2, cueTop + 1), sel ? "#FFE6F5" : "#D8CCF5", 11);
         }
 
         // ── scrub playhead ──
@@ -150,4 +168,6 @@ public sealed class HapticTimeline : Control
         var t = TimeSpan.FromMilliseconds(ms);
         return $"{(int)t.TotalMinutes}:{t.Seconds:00}";
     }
+
+    private static string FormatDur(long ms) => ms >= 1000 ? $"{ms / 1000.0:0.#}s" : $"{ms}ms";
 }

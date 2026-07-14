@@ -686,7 +686,7 @@
                            Foreground="#FF6B6B" VerticalAlignment="Center"/>
                 <Button Grid.Column="1" x:Name="DawToyConnect" Content="Connect"/>
               </Grid>
-              <TextBlock x:Name="DawToyDevices" Classes="muted" Text="(no device)" TextWrapping="Wrap"/>
+              <StackPanel x:Name="DawToyDevices" Spacing="6"/>
               <TextBlock Classes="label" Text="Sync offset — + delays the toy, − advances it"
                          TextWrapping="Wrap" Margin="0,4,0,0"/>
               <Slider x:Name="DawSyncOffset" Minimum="-1000" Maximum="1000" Value="0" TickFrequency="50"
