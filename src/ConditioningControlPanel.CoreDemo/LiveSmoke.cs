@@ -7,7 +7,7 @@ static class LiveSmoke
     public static async Task<int> Run()
     {
         var agentId = Environment.GetEnvironmentVariable("LETTA_AGENT_ID") ?? "";
-        var keyPath = "/home/star_and_ves/.config/letta/letta_api_key";
+        var keyPath = "/home/stardust/.config/letta/letta_api_key";
         var key = File.Exists(keyPath) ? File.ReadAllText(keyPath).Trim() : "";
         if (string.IsNullOrWhiteSpace(agentId) || string.IsNullOrWhiteSpace(key))
         { Console.WriteLine("STOP: missing agent id or key"); return 2; }

@@ -7,7 +7,7 @@ static class RawDump
     public static async Task<int> Run()
     {
         var agentId = Environment.GetEnvironmentVariable("LETTA_AGENT_ID") ?? "";
-        var key = File.ReadAllText("/home/star_and_ves/.config/letta/letta_api_key").Trim();
+        var key = File.ReadAllText("/home/stardust/.config/letta/letta_api_key").Trim();
         var prompt = "§ CCP PANEL EVENT. Reply ONLY with JSON {\"say\":..,\"commands\":[..]}. ops: say,spiral{on,secs},flash{text},pinkfog{on},lockcard{sentence},haptics{intensity,pattern}. EVENT: keyword trigger fired: \"spiral\"";
         var payload = System.Text.Json.JsonSerializer.Serialize(new {
             agent_id = agentId,
